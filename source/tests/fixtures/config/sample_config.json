@@ -1,0 +1,174 @@
+{
+  "datasetGroup": {
+    "serviceConfig": {
+      "name": "unit_test_new_datasetgroup"
+    },
+    "workflowConfig": {
+      "schedules": {
+        "import": "cron(0 */6 * * ? *)"
+      }
+    }
+  },
+  "datasets": {
+    "users": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "unit_test_only_users"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "unit_test_only_users_schema",
+          "schema": {
+            "type": "record",
+            "name": "users",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "AGE",
+                "type": "int"
+              },
+              {
+                "name": "GENDER",
+                "type": "string",
+                "categorical": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "interactions": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "unit_test_only_interactions"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "unit_test_only_interactions_schema",
+          "schema": {
+            "type": "record",
+            "name": "interactions",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "ITEM_ID",
+                "type": "string"
+              },
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "TIMESTAMP",
+                "type": "long"
+              },
+              {
+                "name": "EVENT_TYPE",
+                "type": "string"
+              },
+              {
+                "name": "EVENT_VALUE",
+                "type": "float"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "solutions": [
+    {
+      "serviceConfig": {
+        "name": "unit_test_sims_new",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-sims"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 0 ? * 1 *)"
+        }
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_popularity_count_new",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-popularity-count"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 1 ? * 1 *)"
+        }
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_personalized_ranking_new",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 2 ? * 1 *)"
+        }
+      },
+      "campaigns": [
+        {
+          "serviceConfig": {
+            "name": "unit_test_personalized_ranking_new_campaign",
+            "minProvisionedTPS": 1
+          }
+        }
+      ]
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_personalized_ranking_new_2",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 2 ? * 1 *)"
+        }
+      },
+      "campaigns": [
+        {
+          "serviceConfig": {
+            "name": "unit_test_personalized_ranking_2_campaign",
+            "minProvisionedTPS": 1
+          }
+        }
+      ],
+      "batchInferenceJobs": [
+        {
+          "serviceConfig": {},
+          "workflowConfig": {
+            "schedule": "cron(0 3 * * ? *)"
+          }
+        }
+      ]
+    }
+  ],
+  "eventTracker": {
+    "serviceConfig": {
+      "name": "unit_test_new_event_tracker"
+    }
+  },
+  "filters": [
+    {
+      "serviceConfig": {
+        "name": "clicked-or-streamed-2",
+        "filterExpression": "INCLUDE ItemID WHERE Interactions.EVENT_TYPE in (\"click\", \"stream\")"
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "interacted-2",
+        "filterExpression": "INCLUDE ItemID WHERE Interactions.EVENT_TYPE in (\"*\")"
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+# Modified based on https://www.gitignore.io/api/visualstudiocode,python
+
+# compiled output
+**/global-s3-assets
+**/regional-s3-assets
+**/build-s3-assets
+**/open-source
+**/tmp
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python Distribution / packaging
+*.egg-info/
+*.egg
+
+# Python Virtual Environments
+**/venv*
+**/.venv*
+.python-version
+
+## Python Testing
+**/.pytest_cache
+**/.coverage
+**/coverage-reports/
+
+# linting, scanning configurations, sonarqube
+.scannerwork/
+
+### VisualStudioCode ###
+.vscode/*
+
+### IntelliJ/ PyCharm ###
+**/.idea/*
+
+# System Files
+**/.DS_Store
+
+# CDK
+**/cdk.out
+
+# Glue
+.glue/*
+
+# Generated test assets
+source/infrastructure/tests/assets/*
+!source/infrastructure/tests/assets/.keep
+source/aws_lambda/get_next_scheduled_event/.gradle
+source/aws_lambda/get_next_scheduled_event/build
+source/aws_lambda/get_next_scheduled_event/.idea
+
+# gradle build files
+**/.gradle/*
+
+# java build files
+**/java/**/build
+
+# python build files
+source/cdk_solution_helper_py/helpers_cdk/build/*
+source/cdk_solution_helper_py/helpers_common/build/*

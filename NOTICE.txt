@@ -1,0 +1,40 @@
+Maintaining Personalized Experiences with Machine Learning
+
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Licensed under the Apache License Version 2.0 (the "License"). You may not use this file except
+in compliance with the License. A copy of the License is located at http://www.apache.org/licenses/
+or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+
+**********************
+THIRD PARTY COMPONENTS
+**********************
+This software includes third party software subject to the following copyrights:
+
+Apache Avro under the Apache License 2.0
+AWS Lambda Java Support Libraries under the Apache License Version 2.0
+AWS Lambda Powertools for Python under the MIT No Attribution license
+AWS SDK under the Apache License Version 2.0
+boto3 under the Apache License Version 2.0
+black under the Massachusetts Institute of Technology (MIT) license
+click under the BSD 3-Clause license
+coverage under the Apache License Version 2.0
+crhelper under the Apache License Version 2.0
+cronex under the Massachusetts Institute of Technology (MIT) license
+docker-py under the Apache License Version 2.0
+Gradle under the Apache License Version 2.0
+jmespath under the Apache License Version 2.0
+junit under the Eclipse Public License Version 2.0
+moto under the Apache License Version 2.0
+pytest under the Massachusetts Institute of Technology (MIT) license
+pytest-cov under the Massachusetts Institute of Technology (MIT) license
+pytest-mock under the Massachusetts Institute of Technology (MIT) license
+pytest-env under the Massachusetts Institute of Technology (MIT) license
+PyYAML under the Massachusetts Institute of Technology (MIT) license
+requests under the Apache License Version 2.0
+requests-mock under the Apache License Version 2.0
+tenacity under the Apache License Version 2.0
+quartz-scheduler under the Apache License Version 2.0
+
+The Apache License Version Version 2.0 is included in LICENSE.txt.

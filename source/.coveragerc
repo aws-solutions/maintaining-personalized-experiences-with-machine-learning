@@ -1,0 +1,12 @@
+[run]
+omit =
+    infrastructure/setup.py
+    infrastructure/cdk.out/*
+    tests/*
+source =
+    infrastructure
+    aws_lambda
+    cdk_solution_helper_py
+
+[report]
+fail_under = 80.0
