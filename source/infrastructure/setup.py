@@ -12,6 +12,7 @@
 # ######################################################################################################################
 
 
+import json
 from pathlib import Path
 
 import setuptools
@@ -20,10 +21,14 @@ readme_path = Path(__file__).resolve().parent.parent.parent / "README.md"
 with open(readme_path) as fp:
     long_description = fp.read()
 
+cdk_json_path = Path(__file__).resolve().parent / "cdk.json"
+cdk_json = json.loads(cdk_json_path.read_text())
+VERSION = cdk_json["context"]["SOLUTION_VERSION"]
+
 
 setuptools.setup(
     name="infrastructure",
-    version="1.0.0",
+    version=VERSION,
     description="AWS CDK stack to deploy the AWS MLOps for Amazon Personalize solution.",
     long_description=long_description,
     long_description_content_type="text/markdown",
