@@ -10,9 +10,8 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
-
+import json
 import os
-from typing import List
 
 from aws_lambda_powertools import Logger, Tracer, Metrics
 from aws_lambda_powertools.metrics import MetricUnit
@@ -43,21 +42,50 @@ def solution_name() -> str:
     return os.environ["SOLUTION_NAME"]
 
 
-def send_configuration_error(errors: List[str]):
+def send_configuration_error(configuration: Configuration):
+    errors = configuration.errors
     sns = get_service_client("sns")
+    dataset_group = configuration.dataset_group
+
     subject = f"{solution_name()} Notifications"
 
-    message = "There were errors detected when reading a personalization job configuration file:\n\n"
-    for error in errors:
-        logger.error(f"Personalization job configuration error: {error}")
-        message += f"   - {error}\n"
-    message += "\nPlease correct these errors and upload the configuration again."
+    def build_default_message():
+        f"The personalization workflow for {configuration.dataset_group} completed with errors."
 
+    def build_json_message():
+        return json.dumps(
+            {
+                "datasetGroup": dataset_group,
+                "status": "UPDATE FAILED",
+                "summary": "There were errors detected when reading a personalization job configuration file",
+                "description": [error for error in errors],
+            }
+        )
+
+    def build_long_message():
+        message = "There were errors detected when reading a personalization job configuration file:\n\n"
+        for error in errors:
+            logger.error(f"Personalization job configuration error: {error}")
+            message += f"   - {error}\n"
+        message += "\nPlease correct these errors and upload the configuration again."
+        return message
+
+    logger.error("publishing configuration error to SQS")
     sns.publish(
         TopicArn=topic_arn(),
-        Message=message,
+        Message=json.dumps(
+            {
+                "default": build_default_message(),
+                "sms": build_default_message(),
+                "email": build_long_message(),
+                "email-json": build_json_message(),
+                "sqs": build_json_message(),
+            }
+        ),
+        MessageStructure="json",
         Subject=subject,
     )
+    logger.error("published configuration error to SQS")
 
 
 @metrics.log_metrics
@@ -86,7 +114,7 @@ def lambda_handler(event, context):
         configuration = Configuration()
         configuration.load(config_text)
         if configuration.errors:
-            send_configuration_error(configuration.errors)
+            send_configuration_error(configuration)
             metrics.add_metric(
                 "ConfigurationsProcessedFailures", unit=MetricUnit.Count, value=1
             )
@@ -98,7 +126,7 @@ def lambda_handler(event, context):
             metrics.add_metric(
                 "ConfigurationsProcessedFailures", unit=MetricUnit.Count, value=1
             )
-            send_configuration_error(configuration.errors)
+            send_configuration_error(configuration)
         else:
             config = configuration.config_dict
             config = set_bucket(config, bucket, key)
