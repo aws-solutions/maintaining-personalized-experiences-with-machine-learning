@@ -212,7 +212,11 @@ class PersonalizeResource:
                 expected_value = expected_value.lower()
 
             # some parameters don't require checking:
-            if self.resource == "datasetImportJob" and expected_key == "jobName":
+            if self.resource == "datasetImportJob" and expected_key in {
+                "jobName",
+                "dataSource",
+                "roleArn",
+            }:
                 continue
             if self.resource == "batchInferenceJob" and expected_key in {
                 "jobName",
