@@ -52,7 +52,233 @@ the AWS Well-Architected Framework. This solution uses the following AWS CDK Sol
 
 You can launch this solution with one click from [AWS Solutions Implementations](https://aws.amazon.com/solutions/implementations/maintaining-personalized-experiences-with-ml). 
 
-To customize the solution, or to contribute to the solution, follow the steps below:
+To customize the solution, or to contribute to the solution, see [Creating a custom build](#creating-a-custom-build)
+
+## Configuration
+
+This solution uses **parameter files**. The parameter file contains all the necessary information to create and maintain
+your resources in Amazon Personalize.
+
+The file can contain the following sections 
+- `datasetGroup`
+- `datasets`
+- `solutions` (can contain `campaigns` and `batchInferenceJobs`)
+- `eventTracker`
+- `filters`
+
+<details>
+<summary>See a sample of the parameter file</summary>
+
+```json 
+{
+  "datasetGroup": {
+    "serviceConfig": {
+      "name": "dataset-group-name"
+    },
+    "workflowConfig": {
+      "schedules": {
+        "import": "cron(0 */6 * * ? *)"
+      }
+    }
+  },
+  "datasets": {
+    "users": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "users-data"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "users-schema",
+          "schema": {
+            "type": "record",
+            "name": "users",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "AGE",
+                "type": "int"
+              },
+              {
+                "name": "GENDER",
+                "type": "string",
+                "categorical": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "interactions": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "interactions-data"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "interactions-schema",
+          "schema": {
+            "type": "record",
+            "name": "interactions",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "ITEM_ID",
+                "type": "string"
+              },
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "TIMESTAMP",
+                "type": "long"
+              },
+              {
+                "name": "EVENT_TYPE",
+                "type": "string"
+              },
+              {
+                "name": "EVENT_VALUE",
+                "type": "float"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "solutions": [
+    {
+      "serviceConfig": {
+        "name": "sims-solution",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-sims"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 0 ? * 1 *)"
+        }
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "popularity-count-solution",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-popularity-count"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 1 ? * 1 *)"
+        }
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "user-personalization-solution",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 2 ? * 1 *)"
+        }
+      },
+      "campaigns": [
+        {
+          "serviceConfig": {
+            "name": "user-personalization-campaign",
+            "minProvisionedTPS": 1
+          }
+        }
+      ],
+      "batchInferenceJobs": [
+        {
+          "serviceConfig": {},
+          "workflowConfig": {
+            "schedule": "cron(0 3 * * ? *)"
+          }
+        }
+      ]
+    }
+  ],
+  "eventTracker": {
+    "serviceConfig": {
+      "name": "dataset-group-name-event-tracker"
+    }
+  },
+  "filters": [
+    {
+      "serviceConfig": {
+        "name": "clicked-or-streamed",
+        "filterExpression": "INCLUDE ItemID WHERE Interactions.EVENT_TYPE in (\"click\", \"stream\")"
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "interacted",
+        "filterExpression": "INCLUDE ItemID WHERE Interactions.EVENT_TYPE in (\"*\")"
+      }
+    }
+  ]
+}
+```
+
+</details>
+
+This solution allows you to manage multiple dataset groups through the use of multiple parameter files. All .json files 
+discovered under the `train/` prefix will trigger the workflow however, the following structure is recommended: 
+
+```
+train/
+│
+├── <dataset_group_1>/ (option 1 - single csv files for data import)
+│   ├── config.json
+│   ├── interactions.csv
+│   ├── items.csv (optional)
+│   └── users.csv (optional)
+│   
+└── <dataset_group_2>/ (option 2 - multiple csv files for data import)
+    ├── config.json
+    ├── interactions/
+    │   ├── <interactions_part_1>.csv
+    │   ├── <interactions_part_2>.csv
+    │   └── <interactions_part_n>.csv
+    ├── users/ (optional)
+    │   ├── <users_part_1>.csv
+    │   ├── <users_part_2>.csv
+    │   └── <users_part_n>.csv
+    └── items/ (optional)
+        ├── <items_part_1>.csv
+        ├── <items_part_2>.csv
+        └── <items_part_n>.csv
+```
+
+If batch inference jobs are required, [batch inference job configuration files](https://docs.aws.amazon.com/personalize/latest/dg/recommendations-batch.html#batch-data-upload) 
+must also be uploaded to the following lcoation:
+
+```
+batch/
+│
+└── <dataset_group_name>/
+    └── <solution_name>/
+        └── job_config.json  
+```
+
+Batch inference output will be produced at the following location:
+
+```
+batch/
+│
+└── <dataset_group_name>/
+    └── <solution_name>/
+        └── <solution_name_YYYY_MM_DD_HH_MM_SS>/
+            ├── _CHECK
+            └── job_config.json.out   
+```
 
 ## Creating a custom build 
 To customize the solution, follow the steps below: 
@@ -134,7 +360,7 @@ build-s3-cdk-dist \
   S3 bucket where the name is `<DIST_BUCKET_PREFIX>-<REGION_NAME>`. The solution's CloudFormation template will expect the
   source code to be located in the bucket matching that name.
 - `$SOLUTION_NAME` - The name of This solution (example: personalize-solution-customization)
-- `$VERSION` - The version number to use (example: v1.0.0)
+- `$VERSION` - The version number to use (example: v1.0.1)
 - `$REGION_NAME` - The region name to use (example: us-east-1)
 
 This will result in all global assets being pushed to the `DIST_BUCKET_PREFIX`, and all regional assets being pushed to 
