@@ -14,7 +14,7 @@
 import re
 
 import pytest
-from aws_cdk.core import App
+from aws_cdk.core import App, CfnParameter
 
 from aws_solutions.cdk.stack import (
     SolutionStack,
@@ -113,3 +113,39 @@ def test_solution_stack():
             ]
         }
     }
+
+
+@pytest.mark.parametrize("execution_number", range(5))
+def test_stack_parameter_ordering(execution_number):
+    app = App(context={"SOLUTION_ID": "SO0123"})
+    stack = SolutionStack(app, "stack", "test stack", "test-stack.template")
+
+    param_1 = CfnParameter(stack, "parameter1")
+    param_2 = CfnParameter(stack, "parameter2")
+
+    stack.solutions_template_options.add_parameter(param_1, "parameter 1", "group 1")
+    stack.solutions_template_options.add_parameter(param_2, "parameter 2", "group 2")
+
+    template = app.synth().stacks[0].template
+
+    assert (
+        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0][
+            "Label"
+        ]["default"]
+        == "group 1"
+    )
+    assert template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0][
+        "Parameters"
+    ] == ["parameter1"]
+    assert (
+        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"][
+            "parameter1"
+        ]["default"]
+        == "parameter 1"
+    )
+    assert (
+        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"][
+            "parameter2"
+        ]["default"]
+        == "parameter 2"
+    )
