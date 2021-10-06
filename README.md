@@ -377,7 +377,7 @@ After running the command, you can deploy the template:
 
 ## Collection of operational metrics
 This solution collects anonymous operational metrics to help AWS improve the quality of features of the solution.
-For more information, including how to disable this capability, please see the [implementation guide](https://aws.amazon.com/solutions/implementations/maintaining-personalized-experiences-with-ml).
+For more information, including how to disable this capability, please see the [implementation guide](https://docs.aws.amazon.com/solutions/latest/maintaining-personalized-experiences-with-ml/collection-of-operational-metrics.html).
  
 ***
 
