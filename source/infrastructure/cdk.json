@@ -3,7 +3,7 @@
   "context": {
     "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
     "SOLUTION_ID": "SO0170",
-    "SOLUTION_VERSION": "1.0.0",
+    "SOLUTION_VERSION": "1.0.1",
     "@aws-cdk/core:newStyleStackSynthesis": "true",
     "@aws-cdk/core:enableStackNameDuplicates": "true",
     "aws-cdk:enableDiffNoFail": "true",
