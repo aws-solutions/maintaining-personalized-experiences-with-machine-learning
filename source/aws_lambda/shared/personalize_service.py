@@ -609,6 +609,7 @@ class Configuration:
     def __init__(self):
         self._configuration_errors = []
         self.config_dict = {}
+        self.dataset_group = "UNKNOWN"
 
     def load(self, content: Union[Path, str]):
         if isinstance(content, Path):
@@ -670,6 +671,8 @@ class Configuration:
             )
         else:
             self._validate_resource(DatasetGroup(), dataset_group)
+            if isinstance(dataset_group, dict):
+                self.dataset_group = dataset_group.get("name", self.dataset_group)
 
     def _validate_event_tracker(self, path="eventTracker.serviceConfig"):
         event_tracker = jmespath.search(path, self.config_dict)

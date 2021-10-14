@@ -43,7 +43,7 @@ class Dashboard(Construct):
         self.dashboard = cw.Dashboard(
             self,
             "PersonalizeDashboard",
-            dashboard_name=f"PersonalizeSolution-{Aws.STACK_NAME}",
+            dashboard_name=f"PersonalizeSolution-{Aws.STACK_NAME}-{Aws.REGION}",
             period_override=cw.PeriodOverride.AUTO,
             start="-PT1D",
         )
