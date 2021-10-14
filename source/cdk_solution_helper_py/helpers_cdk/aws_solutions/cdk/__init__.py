@@ -29,5 +29,13 @@ class CDKSolution:
     """
 
     def __init__(self, cdk_json_path: Path, qualifier="hnb659fds"):
+        self.qualifier = qualifier
         self.context = SolutionContext(cdk_json_path=cdk_json_path)
-        self.synthesizer = SolutionStackSubstitions(qualifier=qualifier)
+        self.synthesizer = SolutionStackSubstitions(qualifier=self.qualifier)
+
+    def reset(self) -> None:
+        """
+        Get a new synthesizer for this CDKSolution - useful for testing
+        :return: None
+        """
+        self.synthesizer = SolutionStackSubstitions(qualifier=self.qualifier)

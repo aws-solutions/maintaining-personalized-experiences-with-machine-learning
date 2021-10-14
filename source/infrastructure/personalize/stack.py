@@ -68,6 +68,25 @@ class PersonalizeStack(SolutionStack):
         super().__init__(scope, construct_id, *args, **kwargs)
 
         # CloudFormation Parameters
+        self.email = cdk.CfnParameter(
+            self,
+            id="Email",
+            type="String",
+            description="Email to notify with personalize workflow results",
+            default="",
+            max_length=50,
+            allowed_pattern=r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$|^$)",
+            constraint_description="Must be a valid email address or blank",
+        )
+        self.solutions_template_options.add_parameter(
+            self.email, "Email", "Solution Configuration"
+        )
+        self.email_provided = CfnCondition(
+            self,
+            "EmailProvided",
+            expression=Fn.condition_not(Fn.condition_equals(self.email, "")),
+        )
+
         self.personalize_kms_key_arn = cdk.CfnParameter(
             self,
             id="PersonalizeKmsKeyArn",
@@ -86,25 +105,6 @@ class PersonalizeStack(SolutionStack):
             expression=Fn.condition_not(
                 Fn.condition_equals(self.personalize_kms_key_arn, "")
             ),
-        )
-
-        self.email = cdk.CfnParameter(
-            self,
-            id="Email",
-            type="String",
-            description="Email to notify with personalize workflow results",
-            default="",
-            max_length=50,
-            allowed_pattern=r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$|^$)",
-            constraint_description="Must be a valid email address or blank",
-        )
-        self.solutions_template_options.add_parameter(
-            self.email, "Email", "Solution Configuration"
-        )
-        self.email_provided = CfnCondition(
-            self,
-            "EmailProvided",
-            expression=Fn.condition_not(Fn.condition_equals(self.email, "")),
         )
 
         # layers
@@ -412,4 +412,10 @@ class PersonalizeStack(SolutionStack):
             "Dashboard",
             value=self.dashboard.name,
             export_name=f"{Aws.STACK_NAME}-Dashboard",
+        )
+        cdk.CfnOutput(
+            self,
+            "SNSTopicArn",
+            value=notifications.topic.topic_arn,
+            export_name=f"{Aws.STACK_NAME}-SNSTopicArn",
         )

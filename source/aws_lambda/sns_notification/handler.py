@@ -67,6 +67,26 @@ class MessageBuilder:
             metrics.add_metric("JobSuccess", unit=MetricUnit.Count, value=1)
             self.message = self._build_success_message()
 
+        self.default = self._build_default_message()
+        self.sms = self._build_sms_message()
+        self.json = self._build_json_message()
+
+    def _build_json_message(self):
+        return json.dumps(
+            {
+                "datasetGroup": self.dataset_group,
+                "status": "UPDATE FAILED" if self.error else "UPDATE COMPLETE",
+                "summary": self._build_default_message(),
+                "description": self.message,
+            }
+        )
+
+    def _build_default_message(self) -> str:
+        return f"The personalization workflow for {self.dataset_group} completed {'with errors' if self.error else 'successfully'}"
+
+    def _build_sms_message(self) -> str:
+        return self._build_default_message()
+
     def _build_error_message(self) -> str:
         """
         Build the error message
@@ -116,12 +136,21 @@ def lambda_handler(event, context):
     :return: None
     """
     sns = get_service_client("sns")
-    message = MessageBuilder(event, context).message
+    message_builder = MessageBuilder(event, context)
     subject = f"{solution_name()} Notifications"
 
     logger.info("publishing message for event", extra={"event": event})
     sns.publish(
         TopicArn=topic_arn(),
-        Message=message,
+        Message=json.dumps(
+            {
+                "default": message_builder.default,
+                "sms": message_builder.sms,
+                "email": message_builder.message,
+                "email-json": message_builder.json,
+                "sqs": message_builder.json,
+            }
+        ),
+        MessageStructure="json",
         Subject=subject,
     )

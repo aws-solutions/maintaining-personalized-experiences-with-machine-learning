@@ -139,7 +139,10 @@ class Scheduler:
         :return: Generator[str] of the schedules (by name)
         """
         done = False
-        scan_kwargs = {"ProjectionExpression": TASK_PK}
+        scan_kwargs = {
+            "ProjectionExpression": "#name",
+            "ExpressionAttributeNames": {"#name": TASK_PK},
+        }
         start_key = None
         discovered = set()
         while not done:

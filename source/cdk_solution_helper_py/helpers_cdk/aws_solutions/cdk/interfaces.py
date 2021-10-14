@@ -77,9 +77,12 @@ class TemplateOptions:
         return self._metadata
 
     def _get_metadata(self) -> dict:
-        parameter_groups = list(
-            set([parameter.group for parameter in self._parameters])
-        )
+        pgs = set()
+        parameter_groups = [
+            p.group
+            for p in self._parameters
+            if p.group not in pgs and not pgs.add(p.group)
+        ]
         metadata = {
             "AWS::CloudFormation::Interface": {
                 "ParameterGroups": [
