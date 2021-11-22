@@ -24,11 +24,11 @@ from moto import mock_s3, mock_sts
 from aws_lambda.shared.personalize_service import (
     S3,
     Personalize,
-    ServiceModel,
     Configuration,
     get_duplicates,
 )
 from shared.exceptions import ResourceNeedsUpdate, ResourceFailed
+from shared.personalize.service_model import ServiceModel
 from shared.resource import Campaign
 
 
@@ -153,10 +153,10 @@ def test_service_model(personalize_stubber):
     filter_arn_1 = f"arn:aws:personalize:us-east-1:{'1' * 12}:filter/{filter_name_1}"
     filter_arn_2 = f"arn:aws:personalize:us-east-1:{'1' * 12}:filter/{filter_name_2}"
     campaign_arn_1 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:filter/{campaign_name_1}"
+        f"arn:aws:personalize:us-east-1:{'1' * 12}:campaign/{campaign_name_1}"
     )
     campaign_arn_2 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:filter/{campaign_name_2}"
+        f"arn:aws:personalize:us-east-1:{'1' * 12}:campaign/{campaign_name_2}"
     )
 
     # all dataset groups
@@ -201,6 +201,11 @@ def test_service_model(personalize_stubber):
         expected_params={"solutionArn": solution_arn_1},
         service_response={"solutionVersions": []},
     )
+    personalize_stubber.add_response(
+        method="list_event_trackers",
+        expected_params={"datasetGroupArn": dataset_group_arn_1},
+        service_response={"eventTrackers": []},
+    )
 
     # second dataset group
     personalize_stubber.add_response(
@@ -232,6 +237,11 @@ def test_service_model(personalize_stubber):
         method="list_solution_versions",
         expected_params={"solutionArn": solution_arn_2},
         service_response={"solutionVersions": []},
+    )
+    personalize_stubber.add_response(
+        method="list_event_trackers",
+        expected_params={"datasetGroupArn": dataset_group_arn_2},
+        service_response={"eventTrackers": []},
     )
 
     sm = ServiceModel(cli)
@@ -299,6 +309,7 @@ def test_describe_with_update(mocker):
     describe_mock.return_value = {
         "campaign": {
             "solutionVersionArn": arn,
+            "campaignArn": Campaign().arn("campaign_name"),
         }
     }
     personalize.describe_default = describe_mock
@@ -490,3 +501,61 @@ def test_record_offline_metrics(
     assert metrics["precision_at_5"]
     assert metrics["precision_at_10"]
     assert metrics["precision_at_25"]
+
+
+def test_solution_version_update_validation():
+    cfg = Configuration()
+    cfg.config_dict = {
+        "solutions": [
+            {
+                "serviceConfig": {
+                    "name": "valid",
+                    "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization",
+                },
+                "workflowConfig": {
+                    "schedules": {
+                        "full": "cron(0 0 ? * 1 *)",
+                        "update": "cron(0 * * * ? *)",
+                    }
+                },
+            },
+            {
+                "serviceConfig": {
+                    "name": "valid",
+                    "recipeArn": "arn:aws:personalize:::recipe/aws-sims",
+                },
+                "workflowConfig": {
+                    "schedules": {
+                        "full": "cron(0 0 ? * 1 *)",
+                    }
+                },
+            },
+            {
+                "serviceConfig": {
+                    "name": "valid",
+                    "recipeArn": "arn:aws:personalize:::recipe/aws-hrnn-coldstart",
+                },
+                "workflowConfig": {
+                    "schedules": {
+                        "full": "cron(0 0 ? * 1 *)",
+                        "update": "cron(0 * * * ? *)",
+                    }
+                },
+            },
+            {
+                "serviceConfig": {
+                    "name": "invalid",
+                    "recipeArn": "arn:aws:personalize:::recipe/aws-sims",
+                },
+                "workflowConfig": {
+                    "schedules": {
+                        "full": "cron(0 0 ? * 1 *)",
+                        "update": "cron(0 * * * ? *)",
+                    }
+                },
+            },
+        ]
+    }
+    cfg._validate_solution_update()
+    assert len(cfg._configuration_errors) == 1
+    assert cfg._configuration_errors[0].startswith("solution invalid does not support")

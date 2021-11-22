@@ -19,9 +19,9 @@ from aws_cdk.aws_sns import Topic
 from aws_cdk.aws_stepfunctions import StateMachine
 from aws_cdk.core import Construct, Duration
 
+from aws_solutions.cdk.aws_lambda.environment import Environment
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
-from personalize.aws_lambda.functions.environment import Environment
 
 
 class S3EventHandler(SolutionsPythonFunction):

@@ -64,6 +64,12 @@ metrics = Metrics()
             "default": "omit",
             "as": "seconds",
         },
+        "timeStarted": {
+            "source": "event",
+            "path": "workflowConfig.timeStarted",
+            "default": "omit",
+            "as": "iso8601",
+        },
     },
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:

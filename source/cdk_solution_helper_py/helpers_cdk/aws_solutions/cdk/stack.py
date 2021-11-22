@@ -50,12 +50,14 @@ class SolutionStack(Stack):
 
         self.metrics = {}
         self.solution_id = self.node.try_get_context("SOLUTION_ID")
+        self.solution_version = self.node.try_get_context("SOLUTION_VERSION")
         self.mappings = Mappings(self, solution_id=self.solution_id)
         self.solutions_template_filename = validate_template_filename(template_filename)
+        self.description = description.strip(".")
         self.solutions_template_options = TemplateOptions(
             self,
             construct_id=construct_id,
-            description=f"({self.solution_id}) {description}",
+            description=f"({self.solution_id}) - {self.description}. Version {self.solution_version}",
             filename=template_filename,
         )
 

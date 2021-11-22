@@ -10,8 +10,8 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
-import datetime
 import logging
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -29,7 +29,9 @@ from aws_lambda.shared.sfn_middleware import (
     set_bucket,
     parse_datetime,
     Parameter,
+    set_workflow_config,
 )
+from shared.resource import DatasetGroup
 
 
 @pytest.fixture
@@ -64,7 +66,9 @@ def test_personalize_status_invalid(personalize_resource):
 
 
 @mock_sts
-def test_personalize_resource_decorator(personalize_resource, personalize_stubber):
+def test_personalize_resource_decorator(
+    personalize_resource, personalize_stubber, notifier_stubber
+):
     """
     The typical workflow is to describe, then create, then raise ResourcePending
     """
@@ -73,7 +77,11 @@ def test_personalize_resource_decorator(personalize_resource, personalize_stubbe
         "describe_dataset_group", "ResourceNotFoundException"
     )
     personalize_stubber.add_response(
-        "create_dataset_group", {}, expected_params={"name": dsg_name}
+        "create_dataset_group",
+        service_response={"datasetGroupArn": DatasetGroup().arn(dsg_name)},
+        expected_params={
+            "name": dsg_name,
+        },
     )
 
     @personalize_resource
@@ -87,7 +95,7 @@ def test_personalize_resource_decorator(personalize_resource, personalize_stubbe
 @pytest.mark.parametrize(
     "item,serialized",
     [
-        (datetime.datetime(2020, 1, 1), "2020-01-01T00:00:00"),
+        (datetime(2020, 1, 1), "2020-01-01T00:00:00"),
         (Decimal(1), 1),
         (Decimal(1.5), 1.5),
     ],
@@ -113,11 +121,9 @@ def test_set_defaults_2():
     del defaults["currentDate"]
     del defaults["datasetGroup"]
 
-    assert defaults == {
-        "solutions": [
-            {"solutionVersions": [], "campaigns": [], "batchInferenceJobs": []}
-        ],
-    }
+    assert defaults["solutions"][0]["solutionVersions"] == []
+    assert defaults["solutions"][0]["campaigns"] == []
+    assert defaults["solutions"][0]["batchInferenceJobs"] == []
 
 
 def test_set_defaults_3():
@@ -203,4 +209,76 @@ def test_parameter_resolution(key, source, path, format_as, default, result):
             default=default,
         ).resolve(event)
         == result
+    )
+
+
+def test_set_workflow_config():
+    result = set_workflow_config(
+        {
+            "datasetGroup": {
+                "serviceConfig": {"datasetGroup": "should-not-change"},
+                "workflowConfig": {"maxAge": "one day"},
+            },
+            "eventTracker": {
+                "serviceConfig": {},
+            },
+            "datasets": {
+                "users": {
+                    "dataset": {"serviceConfig": {}},
+                    "schema": {"serviceConfig": {}},
+                },
+                "items": {
+                    "dataset": {"serviceConfig": {}},
+                    "schema": {"serviceConfig": {}},
+                },
+                "interactions": {
+                    "dataset": {"serviceConfig": {}},
+                    "schema": {"serviceConfig": {}},
+                },
+            },
+            "filters": [{"serviceConfig": {}}],
+            "solutions": [
+                {
+                    "serviceConfig": {"datasetGroup": "should-not-change"},
+                    "campaigns": [
+                        {
+                            "serviceConfig": {},
+                            "workflowConfig": {"maxAge": "should-not-change"},
+                        },
+                        {"serviceConfig": {}},
+                    ],
+                    "batchInferenceJobs": [
+                        {
+                            "serviceConfig": {},
+                        }
+                    ],
+                },
+                {"serviceConfig": {}},
+            ],
+        }
+    )
+
+    # all workflowConfig should be set
+    assert result.get("datasetGroup").get("workflowConfig")
+    assert all(s.get("workflowConfig") for s in result["solutions"])
+    assert all(f.get("workflowConfig") for f in result["filters"])
+    assert all(c.get("workflowConfig") for c in result["solutions"][0]["campaigns"])
+    assert all(
+        c.get("workflowConfig") for c in result["solutions"][0]["batchInferenceJobs"]
+    )
+
+    # keys under serviceConfig should not change
+    assert (
+        result.get("datasetGroup").get("serviceConfig").get("datasetGroup")
+        == "should-not-change"
+    )
+    assert (
+        result.get("solutions")[0].get("serviceConfig").get("datasetGroup")
+        == "should-not-change"
+    )
+
+    # overrides to the default must remain unchanged
+    assert (
+        result.get("solutions")[0]["campaigns"][0]["workflowConfig"]["maxAge"]
+        == "should-not-change"
     )

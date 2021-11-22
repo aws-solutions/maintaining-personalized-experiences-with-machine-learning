@@ -17,12 +17,14 @@ import decimal
 import json
 import os
 from dataclasses import dataclass, field
+from enum import Enum, auto
 from pathlib import Path
 from typing import Dict, Any, Callable, Optional, List, Union
 from uuid import uuid4
 
 import jmespath
 from aws_lambda_powertools import Logger
+from dateutil.parser import isoparse
 
 from aws_solutions.core import get_service_client
 from shared.date_helpers import parse_datetime
@@ -35,6 +37,8 @@ from shared.exceptions import (
 from shared.personalize_service import Personalize
 from shared.resource import get_resource
 
+logger = Logger()
+
 STATUS_IN_PROGRESS = (
     "CREATE PENDING",
     "CREATE IN_PROGRESS",
@@ -44,7 +48,18 @@ STATUS_IN_PROGRESS = (
 STATUS_FAILED = "CREATE FAILED"
 STATUS_ACTIVE = "ACTIVE"
 
-logger = Logger()
+WORKFLOW_PARAMETERS = {
+    "maxAge",
+    "timeStarted",
+}
+WORKFLOW_CONFIG_DEFAULT = {
+    "timeStarted": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+}
+
+
+class Arity(Enum):
+    ONE = auto()
+    MANY = auto()
 
 
 def json_handler(item):
@@ -55,6 +70,41 @@ def json_handler(item):
     elif isinstance(item, decimal.Decimal) and item.as_integer_ratio()[1] != 1:
         return float(item)
     raise TypeError("Unknown Type")
+
+
+def set_workflow_config(config: Dict) -> Dict:
+    """
+    Set the defaults for workflowConfiguration for all configured items
+    :param config: the configuration dictionary
+    :return: the configuration with defaults set
+    """
+
+    resources = {
+        "datasetGroup": Arity.ONE,
+        "solutions": Arity.MANY,
+        "campaigns": Arity.MANY,
+        "batchInferenceJobs": Arity.MANY,
+        "filters": Arity.MANY,
+        "solutionVersion": Arity.ONE,
+    }
+    # Note: schema creation notification is not supported at this time
+    # Note: dataset, dataset import job, event tracker notifications are added in the workflow
+
+    for k, v in config.items():
+        if k in {"serviceConfig", "workflowConfig", "bucket", "currentDate"}:
+            pass  # do not modify any serviceConfig keys
+        elif k in resources.keys() and resources[k] == Arity.ONE:
+            config[k].setdefault("workflowConfig", {})
+            config[k]["workflowConfig"] |= WORKFLOW_CONFIG_DEFAULT
+        elif k in resources.keys() and resources[k] == Arity.MANY:
+            for idx, i in enumerate(v):
+                config[k][idx].setdefault("workflowConfig", {})
+                config[k][idx]["workflowConfig"] |= WORKFLOW_CONFIG_DEFAULT
+                config[k][idx] = set_workflow_config(config[k][idx])
+        else:
+            config[k] = set_workflow_config(config[k]) if config[k] else config[k]
+
+    return config
 
 
 def set_defaults(config: Dict) -> Dict:
@@ -122,6 +172,8 @@ class Parameter:
             return json.dumps(resolved)
         elif self.format_as == "seconds":
             return parse_datetime(resolved)
+        elif self.format_as == "iso8601":
+            return isoparse(resolved)
         elif self.format_as == "int":
             return int(resolved)
         else:
@@ -226,7 +278,7 @@ class PersonalizeResource:
                 continue
             if self.resource == "solutionVersion" and expected_key == "trainingMode":
                 continue
-            if expected_key == "maxAge":
+            if expected_key in WORKFLOW_PARAMETERS:
                 continue
 
             if actual_value != expected_value:

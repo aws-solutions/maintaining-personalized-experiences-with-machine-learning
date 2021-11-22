@@ -10,12 +10,13 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
+from pathlib import Path
 
 import aws_cdk.aws_iam as iam
 from aws_cdk.aws_s3 import IBucket
 from aws_cdk.core import Construct, Aws
 
-from personalize.aws_lambda.functions.solutionstep import SolutionStep
+from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 
 
 class CreateBatchInferenceJob(SolutionStep):
@@ -63,6 +64,13 @@ class CreateBatchInferenceJob(SolutionStep):
             scope,
             id,
             layers=layers,
+            entrypoint=(
+                Path(__file__).absolute().parents[4]
+                / "aws_lambda"
+                / "create_batch_inference_job"
+                / "handler.py"
+            ),
+            libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
 
     def _set_permissions(self):

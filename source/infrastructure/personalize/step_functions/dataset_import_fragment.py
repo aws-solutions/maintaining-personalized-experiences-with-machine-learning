@@ -69,7 +69,8 @@ class DatasetImportFragment(StateMachineFragment):
                                                 },
                                             },
                                             "workflowConfig": {
-                                                "maxAge.$": "$.datasetGroup.workflowConfig.maxAge"
+                                                "maxAge.$": "$.datasetGroup.workflowConfig.maxAge",  # NOSONAR (python:S1192) - string for clarity
+                                                "timeStarted.$": "$$.State.EnteredTime"  # NOSONAR (python:S1192) - string for clarity
                                             }
                                         }),
                                         result_path=JsonPath.DISCARD,
@@ -86,7 +87,8 @@ class DatasetImportFragment(StateMachineFragment):
                                                 },
                                             },
                                             "workflowConfig": {
-                                                "maxAge.$": "$.datasetGroup.workflowConfig.maxAge"
+                                                "maxAge.$": "$.datasetGroup.workflowConfig.maxAge",  # NOSONAR (python:S1192) - string for clarity
+                                                "timeStarted.$": "$$.State.EnteredTime",  # NOSONAR (python:S1192) - string for clarity
                                             }
                                         }),
                                         result_path=JsonPath.DISCARD,
@@ -101,10 +103,16 @@ class DatasetImportFragment(StateMachineFragment):
                                               result_path=f"$.datasets.{id.lower()}.schema.serviceConfig")
                           .next(create_dataset.state(self, f"Create {id} Dataset",
                                                      payload=TaskInput.from_object({
-                                                         "name.$": f"$.datasets.{id.lower()}.dataset.serviceConfig.name",
-                                                         "schemaArn.$": f"$.datasets.{id.lower()}.schema.serviceConfig.schemaArn",
-                                                         "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
-                                                         "datasetType": f"{id.lower()}",
+                                                         "serviceConfig": {
+                                                            "name.$": f"$.datasets.{id.lower()}.dataset.serviceConfig.name",
+                                                            "schemaArn.$": f"$.datasets.{id.lower()}.schema.serviceConfig.schemaArn",
+                                                            "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
+                                                            "datasetType": f"{id.lower()}",
+                                                         },
+                                                         "workflowConfig": {
+                                                             "maxAge.$": "$.datasetGroup.workflowConfig.maxAge",
+                                                             "timeStarted.$": "$$.State.EnteredTime",
+                                                         }
                                                      }),
                                                      result_path=f"$.datasets.{id.lower()}.dataset.serviceConfig",
                                                      **retry_config))

@@ -92,12 +92,14 @@ def test_solution_stack():
     stack_description = "stack description"
     stack_filename = "stack-name.template"
 
-    app = App(context={"SOLUTION_ID": stack_id})
+    app = App(context={"SOLUTION_ID": stack_id, "SOLUTION_VERSION": "v0.0.1"})
     SolutionStack(app, "stack", stack_description, stack_filename)
 
     template = app.synth().stacks[0].template
 
-    assert template["Description"] == f"({stack_id}) {stack_description}"
+    assert (
+        template["Description"] == f"({stack_id}) - {stack_description}. Version v0.0.1"
+    )
     assert template["Metadata"] == {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [],

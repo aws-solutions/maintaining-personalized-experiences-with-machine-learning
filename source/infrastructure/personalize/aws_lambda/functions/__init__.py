@@ -15,6 +15,7 @@ from personalize.aws_lambda.functions.create_batch_inference_job import (
     CreateBatchInferenceJob,
 )
 from personalize.aws_lambda.functions.create_campaign import CreateCampaign
+from personalize.aws_lambda.functions.create_config import CreateConfig
 from personalize.aws_lambda.functions.create_dataset import CreateDataset
 from personalize.aws_lambda.functions.create_dataset_group import CreateDatasetGroup
 from personalize.aws_lambda.functions.create_dataset_import_job import (
@@ -30,4 +31,3 @@ from personalize.aws_lambda.functions.create_solution_version import (
 )
 from personalize.aws_lambda.functions.create_timestamp import CreateTimestamp
 from personalize.aws_lambda.functions.s3_event import S3EventHandler
-from personalize.aws_lambda.functions.sns_notification import SNSNotification

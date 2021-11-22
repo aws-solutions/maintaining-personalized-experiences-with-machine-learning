@@ -17,7 +17,7 @@ Steps to reproduce the behavior.
 A clear and concise description of what you expected to happen.
 
 **Please complete the following information about the solution:**
-- [ ] Version: [e.g. v1.0.0]
+- [ ] Version: [e.g. v0.0.1]
 
 To get the version of the solution, you can look at the description of the created CloudFormation stack. For example, "(SO0170) Maintaining Personalized Experiences with Machine Learning [...]".
 
