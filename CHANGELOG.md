@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2021-11-22
+### Added
+- The solution now creates an Amazon EventBridge event bus, and puts messages to the bus when resources have been
+created by the workflow. This can be useful when integrating with external systems. 
+- The solution now contains a command line interface (CLI) that allows schedule creation for existing resources in
+Amazon Personalize. 
+
 ## [1.0.1] - 2021-10-01
 ### Added
 - The solution now exports the Amazon SNS Topic ARN as `SNSTopicArn`.

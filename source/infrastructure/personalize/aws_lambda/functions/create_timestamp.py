@@ -10,10 +10,11 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
+from pathlib import Path
 
 from aws_cdk.core import Construct
 
-from personalize.aws_lambda.functions.solutionstep import SolutionStep
+from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 
 
 class CreateTimestamp(SolutionStep):
@@ -23,7 +24,17 @@ class CreateTimestamp(SolutionStep):
         id: str,
         layers=None,
     ):
-        super().__init__(scope, id, layers=layers)
+        super().__init__(
+            scope,
+            id,
+            layers=layers,
+            entrypoint=(
+                Path(__file__).absolute().parents[4]
+                / "aws_lambda"
+                / "create_timestamp"
+                / "handler.py"
+            ),
+        )
 
     def _set_permissions(self):
         pass  # NOSONAR (python:S1186) - no permissions required

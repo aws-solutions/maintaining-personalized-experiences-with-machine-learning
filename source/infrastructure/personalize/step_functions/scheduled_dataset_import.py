@@ -17,7 +17,7 @@ from aws_cdk.core import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
-from personalize.aws_lambda.functions.solutionstep import SolutionStep
+from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 from personalize.step_functions.dataset_imports_fragment import DatasetImportsFragment
 from personalize.step_functions.failure_fragment import FailureFragment
 
@@ -30,6 +30,7 @@ class ScheduledDatasetImport(Construct):
         dataset_management_functions: Dict[str, SolutionStep],
         create_timestamp: SolutionStep,
         notifications: SolutionStep,
+        prepare_input: SolutionStep,
     ):
         super().__init__(scope, construct_id)
 
@@ -45,7 +46,9 @@ class ScheduledDatasetImport(Construct):
                 .branch(
                     create_timestamp.state(
                         self, "Set Current Timestamp", result_path="$.currentDate"
-                    ).next(
+                    )
+                    .next(prepare_input.state(self, "Prepare Input"))
+                    .next(
                         DatasetImportsFragment(
                             self,
                             "Handle Periodic Dataset Imports",

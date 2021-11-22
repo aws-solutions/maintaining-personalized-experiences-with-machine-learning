@@ -22,8 +22,6 @@ def ignore_globs(*globs):
     Patterns is a sequence of glob-style patterns
     that are used to exclude files"""
 
-    # globs = globs + tuple([glob[:-2] for glob in globs if glob.endswith('/*')])  # ignore folders
-
     def _ignore_globs(path, names):
         ignored_names = []
         paths = [Path(os.path.join(path, name)).resolve() for name in names]

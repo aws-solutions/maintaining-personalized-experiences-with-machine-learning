@@ -19,15 +19,18 @@ from moto.core import ACCOUNT_ID
 from moto.dynamodb2 import mock_dynamodb2
 from moto.stepfunctions import mock_stepfunctions
 
-from aws_lambda.scheduler.handler import (
+from aws_solutions.scheduler.cdk.aws_lambda.scheduler.handler import (
     create_schedule,
     read_schedule,
     update_schedule,
     delete_schedule,
 )
-from shared.scheduler.base import Scheduler
-from shared.scheduler.schedule import Schedule, ScheduleError
-from shared.scheduler.task import Task
+from aws_solutions.scheduler.common import (
+    Scheduler,
+    Schedule,
+    ScheduleError,
+    Task,
+)
 
 
 @pytest.fixture
@@ -119,7 +122,9 @@ def scheduler(scheduler_table, scheduler_stepfunctions, mocker):
     _scheduler = Scheduler()
     _scheduler.sfn_cli = sfn_cli
     _scheduler.stepfunction = sfn_arn
-    mocker.patch("aws_lambda.scheduler.handler.scheduler", _scheduler)
+    mocker.patch(
+        "aws_solutions.scheduler.cdk.aws_lambda.scheduler.handler.scheduler", _scheduler
+    )
 
     yield _scheduler
 
