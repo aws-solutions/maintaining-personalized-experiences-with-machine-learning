@@ -25,11 +25,11 @@ from aws_cdk.aws_stepfunctions import (
 )
 from aws_cdk.core import Construct, Duration
 
+from aws_solutions.scheduler.cdk.construct import Scheduler
+from aws_solutions.scheduler.cdk.scheduler_fragment import SchedulerFragment
 from personalize.aws_lambda.functions import (
     CreateBatchInferenceJob,
 )
-from personalize.scheduler import Scheduler
-from personalize.step_functions.scheduler_fragment import SchedulerFragment
 
 TEMPORARY_PATH = "$._tmp"
 BATCH_INFERENCE_JOB_PATH = "$.batchInferenceJob"

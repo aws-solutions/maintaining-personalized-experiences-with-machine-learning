@@ -35,6 +35,10 @@ The template includes the following components:
     2. Perform solution FULL retraining on schedule (and update associated campaigns)
     3. Perform solution UPDATE retraining on schedule (and update associated campaigns)
     4. Create batch inference jobs
+9. An Amazon EventBridge event bus, where resource status notification updates are posted throughout the AWS Step
+functions workflow 
+10. A command line interface (CLI) lets existing resources be imported and allows schedules to be established for
+resources that already exist in Amazon Personalize
 
 
 **Note**: From v1.0.0, AWS CloudFormation template resources are created by the [AWS CDK](https://aws.amazon.com/cdk/) 
@@ -287,9 +291,9 @@ To customize the solution, follow the steps below:
 The following procedures assumes that all the OS-level configuration has been completed. They are:
 
 * [AWS Command Line Interface](https://aws.amazon.com/cli/)
-* [Python](https://www.python.org/) 3.7 or newer
+* [Python](https://www.python.org/) 3.9 or newer
 * [Node.js](https://nodejs.org/en/) 16.x or newer 
-* [AWS CDK](https://aws.amazon.com/cdk/) 1.95.2 or newer 
+* [AWS CDK](https://aws.amazon.com/cdk/) 1.126.0 or newer 
 * [Amazon Corretto OpenJDK](https://docs.aws.amazon.com/corretto/) 11 
 
 > **Please ensure you test the templates before updating any production deployments.**
@@ -360,7 +364,7 @@ build-s3-cdk-dist \
   S3 bucket where the name is `<DIST_BUCKET_PREFIX>-<REGION_NAME>`. The solution's CloudFormation template will expect the
   source code to be located in the bucket matching that name.
 - `$SOLUTION_NAME` - The name of This solution (example: personalize-solution-customization)
-- `$VERSION` - The version number to use (example: v1.0.1)
+- `$VERSION` - The version number to use (example: v0.0.1)
 - `$REGION_NAME` - The region name to use (example: us-east-1)
 
 This will result in all global assets being pushed to the `DIST_BUCKET_PREFIX`, and all regional assets being pushed to 

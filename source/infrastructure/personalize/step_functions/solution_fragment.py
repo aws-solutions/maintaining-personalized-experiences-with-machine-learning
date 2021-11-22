@@ -26,13 +26,13 @@ from aws_cdk.aws_stepfunctions import (
 )
 from aws_cdk.core import Construct, Duration
 
+from aws_solutions.scheduler.cdk.construct import Scheduler
 from personalize.aws_lambda.functions import (
     CreateSolution,
     CreateSolutionVersion,
     CreateCampaign,
     CreateBatchInferenceJob,
 )
-from personalize.scheduler import Scheduler
 from personalize.step_functions.batch_inference_jobs_fragment import (
     BatchInferenceJobsFragment,
 )
@@ -96,7 +96,8 @@ class SolutionFragment(StateMachineFragment):
                     "trainingMode": "FULL"
                 },
                 "workflowConfig": {
-                    "maxAge": "365 days"  # do not create a new solution version on new file upload
+                    "maxAge": "365 days",  # do not create a new solution version on new file upload
+                    "timeStarted.$": "$$.State.EnteredTime",
                 }
             },
             result_path = "$.solution.solutionVersion",  # NOSONAR (python:S1192) - string for clarity
@@ -155,7 +156,8 @@ class SolutionFragment(StateMachineFragment):
                         },
                         "workflowConfig": {
                             "maxAge.$": "$.solution.solutionVersion.workflowConfig.maxAge",
-                            "solutionVersionArn.$": f"{TEMPORARY_PATH}.errorInfo.errorMessage"
+                            "solutionVersionArn.$": f"{TEMPORARY_PATH}.errorInfo.errorMessage",
+                            "timeStarted.$": "$$.State.EnteredTime",
                         }
                     },
                     result_path="$.solution.solutionVersion"

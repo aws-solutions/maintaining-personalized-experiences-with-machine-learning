@@ -1,4 +1,5 @@
 ../../../../../../cdk_solution_helper_py/helpers_common
+../../../../../../scheduler/common
 avro==1.10.2
 cronex==0.1.3.1
 jmespath==0.10.0

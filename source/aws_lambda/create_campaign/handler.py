@@ -52,8 +52,14 @@ metrics = Metrics()
             "default": "omit",
             "as": "seconds",
         },
+        "timeStarted": {
+            "source": "event",
+            "path": "workflowConfig.timeStarted",
+            "default": "omit",
+            "as": "iso8601",
+        },
     },
-    status="campaign.status",
+    status="campaign.latestCampaignUpdate.status || campaign.status",
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
     """Create a campaign in Amazon Personalize based on the configuration in `event`

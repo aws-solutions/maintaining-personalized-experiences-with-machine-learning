@@ -14,6 +14,7 @@ import os
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Dict
 
 import jsii
 import pytest
@@ -33,6 +34,10 @@ from aws_solutions.core import get_service_client
 shared_path = str(Path(__file__).parent.parent / "aws_lambda")
 if shared_path not in sys.path:
     sys.path.insert(0, shared_path)
+
+
+from shared.notifiers.base import Notifier
+from shared.resource import Resource
 
 
 class Solution:
@@ -61,6 +66,9 @@ def solution_env():
     os.environ[
         "STATE_MACHINE_ARN"
     ] = f"arn:aws:states:us-east-1:{'1'*12}:stateMachine:personalize-workflow"
+    os.environ[
+        "EVENT_BUS_ARN"
+    ] = f"arn:aws:events:us-east-1:{'1'*12}:event-bus/PersonalizeEventBus"
     yield
 
 
@@ -123,3 +131,60 @@ def cdk_lambda_mocks(mocker, request):
 @pytest.fixture
 def configuration_path():
     return Path(__file__).parent / "fixtures" / "config" / "sample_config.json"
+
+
+class NotifierStub(Notifier):
+    def __init__(self):
+        self.creation_notifications = []
+        self.completion_notifications = []
+
+    @property
+    def has_notified_for_creation(self) -> bool:
+        if len(self.creation_notifications) > 1:
+            raise ValueError("should not notify for creation more than once")
+        return len(self.creation_notifications) == 1
+
+    @property
+    def has_notified_for_complete(self) -> bool:
+        if len(self.completion_notifications) > 1:
+            raise ValueError("should not notify for completion more than once")
+        return len(self.completion_notifications) == 1
+
+    @property
+    def latest_notification_status(self):
+        if self.has_notified_for_complete and self.has_notified_for_creation:
+            raise ValueError("should not notifiy for both creation and completion")
+
+        if self.has_notified_for_creation:
+            status = self.creation_notifications[0]["status"]
+        elif self.has_notified_for_complete:
+            status = self.completion_notifications[0]["status"]
+        else:
+            raise ValueError("no notifications have been requested")
+
+        return status
+
+    def notify_create(self, status: str, resource: Resource, result: Dict):
+        self.creation_notifications.append(
+            {
+                "resource": resource.name.camel,
+                "result": result,
+                "status": status,
+            }
+        )
+
+    def notify_complete(self, status: str, resource: Resource, result: Dict):
+        self.completion_notifications.append(
+            {
+                "resource": resource.name.camel,
+                "result": result,
+                "status": status,
+            }
+        )
+
+
+@pytest.fixture(scope="function")
+def notifier_stubber(mocker):
+    notifier = NotifierStub()
+    mocker.patch("shared.events.NOTIFY_LIST", [notifier])
+    yield notifier

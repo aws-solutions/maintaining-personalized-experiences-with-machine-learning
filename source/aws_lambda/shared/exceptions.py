@@ -30,3 +30,7 @@ class ResourceInvalid(Exception):
 
 class ResourceNeedsUpdate(Exception):
     pass
+
+
+class NotificationError(Exception):
+    pass

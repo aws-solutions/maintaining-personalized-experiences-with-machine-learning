@@ -11,5 +11,4 @@
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
 
-from personalize.aws_lambda.layers.aws_lambda_powertools.layer import PowertoolsLayer
 from personalize.aws_lambda.layers.aws_solutions.layer import SolutionsLayer

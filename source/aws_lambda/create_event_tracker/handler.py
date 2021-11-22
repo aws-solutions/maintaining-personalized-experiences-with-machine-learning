@@ -31,11 +31,17 @@ metrics = Metrics()
     config={
         "name": {
             "source": "event",
-            "path": "name",
+            "path": "serviceConfig.name",
         },
         "datasetGroupArn": {
             "source": "event",
-            "path": "datasetGroupArn",
+            "path": "serviceConfig.datasetGroupArn",
+        },
+        "timeStarted": {
+            "source": "event",
+            "path": "workflowConfig.timeStarted",
+            "default": "omit",
+            "as": "iso8601",
         },
     },
 )

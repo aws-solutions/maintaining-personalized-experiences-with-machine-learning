@@ -10,6 +10,7 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  #
 #  the specific language governing permissions and limitations under the License.                                     #
 # #####################################################################################################################
+from pathlib import Path
 from typing import Optional
 
 from aws_cdk.aws_sns import Subscription, SubscriptionProtocol
@@ -24,7 +25,7 @@ from aws_cdk.core import (
 from aws_solutions_constructs.aws_lambda_sns import LambdaToSns
 
 from aws_solutions.cdk.aspects import ConditionalResources
-from personalize.aws_lambda.functions.solutionstep import SolutionStep
+from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 
 
 class Notifications(SolutionStep):
@@ -42,7 +43,19 @@ class Notifications(SolutionStep):
         self.topic = None  # delay creation until after parent is setup
         self.subscription = None  # delay creation until after parent is setup
 
-        super().__init__(scope, id, layers=layers, failure_state=failure_state)
+        super().__init__(
+            scope,
+            id,
+            layers=layers,
+            failure_state=failure_state,
+            entrypoint=(
+                Path(__file__).absolute().parents[3]
+                / "aws_lambda"
+                / "sns_notification"
+                / "handler.py"
+            ),
+            libraries=[Path(__file__).absolute().parents[3] / "aws_lambda" / "shared"],
+        )
 
     def create_sns(self):
         """

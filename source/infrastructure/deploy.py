@@ -34,7 +34,7 @@ def build_app(context):
     PersonalizeStack(
         app,
         "PersonalizeStack",
-        description="Deploy, deliver and maintain personalized experiences with Amazon Personalize",
+        description=f"Deploy, deliver and maintain personalized experiences with Amazon Personalize",
         template_filename="maintaining-personalized-experiences-with-machine-learning.template",
         synthesizer=solution.synthesizer,
     )

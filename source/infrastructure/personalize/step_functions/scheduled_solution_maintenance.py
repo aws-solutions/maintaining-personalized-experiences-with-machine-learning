@@ -16,13 +16,14 @@ from aws_cdk.core import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
+from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 from personalize.aws_lambda.functions import (
     CreateBatchInferenceJob,
     CreateSolution,
     CreateSolutionVersion,
     CreateCampaign,
 )
-from personalize.aws_lambda.functions.solutionstep import SolutionStep
+from personalize.aws_lambda.functions.prepare_input import PrepareInput
 from personalize.step_functions.failure_fragment import FailureFragment
 from personalize.step_functions.solution_fragment import SolutionFragment
 
@@ -36,6 +37,7 @@ class ScheduledSolutionMaintenance(Construct):
         create_solution_version: CreateSolutionVersion,
         create_campaign: CreateCampaign,
         create_batch_inference_job: CreateBatchInferenceJob,
+        prepare_input: PrepareInput,
         create_timestamp: SolutionStep,
         notifications: SolutionStep,
     ):
@@ -56,7 +58,9 @@ class ScheduledSolutionMaintenance(Construct):
                 .branch(
                     create_timestamp.state(
                         self, "Set Current Timestamp", result_path="$.currentDate"
-                    ).next(
+                    )
+                    .next(prepare_input.state(self, "Prepare Input"))
+                    .next(
                         SolutionFragment(
                             self,
                             "Handle Periodic Solution Maintenance",

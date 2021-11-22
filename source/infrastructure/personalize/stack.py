@@ -12,6 +12,7 @@
 # ######################################################################################################################
 
 from aws_cdk import core as cdk
+from aws_cdk.aws_events import EventBus
 from aws_cdk.aws_s3 import EventType, NotificationKeyFilter
 from aws_cdk.aws_s3_notifications import LambdaDestination
 from aws_cdk.aws_stepfunctions import (
@@ -23,12 +24,14 @@ from aws_cdk.aws_stepfunctions import (
 from aws_cdk.core import CfnCondition, Fn, Aws, Duration
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
+from aws_solutions.cdk.aws_lambda.layers.aws_lambda_powertools import PowertoolsLayer
 from aws_solutions.cdk.cfn_nag import (
     CfnNagSuppression,
     add_cfn_nag_suppressions,
     CfnNagSuppressAll,
 )
 from aws_solutions.cdk.stack import SolutionStack
+from aws_solutions.scheduler.cdk.construct import Scheduler
 from personalize.aws_lambda.functions import (
     S3EventHandler,
     CreateDatasetGroup,
@@ -42,11 +45,12 @@ from personalize.aws_lambda.functions import (
     CreateFilter,
     CreateBatchInferenceJob,
     CreateTimestamp,
+    CreateConfig,
 )
-from personalize.aws_lambda.layers import PowertoolsLayer, SolutionsLayer
+from personalize.aws_lambda.functions.prepare_input import PrepareInput
+from personalize.aws_lambda.layers import SolutionsLayer
 from personalize.cloudwatch.dashboard import Dashboard
 from personalize.s3 import AccessLogsBucket, DataBucket
-from personalize.scheduler import Scheduler
 from personalize.sns.notifications import Notifications
 from personalize.step_functions.dataset_imports_fragment import DatasetImportsFragment
 from personalize.step_functions.event_tracker_fragment import EventTrackerFragment
@@ -132,6 +136,12 @@ class PersonalizeStack(SolutionStack):
         )
 
         # the AWS lambda functions required by the shared step functions
+        create_config = CreateConfig(self, "CreateConfig", layers=common_layers)
+        prepare_input = PrepareInput(
+            self,
+            "Prepare Input",
+            layers=common_layers,
+        )
         create_dataset_group = CreateDatasetGroup(
             self,
             "Create Dataset Group",
@@ -195,6 +205,32 @@ class PersonalizeStack(SolutionStack):
             self, "Create Timestamp", layers=[layer_powertools]
         )
 
+        # EventBridge events can be triggered for resource creation and update
+        # Note: https://github.com/aws/aws-cdk/issues/17338
+        bus_name = (
+            f"aws-solutions-{self.node.try_get_context('SOLUTION_ID')}-{Aws.STACK_NAME}"
+        )
+        event_bus = EventBus(
+            self,
+            id="Notifications",
+            event_bus_name=bus_name,
+        )
+        event_bus.node.default_child.add_override(
+            "Properties.Name",
+            bus_name,
+        )
+
+        create_dataset_group.grant_put_events(event_bus)
+        create_schema.grant_put_events(event_bus)
+        create_dataset.grant_put_events(event_bus)
+        create_dataset_import_job.grant_put_events(event_bus)
+        create_event_tracker.grant_put_events(event_bus)
+        create_solution.grant_put_events(event_bus)
+        create_solution_version.grant_put_events(event_bus)
+        create_campaign.grant_put_events(event_bus)
+        create_batch_inference_job.grant_put_events(event_bus)
+        create_filter.grant_put_events(event_bus)
+
         dataset_management_functions = {
             "create_schema": create_schema,
             "create_dataset": create_dataset,
@@ -215,11 +251,13 @@ class PersonalizeStack(SolutionStack):
             dataset_management_functions=dataset_management_functions,
             create_timestamp=create_timestamp,
             notifications=notifications,
+            prepare_input=prepare_input,
         ).state_machine
 
         solution_maintenance_schedule_sfn = ScheduledSolutionMaintenance(
             self,
             "Scheduled Solution Maintenance",
+            prepare_input=prepare_input,
             create_solution=create_solution,
             create_solution_version=create_solution_version,
             create_campaign=create_campaign,
@@ -267,14 +305,18 @@ class PersonalizeStack(SolutionStack):
         definition = Chain.start(
             Parallel(self, "Manage The Execution")
             .branch(
-                create_dataset_group.state(
+                prepare_input.state(
                     self,
-                    "Create Dataset Group",
-                    backoff_rate=1.02,
-                    interval=Duration.seconds(5),
-                    max_attempts=30,
-                )
-                .next(
+                    "Prepare Input",
+                ) .next(
+                    create_dataset_group.state(
+                        self,
+                        "Create Dataset Group",
+                        backoff_rate=1.02,
+                        interval=Duration.seconds(5),
+                        max_attempts=30,
+                    )
+                ).next(
                     DatasetImportsFragment(
                         self,
                         "Handle Dataset Imports",
@@ -409,6 +451,12 @@ class PersonalizeStack(SolutionStack):
         )
         cdk.CfnOutput(
             self,
+            "SchedulerStepFunctionArn",
+            value=scheduler.state_machine_arn,
+            export_name=f"{Aws.STACK_NAME}-SchedulerStepFunctionArn",
+        )
+        cdk.CfnOutput(
+            self,
             "Dashboard",
             value=self.dashboard.name,
             export_name=f"{Aws.STACK_NAME}-Dashboard",
@@ -418,4 +466,16 @@ class PersonalizeStack(SolutionStack):
             "SNSTopicArn",
             value=notifications.topic.topic_arn,
             export_name=f"{Aws.STACK_NAME}-SNSTopicArn",
+        )
+        cdk.CfnOutput(
+            self,
+            "EventBusArn",
+            value=event_bus.event_bus_arn,
+            export_name=f"{Aws.STACK_NAME}-EventBusArn",
+        )
+        cdk.CfnOutput(
+            self,
+            "CreateConfigFunctionArn",
+            value=create_config.function_arn,
+            export_name=f"{Aws.STACK_NAME}-CreateConfigFunctionArn",
         )

@@ -49,8 +49,8 @@ setuptools.setup(
         ]
     },
     install_requires=[
-        "aws-cdk.core>=1.120.0",
-        "aws-cdk.aws_lambda>=1.120.0",
+        "aws-cdk.core>=1.126.0",
+        "aws-cdk.aws_lambda>=1.126.0",
         "Click>=7.1.2",
         "boto3>=1.17.52",
         "requests>=2.24.0",

@@ -30,6 +30,8 @@ from aws_solutions.core import (
     get_aws_region,
     get_aws_account,
 )
+from aws_solutions.scheduler.common import ScheduleError, Schedule
+from shared.events import Notifies
 from shared.exceptions import (
     ResourcePending,
     ResourceNeedsUpdate,
@@ -50,7 +52,6 @@ from shared.resource import (
     Campaign,
 )
 from shared.s3 import S3
-from shared.scheduler import Schedule, ScheduleError
 
 logger = Logger()
 metrics = Metrics()
@@ -58,7 +59,11 @@ metrics = Metrics()
 STATUS_CREATING = ("ACTIVE", "CREATE PENDING", "CREATE IN_PROGRESS")
 CRON_ANY_WILDCARD = "?"
 CRON_MIN_MAX_YEAR = (1970, 2199)
-SOLUTION_PARAMETERS = (("maxAge", Resource), ("solutionVersionArn", SolutionVersion))
+WORKFLOW_PARAMETERS = (
+    ("maxAge", Resource),
+    ("timeStarted", Resource),
+    ("solutionVersionArn", SolutionVersion),
+)
 
 
 def get_duplicates(items):
@@ -92,6 +97,7 @@ class Personalize:
             for item in page[resource_key]:
                 yield item
 
+    @Notifies("ACTIVE")
     def describe(self, resource: Resource, **kwargs):
         """
         Describe a resource in Amazon Personalize
@@ -126,6 +132,11 @@ class Personalize:
         describe_fn = getattr(self.cli, describe_fn_name)
         return describe_fn(**self.arn(resource, kwargs["name"]))
 
+    def describe_by_arn(self, resource: Resource, arn: str):
+        describe_fn_name = f"describe_{resource.name.snake}"
+        describe_fn = getattr(self.cli, describe_fn_name)
+        return describe_fn(**{f"{resource.name.camel}Arn": arn})
+
     def _check_solution(self, sv_arn_expected: str, sv_arn_received: str) -> bool:
         """
         Check if solution versions sv_received and sv_expected have the same solution ARN
@@ -149,6 +160,7 @@ class Personalize:
         :param kwargs: the resource keyword arguments to validate
         :return: the response from Amazon Personalize
         """
+        kwargs = self._remove_workflow_parameters(resource, kwargs.copy())
         result = self.describe_default(resource, **kwargs)
         for k, v in kwargs.items():
             received = result[resource.name.camel][k]
@@ -159,16 +171,18 @@ class Personalize:
                 self._check_solution(expected, received)
 
             if result[resource.name.camel].get(k) != v:
-                raise ResourceNeedsUpdate()
+                raise ResourceNeedsUpdate(
+                    result[resource.name.camel][f"{resource.name.camel}Arn"]
+                )
         return result
 
-    def _remove_solution_parameters(self, resource: Resource, kwargs):
+    def _remove_workflow_parameters(self, resource: Resource, kwargs):
         """
-        Remove solution parameters for the keyword arguments presented
+        Remove workflow parameters for the keyword arguments presented
         :param kwargs:
         :return: the kwargs with the solution parameters removed
         """
-        for key, resource_type in SOLUTION_PARAMETERS:
+        for key, resource_type in WORKFLOW_PARAMETERS:
             if isinstance(resource, resource_type):
                 kwargs.pop(key, None)
         return kwargs
@@ -374,9 +388,13 @@ class Personalize:
             **kwargs,
         )
 
+    @Notifies("UPDATING")
     def update(self, resource: Resource, **kwargs):
         update_fn_name = f"update_{resource.name.snake}"
         update_fn = getattr(self.cli, update_fn_name)
+
+        # always remove the workflow configuration parameters before update
+        kwargs = self._remove_workflow_parameters(resource, kwargs)
 
         # set up the ARN to update
         kwargs_arn = self.arn(resource, kwargs.pop("name"))
@@ -395,12 +413,13 @@ class Personalize:
 
         return result
 
+    @Notifies("CREATING")
     def create(self, resource: Resource, **kwargs):
         create_fn_name = f"create_{resource.name.snake}"
         create_fn = getattr(self.cli, create_fn_name)
 
         # always remove the workflow configuration parameters before create
-        kwargs = self._remove_solution_parameters(resource, kwargs)
+        kwargs = self._remove_workflow_parameters(resource, kwargs)
 
         try:
             result = create_fn(**kwargs)
@@ -468,71 +487,6 @@ class Personalize:
         return self.cli.exceptions
 
 
-class ServiceModel:
-    """Lists all resources in Amazon Personalize for lookup against the dataset group ARN"""
-
-    _arn_ownership = {}
-
-    def __init__(self, cli: Personalize):
-        self.cli = cli
-
-        dsgs = self._arns(self.cli.list(DatasetGroup()))
-        for dsg in dsgs:
-            logger.debug(f"listing children of {dsg}")
-            self._list_children(DatasetGroup(), dsg, dsg)
-
-    def owned_by(self, resource_arn, dataset_group_owner: str) -> bool:
-        """
-        Check
-        :param resource_arn: the resource ARN to check
-        :param dataset_group_owner: the dataset group owner expected
-        :return: True if the resource is managed by the dataset group, otherwise False
-        """
-        if not dataset_group_owner.startswith("arn:"):
-            dataset_group_owner = f"arn:{get_aws_partition()}:personalize:{get_aws_region()}:{get_aws_account()}:dataset-group/{dataset_group_owner}"
-
-        return dataset_group_owner == self._arn_ownership.get(resource_arn, False)
-
-    def available(self, resource_arn: str) -> bool:
-        """
-        Check if the requested ARN is available
-        :param resource_arn: requested ARN
-        :return: True if the ARN is available, otherwise False
-        """
-        all_arns = set(self._arn_ownership.keys()).union(
-            set(self._arn_ownership.values())
-        )
-        return resource_arn not in all_arns
-
-    def _list_children(self, parent: Resource, parent_arn, dsg: str) -> None:
-        """
-        Recursively list the children of a resource
-        :param parent: the parent Resource
-        :param parent_arn: the parent Resource ARN
-        :param dsg: the parent dataset group ARN
-        :return: None
-        """
-        for c in parent.children:
-            child_arns = self._arns(
-                self.cli.list(c, filters={f"{parent.name.camel}Arn": parent_arn})
-            )
-
-            for arn in child_arns:
-                logger.debug(f"listing children of {arn}")
-                self._arn_ownership[arn] = dsg
-                self._list_children(c, arn, dsg)
-
-    def _arns(self, l: List[Dict]) -> List[str]:
-        """
-        Lists the first ARN found for each resource in a list of resources
-        :param l: the list of resources
-        :return: the list of ARNs
-        """
-        return [
-            [v for k, v in resource.items() if k.endswith("Arn")][0] for resource in l
-        ]
-
-
 class InputValidator:
     @classmethod
     def validate(cls, method: str, expected_params: Dict) -> None:
@@ -552,7 +506,12 @@ class Configuration:
         {
             "datasetGroup": [
                 "serviceConfig",
-                {"workflowConfig": [{"schedules": ["import"]}, "maxAge"]},
+                {
+                    "workflowConfig": [
+                        {"schedules": ["import"]},
+                        "maxAge",
+                    ]
+                },
             ]
         },
         {
@@ -735,13 +694,9 @@ class Configuration:
             self._validate_resource(Solution(), _solution)
 
     def _validate_solution_update(self):
-        valid_recipes = [
-            "arn:aws:personalize:::recipe/aws-hrnn-coldstart",
-            "arn:aws:personalize:::recipe/aws-user-personalization",
-        ]
         invalid = (
             jmespath.search(
-                f"solutions[?workflowConfig.schedules.update && (serviceConfig.recipeArn != '{valid_recipes[0]}' || serviceConfig.recipeArn != '{valid_recipes[1]}')].serviceConfig.name",
+                "solutions[].{name: serviceConfig.name, recipe: serviceConfig.recipeArn, update: workflowConfig.schedules.update} | @[?update && (!contains(recipe, `aws-hrnn-coldstart`) && !contains(recipe, `aws-user-personalization`))].name",
                 self.config_dict,
             )
             or []

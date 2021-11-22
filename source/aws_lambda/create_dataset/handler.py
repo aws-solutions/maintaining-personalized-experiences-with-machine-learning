@@ -30,17 +30,23 @@ metrics = Metrics()
     config={
         "name": {
             "source": "event",
-            "path": "name",
+            "path": "serviceConfig.name",
         },
         "datasetType": {
             "source": "event",
-            "path": "datasetType",
+            "path": "serviceConfig.datasetType",
         },
         "datasetGroupArn": {
             "source": "event",
-            "path": "datasetGroupArn",
+            "path": "serviceConfig.datasetGroupArn",
         },
-        "schemaArn": {"source": "event", "path": "schemaArn"},
+        "schemaArn": {"source": "event", "path": "serviceConfig.schemaArn"},
+        "timeStarted": {
+            "source": "event",
+            "path": "workflowConfig.timeStarted",
+            "default": "omit",
+            "as": "iso8601",
+        },
     },
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
