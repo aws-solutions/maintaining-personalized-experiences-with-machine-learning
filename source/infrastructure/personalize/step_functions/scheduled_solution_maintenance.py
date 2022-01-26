@@ -12,7 +12,7 @@
 # ######################################################################################################################
 
 from aws_cdk.aws_stepfunctions import StateMachine, Chain, Parallel, TaskInput
-from aws_cdk.core import Construct
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
@@ -22,6 +22,8 @@ from personalize.aws_lambda.functions import (
     CreateSolution,
     CreateSolutionVersion,
     CreateCampaign,
+    CreateBatchSegmentJob,
+    CreateRecommender,
 )
 from personalize.aws_lambda.functions.prepare_input import PrepareInput
 from personalize.step_functions.failure_fragment import FailureFragment
@@ -37,9 +39,11 @@ class ScheduledSolutionMaintenance(Construct):
         create_solution_version: CreateSolutionVersion,
         create_campaign: CreateCampaign,
         create_batch_inference_job: CreateBatchInferenceJob,
+        create_batch_segment_job: CreateBatchSegmentJob,
         prepare_input: PrepareInput,
         create_timestamp: SolutionStep,
         notifications: SolutionStep,
+        create_recommender: CreateRecommender,
     ):
         super().__init__(scope, construct_id)
 
@@ -68,6 +72,8 @@ class ScheduledSolutionMaintenance(Construct):
                             create_solution_version=create_solution_version,
                             create_campaign=create_campaign,
                             create_batch_inference_job=create_batch_inference_job,
+                            create_batch_segment_job=create_batch_segment_job,
+                            create_recommender=create_recommender,
                         )
                     )
                 )

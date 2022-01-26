@@ -13,16 +13,16 @@
 from pathlib import Path
 from typing import Optional
 
-from aws_cdk.aws_sns import Subscription, SubscriptionProtocol
-from aws_cdk.aws_sns import TopicProps
-from aws_cdk.aws_stepfunctions import IChainable
-from aws_cdk.core import (
-    Construct,
+from aws_cdk import (
     CfnParameter,
     CfnCondition,
     Aspects,
 )
+from aws_cdk.aws_sns import Subscription, SubscriptionProtocol
+from aws_cdk.aws_sns import TopicProps
+from aws_cdk.aws_stepfunctions import IChainable
 from aws_solutions_constructs.aws_lambda_sns import LambdaToSns
+from constructs import Construct
 
 from aws_solutions.cdk.aspects import ConditionalResources
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep

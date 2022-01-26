@@ -22,6 +22,8 @@ from shared.resource import (
     SolutionVersion,
     Campaign,
     EventTracker,
+    BatchSegmentJob,
+    BatchInferenceJob,
 )
 
 
@@ -41,6 +43,13 @@ from shared.resource import (
         (SolutionVersion, "solutionVersion", "solution-version", "solution_version"),
         (Campaign, "campaign", "campaign", "campaign"),
         (EventTracker, "eventTracker", "event-tracker", "event_tracker"),
+        (
+            BatchInferenceJob,
+            "batchInferenceJob",
+            "batch-inference-job",
+            "batch_inference_job",
+        ),
+        (BatchSegmentJob, "batchSegmentJob", "batch-segment-job", "batch_segment_job"),
     ],
     ids=[
         "DatasetGroup",
@@ -51,6 +60,8 @@ from shared.resource import (
         "SolutionVersion",
         "Campaign",
         "EventTracker",
+        "BatchInferenceJob",
+        "BatchSegmentJob,",
     ],
 )
 def test_resource_naming(klass, camel, dash, snake):

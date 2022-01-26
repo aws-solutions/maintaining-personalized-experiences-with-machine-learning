@@ -13,13 +13,13 @@
 from pathlib import Path
 from typing import Dict
 
-from aws_cdk.core import (
-    Construct,
+from aws_cdk import (
     CfnResource,
     Fn,
     CfnCondition,
     Aws,
 )
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression

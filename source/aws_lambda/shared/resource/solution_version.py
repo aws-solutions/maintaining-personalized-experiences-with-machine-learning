@@ -12,8 +12,9 @@
 # ######################################################################################################################
 from shared.resource.base import Resource
 from shared.resource.batch_inference_job import BatchInferenceJob
+from shared.resource.batch_segment_job import BatchSegmentJob
 
 
 class SolutionVersion(Resource):
-    children = [BatchInferenceJob()]
+    children = [BatchInferenceJob(), BatchSegmentJob()]
     has_soft_limit = True

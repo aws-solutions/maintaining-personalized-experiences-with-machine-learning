@@ -11,9 +11,13 @@
 #  the specific language governing permissions and limitations under the License.                                     #
 # #####################################################################################################################
 
+from __future__ import annotations
+
 import re
 
-from aws_cdk.core import Stack, Construct
+import jsii
+from aws_cdk import Stack, Aspects, IAspect
+from constructs import Construct, IConstruct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics import Metrics
 from aws_solutions.cdk.interfaces import TemplateOptions
@@ -35,6 +39,17 @@ def validate_solution_id(solution_id: str) -> str:
 
 def validate_template_filename(template_filename: str) -> str:
     return validate_re("template_filename", template_filename, RE_TEMPLATE_FILENAME)
+
+
+@jsii.implements(IAspect)
+class MetricsAspect:
+    def __init__(self, stack: SolutionStack):
+        self.stack = stack
+
+    def visit(self, node: IConstruct):
+        """Called before synthesis, this allows us to set metrics at the end of synthesis"""
+        if node == self.stack:
+            self.stack.metrics = Metrics(self.stack, "Metrics", self.stack.metrics)
 
 
 class SolutionStack(Stack):
@@ -60,7 +75,4 @@ class SolutionStack(Stack):
             description=f"({self.solution_id}) - {self.description}. Version {self.solution_version}",
             filename=template_filename,
         )
-
-    def _prepare(self) -> None:
-        """Called before synthesis, this allows us to set metrics at the end of synthesis"""
-        self.metrics = Metrics(self, "Metrics", self.metrics)
+        Aspects.of(self).add(MetricsAspect(self))

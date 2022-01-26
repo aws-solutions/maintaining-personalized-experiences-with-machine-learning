@@ -11,7 +11,8 @@
 #  the specific language governing permissions and limitations under the License.                                     #
 # #####################################################################################################################
 
-from aws_cdk.core import Construct, CfnMapping
+from aws_cdk import CfnMapping
+from constructs import Construct
 
 
 class Mappings:

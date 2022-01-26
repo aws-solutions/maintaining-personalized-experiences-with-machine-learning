@@ -14,7 +14,7 @@
 import os
 
 import pytest
-from aws_cdk.core import App, Stack
+from aws_cdk import App, Stack
 
 from aws_solutions.cdk.interfaces import TemplateOptions
 from aws_solutions.cdk.mappings import Mappings

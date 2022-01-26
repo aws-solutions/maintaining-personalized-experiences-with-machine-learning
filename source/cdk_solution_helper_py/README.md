@@ -11,7 +11,7 @@ This README summarizes using the tool.
 Install this package. It requires at least
 
 - Python 3.7
-- AWS CDK version 1.95.2 or higher
+- AWS CDK version 2.7.0 or higher
 
 To install the packages: 
 
@@ -62,12 +62,13 @@ This might be a file called `app.py` in your CDK application directory
 import logging
 from pathlib import Path
 
-from aws_cdk import core
-from aws_cdk.core import CfnParameter, Construct
+from aws_cdk import CfnParameter, App
+from constructs import Construct
 
 from aws_solutions.cdk import CDKSolution
 from aws_solutions.cdk.stack import SolutionStack
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
+
 
 # The solution helper build script expects this logger to be used
 logger = logging.getLogger("cdk-helper")
@@ -119,7 +120,7 @@ def build_app(context):
     The @solution.context decorators indicate that those are required CDK context variables
     The solution.synthesizer is required as a synthesizer for each solution stack
     """
-    app = core.App(context=context)
+    app = App(context=context)
 
     # add constructs to your CDK app that are compatible with AWS Solutions
     MyStack(
@@ -182,7 +183,7 @@ export DIST_OUTPUT_BUCKET=my-bucket-name
 export SOLUTION_NAME=my-solution-name
 export VERSION=my-version
 
-build-s3-cdk-dist --source-bucket-name $DIST_OUTPUT_BUCKET --solution-name $SOLUTION_NAME --version-code $VERSION --cdk-app-path ../source/infrastructure/app.py --cdk-app-entrypoint  app:build_app --sync 
+build-s3-cdk-dist deploy --source-bucket-name $DIST_OUTPUT_BUCKET --solution-name $SOLUTION_NAME --version-code $VERSION --cdk-app-path ../source/infrastructure/app.py --cdk-app-entrypoint  app:build_app --sync 
 ```
 
 > **Note**: `build-s3-cdk-dist` will use your current configured `AWS_REGION` and `AWS_PROFILE`. To set your defaults

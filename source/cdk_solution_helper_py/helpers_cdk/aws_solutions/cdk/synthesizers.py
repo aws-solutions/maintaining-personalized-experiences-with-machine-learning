@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import List, Dict
 
 import jsii
-from aws_cdk.core import IStackSynthesizer, DefaultStackSynthesizer, ISynthesisSession
+from aws_cdk import IStackSynthesizer, DefaultStackSynthesizer, ISynthesisSession
 
 logger = logging.getLogger("cdk-helper")
 

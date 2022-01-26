@@ -13,9 +13,10 @@
 
 from pathlib import Path
 
-from aws_cdk.aws_lambda import Tracing, Runtime, RuntimeFamily
-from aws_cdk.core import Construct, Duration, Aws
 import aws_cdk.aws_iam as iam
+from aws_cdk import Duration, Aws
+from aws_cdk.aws_lambda import Tracing, Runtime, RuntimeFamily
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.environment import Environment
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction

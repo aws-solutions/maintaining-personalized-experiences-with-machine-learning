@@ -11,7 +11,7 @@
 #  the specific language governing permissions and limitations under the License.                                     #
 # #####################################################################################################################
 
-from aws_cdk.core import CfnResource, App, Stack
+from aws_cdk import CfnResource, App, Stack
 
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
 

@@ -14,11 +14,11 @@ import logging
 from pathlib import Path
 
 import pytest
-from aws_cdk.core import (
+from aws_cdk import (
     Stack,
-    Construct,
     App,
 )
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.java.function import SolutionsJavaFunction
 
@@ -53,7 +53,9 @@ def java_function_synth(caplog):
 
 @pytest.mark.no_cdk_lambda_mock
 def test_java_function_synth(java_function_synth):
-    function_stack = java_function_synth.get_stack("test-function-lambda").template
+    function_stack = java_function_synth.get_stack_by_name(
+        "test-function-lambda"
+    ).template
     func = function_stack["Resources"]["TestFunction"]
 
     assert func["Type"] == "AWS::Lambda::Function"

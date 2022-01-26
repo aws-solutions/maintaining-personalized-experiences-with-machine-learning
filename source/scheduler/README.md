@@ -10,7 +10,7 @@ This README summarizes using the scheduler.
 Install this package. It requires at least:
 
 - Python 3.7
-- AWS CDK version 1.126.0 or higher
+- AWS CDK version 2.7.0 or higher
 
 To install the packages: 
 
@@ -24,7 +24,7 @@ pip install <path>/scheduler/common # where <path> is the path to the scheduler 
 ```python
 from pathlib import Path
 
-from aws_cdk.core import Construct
+from constructs import Construct
 from aws_cdk.aws_stepfunctions import StateMachine
 
 from aws_solutions.cdk import CDKSolution

@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 import pytest
-from aws_cdk.core import App, Stack, NestedStack, CfnParameter
+from aws_cdk import App, Stack, NestedStack, CfnParameter
 
 from aws_solutions.cdk.interfaces import (
     _TemplateParameter,

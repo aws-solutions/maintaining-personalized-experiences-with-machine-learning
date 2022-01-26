@@ -293,7 +293,7 @@ The following procedures assumes that all the OS-level configuration has been co
 * [AWS Command Line Interface](https://aws.amazon.com/cli/)
 * [Python](https://www.python.org/) 3.9 or newer
 * [Node.js](https://nodejs.org/en/) 16.x or newer 
-* [AWS CDK](https://aws.amazon.com/cdk/) 1.126.0 or newer 
+* [AWS CDK](https://aws.amazon.com/cdk/) 2.7.0 or newer 
 * [Amazon Corretto OpenJDK](https://docs.aws.amazon.com/corretto/) 11 
 
 > **Please ensure you test the templates before updating any production deployments.**
@@ -349,7 +349,7 @@ export SOLUTION_NAME=my-solution-name
 export VERSION=my-version  
 export REGION_NAME=my-region
 
-build-s3-cdk-dist \
+build-s3-cdk-dist deploy \
   --source-bucket-name DIST_BUCKET_PREFIX \
   --solution-name SOLUTION_NAME \
   --version_code VERSION \

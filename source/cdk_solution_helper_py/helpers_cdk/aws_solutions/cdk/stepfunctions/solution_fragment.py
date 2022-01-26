@@ -13,10 +13,11 @@
 from typing import List, Dict
 from typing import Optional
 
+from aws_cdk import Duration
 from aws_cdk.aws_lambda import CfnFunction
 from aws_cdk.aws_stepfunctions import State, INextable, TaskInput, StateMachineFragment
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
-from aws_cdk.core import Construct, Duration
+from constructs import Construct
 
 
 class SolutionFragment(StateMachineFragment):

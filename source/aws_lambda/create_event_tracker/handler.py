@@ -18,6 +18,25 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from shared.sfn_middleware import PersonalizeResource
 
+RESOURCE = "eventTracker"
+STATUS = "eventTracker.status"
+CONFIG = {
+    "name": {
+        "source": "event",
+        "path": "serviceConfig.name",
+    },
+    "datasetGroupArn": {
+        "source": "event",
+        "path": "serviceConfig.datasetGroupArn",
+    },
+    "timeStarted": {
+        "source": "event",
+        "path": "workflowConfig.timeStarted",
+        "default": "omit",
+        "as": "iso8601",
+    },
+}
+
 logger = Logger()
 tracer = Tracer()
 metrics = Metrics()
@@ -26,24 +45,9 @@ metrics = Metrics()
 @metrics.log_metrics
 @tracer.capture_lambda_handler
 @PersonalizeResource(
-    resource="eventTracker",
-    status="eventTracker.status",
-    config={
-        "name": {
-            "source": "event",
-            "path": "serviceConfig.name",
-        },
-        "datasetGroupArn": {
-            "source": "event",
-            "path": "serviceConfig.datasetGroupArn",
-        },
-        "timeStarted": {
-            "source": "event",
-            "path": "workflowConfig.timeStarted",
-            "default": "omit",
-            "as": "iso8601",
-        },
-    },
+    resource=RESOURCE,
+    status=STATUS,
+    config=CONFIG,
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
     """Create an event tracker in Amazon Personalize based on the configuration in `event`

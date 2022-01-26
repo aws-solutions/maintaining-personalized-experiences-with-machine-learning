@@ -21,30 +21,37 @@ from unittest import mock
 from aws_solutions.scheduler.common.scripts.scheduler_cli import (
     get_stack_output_value,
     get_stack_tag_value,
+    get_stack_metadata_value,
     setup_cli_env,
     get_payload,
 )
 
 
+TEMPLATE = {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Metadata": {
+        "aws:solutions:templatename": "maintaining-personalized-experiences-with-machine-learning.template",
+        "aws:solutions:solution_version": "solution_version_value",
+        "aws:solutions:solution_id": "solution_id_value",
+    },
+    "Resources": {
+        "QueueResource": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {"QueueName": "my-queue"},
+        }
+    },
+    "Outputs": {"QueueOutput": {"Description": "The Queue Name", "Value": "my-queue"}},
+}
+
+
 @pytest.fixture
-def stack():
-    template = {
-        "AWSTemplateFormatVersion": "2010-09-09",
-        "Resources": {
-            "QueueResource": {
-                "Type": "AWS::SQS::Queue",
-                "Properties": {"QueueName": "my-queue"},
-            }
-        },
-        "Outputs": {
-            "QueueOutput": {"Description": "The Queue Name", "Value": "my-queue"}
-        },
-    }
+def stack(mocker):
+    global TEMPLATE
     with mock_cloudformation():
         cli = boto3.client("cloudformation")
         cli.create_stack(
             StackName="TestStack",
-            TemplateBody=json.dumps(template),
+            TemplateBody=json.dumps(TEMPLATE),
             Tags=[
                 {
                     "Key": "TestTag",
@@ -54,7 +61,11 @@ def stack():
                 {"Key": "SOLUTION_VERSION", "Value": "SOLUTION_VERSION_VALUE"},
             ],
         )
-        yield boto3.resource("cloudformation").Stack("TestStack")
+        resource = boto3.resource("cloudformation").Stack("TestStack")
+        resource.meta.client.get_template_summary = mocker.MagicMock(
+            return_value=TEMPLATE | {"Metadata": json.dumps(TEMPLATE["Metadata"])}
+        )
+        yield resource
 
 
 def test_get_stack_output_value(stack):
@@ -75,12 +86,28 @@ def test_get_stack_tag_value_not_present(stack):
         get_stack_tag_value(stack, "missing")
 
 
+def test_get_stack_metadata(stack, mocker):
+    assert (
+        get_stack_metadata_value(stack, "aws:solutions:solution_id")
+        == "solution_id_value"
+    )
+    assert (
+        get_stack_metadata_value(stack, "aws:solutions:solution_version")
+        == "solution_version_value"
+    )
+
+
+def test_get_stack_metadata_not_present(stack, mocker):
+    with pytest.raises(ValueError):
+        get_stack_metadata_value(stack, "missing")
+
+
 def test_setup_cli_env(stack):
     with mock.patch.dict(os.environ, {}):
         setup_cli_env(stack, "eu-central-1")
         assert os.environ.get("AWS_REGION") == "eu-central-1"
-        assert os.environ.get("SOLUTION_ID") == "SOLUTION_ID_VALUE"
-        assert os.environ.get("SOLUTION_VERSION") == "SOLUTION_VERSION_VALUE"
+        assert os.environ.get("SOLUTION_ID") == "solution_id_value"
+        assert os.environ.get("SOLUTION_VERSION") == "solution_version_value"
 
 
 def test_get_payload():

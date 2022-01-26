@@ -13,9 +13,15 @@
 
 import pytest
 
-from aws_lambda.create_dataset_group.handler import lambda_handler
+from aws_lambda.create_dataset_group.handler import (
+    lambda_handler,
+    RESOURCE,
+    STATUS,
+    CONFIG,
+)
 
 
-def test_handler():
+def test_handler(validate_handler_config):
+    validate_handler_config(RESOURCE, CONFIG, STATUS)
     with pytest.raises(ValueError):
         lambda_handler({}, None)

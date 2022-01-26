@@ -43,6 +43,7 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(),
     install_requires=[
         "boto3>=1.17.52",
+        "pip>=21.3",
     ],
     python_requires=">=3.7",
     classifiers=[
