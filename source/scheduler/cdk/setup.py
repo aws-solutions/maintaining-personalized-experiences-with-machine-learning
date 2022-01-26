@@ -42,9 +42,8 @@ setuptools.setup(
     license="Apache License 2.0",
     packages=setuptools.find_namespace_packages(),
     install_requires=[
-        "aws-cdk.core>=1.126.0",
-        "aws-cdk.aws_lambda>=1.126.0",
-        "aws-cdk.aws_stepfunctions>=1.126.0",
+        "pip>=21.3",
+        "aws_cdk_lib>=2.7.0",
         "Click>=7.1.2",
         "boto3>=1.17.52",
     ],

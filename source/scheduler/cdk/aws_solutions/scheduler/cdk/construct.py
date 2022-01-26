@@ -10,11 +10,16 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
+
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Union, Dict, List
 
 import aws_cdk.aws_dynamodb as ddb
 import aws_cdk.aws_iam as iam
+import jsii
+from aws_cdk import Aws, IAspect, Aspects
 from aws_cdk.aws_lambda import Tracing
 from aws_cdk.aws_stepfunctions import (
     StateMachine,
@@ -28,7 +33,7 @@ from aws_cdk.aws_stepfunctions import (
     Condition,
 )
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
-from aws_cdk.core import Construct, Aws
+from constructs import Construct, IConstruct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.aws_lambda.environment import Environment
@@ -45,6 +50,64 @@ from aws_solutions.scheduler.cdk.aws_lambda import (
 TASK_NAME_PATH = "$.name"
 TRIGGER_AT_PATH = "$.trigger_at"
 SCHEDULE_PATH = "$.task.schedule"
+
+
+@jsii.implements(IAspect)
+class SchedulerPermissionsAspect:
+    def __init__(self, scheduler: Scheduler):
+        self.scheduler = scheduler
+
+    def visit(self, node: IConstruct):
+        if node == self.scheduler:
+            # permision: allow the scheduler to call itself
+            self.scheduler.state_machine.add_to_role_policy(
+                iam.PolicyStatement(
+                    effect=iam.Effect.ALLOW,
+                    resources=[self.scheduler.state_machine_arn],
+                    actions=["states:StartExecution"],
+                )
+            )
+            if self.scheduler.sync:
+                self.scheduler.state_machine.add_to_role_policy(
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        resources=["*"],
+                        actions=["states:DescribeExecution", "states:StopExecution"],
+                    )
+                )
+                self.scheduler.state_machine.add_to_role_policy(
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        resources=[
+                            f"arn:{Aws.PARTITION}:events:{Aws.REGION}:{Aws.ACCOUNT_ID}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
+                        ],
+                        actions=[
+                            "events:PutTargets",
+                            "events:PutRule",
+                            "events:DescribeRule",
+                        ],
+                    )
+                )
+
+            add_cfn_nag_suppressions(
+                self.scheduler.state_machine.role.node.try_find_child(
+                    "DefaultPolicy"
+                ).node.find_child("Resource"),
+                [
+                    CfnNagSuppression(
+                        "W12",
+                        "IAM policy for nested synchronous invocation of step functions requires * on Describe and Stop Execution",
+                    ),
+                    CfnNagSuppression(
+                        "W76",
+                        "Large step functions need larger IAM roles to access all managed AWS Lambda functions",
+                    ),
+                ],
+            )
+
+            # permission: allow the scheduler to call its referenced children
+            for child in self.scheduler._scheduler_child_state_machines:
+                child.grant_start_execution(self.scheduler.state_machine)
 
 
 class Scheduler(Construct):
@@ -182,6 +245,9 @@ class Scheduler(Construct):
             tracing_enabled=True,
         )
 
+        # permissions are applied at synthesis time based on the configuration of the scheduler
+        Aspects.of(self).add(SchedulerPermissionsAspect(self))
+
     def grant_invoke(self, state_machine: IStateMachine) -> None:
         """
         Allow the Scheduler to start executions of the provided state machine
@@ -278,61 +344,6 @@ class Scheduler(Construct):
         :return: str
         """
         return self._state_machine_namer.resource_name.to_string()
-
-    def _prepare(self) -> None:
-        """
-        Finalize/ prepare the state machine and associated permissions
-        :return: None
-        """
-        # permision: allow the scheduler to call itself
-        self.state_machine.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                resources=[self.state_machine_arn],
-                actions=["states:StartExecution"],
-            )
-        )
-        if self.sync:
-            self.state_machine.add_to_role_policy(
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    resources=["*"],
-                    actions=["states:DescribeExecution", "states:StopExecution"],
-                )
-            )
-            self.state_machine.add_to_role_policy(
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    resources=[
-                        f"arn:{Aws.PARTITION}:events:{Aws.REGION}:{Aws.ACCOUNT_ID}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
-                    ],
-                    actions=[
-                        "events:PutTargets",
-                        "events:PutRule",
-                        "events:DescribeRule",
-                    ],
-                )
-            )
-
-        add_cfn_nag_suppressions(
-            self.state_machine.role.node.try_find_child(
-                "DefaultPolicy"
-            ).node.find_child("Resource"),
-            [
-                CfnNagSuppression(
-                    "W12",
-                    "IAM policy for nested synchronous invocation of step functions requires * on Describe and Stop Execution",
-                ),
-                CfnNagSuppression(
-                    "W76",
-                    "Large step functions need larger IAM roles to access all managed AWS Lambda functions",
-                ),
-            ],
-        )
-
-        # permission: allow the scheduler to call its referenced children
-        for child in self._scheduler_child_state_machines:
-            child.grant_start_execution(self.state_machine)
 
     def _scheduler_table(self, scope: Construct) -> ddb.Table:
         """

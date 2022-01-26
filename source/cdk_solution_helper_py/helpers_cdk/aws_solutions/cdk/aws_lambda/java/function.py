@@ -14,14 +14,14 @@ from pathlib import Path
 from typing import Optional
 
 import aws_cdk.aws_iam as iam
-from aws_cdk.aws_lambda import Function, Runtime, RuntimeFamily, Code
-from aws_cdk.core import (
-    Construct,
+from aws_cdk import (
     BundlingOptions,
-    BundlingDockerImage,
     BundlingOutput,
     Aws,
+    DockerImage,
 )
+from aws_cdk.aws_lambda import Function, Runtime, RuntimeFamily, Code
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.java.bundling import SolutionsJavaBundling
 
@@ -79,7 +79,7 @@ class SolutionsJavaFunction(Function):
         kwargs["code"] = Code.from_asset(
             path=str(project_path),
             bundling=BundlingOptions(
-                image=BundlingDockerImage.from_registry("scratch"),  # NOT USED
+                image=DockerImage.from_registry("scratch"),  # NOT USED
                 command=["NOT-USED"],
                 entrypoint=["NOT-USED"],
                 local=bundling,

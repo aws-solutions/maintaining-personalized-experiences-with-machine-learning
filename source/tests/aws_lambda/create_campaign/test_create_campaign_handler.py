@@ -18,12 +18,20 @@ from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
 from moto import mock_sts
 
-from aws_lambda.create_campaign.handler import lambda_handler
+from aws_lambda.create_campaign.handler import (
+    lambda_handler,
+    RESOURCE,
+    STATUS,
+    CONFIG,
+)
 from shared.exceptions import ResourcePending
 from shared.resource import Campaign, SolutionVersion
 
 
-def test_create_campaign():
+def test_create_campaign(validate_handler_config):
+    for status in STATUS.split("||"):
+        status = status.strip()
+        validate_handler_config(RESOURCE, CONFIG, status)
     with pytest.raises(ValueError):
         lambda_handler({}, None)
 

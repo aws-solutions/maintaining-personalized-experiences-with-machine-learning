@@ -18,6 +18,36 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from shared.sfn_middleware import PersonalizeResource
 
+RESOURCE = "datasetImportJob"
+STATUS = "datasetImportJob.status"
+CONFIG = {
+    "jobName": {
+        "source": "event",
+        "path": "serviceConfig.jobName",
+    },
+    "datasetArn": {
+        "source": "event",
+        "path": "serviceConfig.datasetArn",
+    },
+    "dataSource": {
+        "source": "event",
+        "path": "serviceConfig.dataSource",
+    },
+    "roleArn": {"source": "environment", "path": "ROLE_ARN"},
+    "maxAge": {
+        "source": "event",
+        "path": "workflowConfig.maxAge",
+        "default": "omit",
+        "as": "seconds",
+    },
+    "timeStarted": {
+        "source": "event",
+        "path": "workflowConfig.timeStarted",
+        "default": "omit",
+        "as": "iso8601",
+    },
+}
+
 logger = Logger()
 tracer = Tracer()
 metrics = Metrics()
@@ -26,35 +56,9 @@ metrics = Metrics()
 @metrics.log_metrics
 @tracer.capture_lambda_handler
 @PersonalizeResource(
-    resource="datasetImportJob",
-    status="datasetImportJob.status",
-    config={
-        "jobName": {
-            "source": "event",
-            "path": "serviceConfig.jobName",
-        },
-        "datasetArn": {
-            "source": "event",
-            "path": "serviceConfig.datasetArn",
-        },
-        "dataSource": {
-            "source": "event",
-            "path": "serviceConfig.dataSource",
-        },
-        "roleArn": {"source": "environment", "path": "ROLE_ARN"},
-        "maxAge": {
-            "source": "event",
-            "path": "workflowConfig.maxAge",
-            "default": "omit",
-            "as": "seconds",
-        },
-        "timeStarted": {
-            "source": "event",
-            "path": "workflowConfig.timeStarted",
-            "default": "omit",
-            "as": "iso8601",
-        },
-    },
+    resource=RESOURCE,
+    status=STATUS,
+    config=CONFIG,
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
     """Create a dataset import job in Amazon Personalize based on the configuration in `event`

@@ -13,9 +13,15 @@
 
 import pytest
 
-from aws_lambda.create_event_tracker.handler import lambda_handler
+from aws_lambda.create_event_tracker.handler import (
+    lambda_handler,
+    RESOURCE,
+    STATUS,
+    CONFIG,
+)
 
 
-def test_create_event_tracker():
+def test_create_event_tracker(validate_handler_config):
+    validate_handler_config(RESOURCE, CONFIG, STATUS)
     with pytest.raises(ValueError):
         lambda_handler({}, None)

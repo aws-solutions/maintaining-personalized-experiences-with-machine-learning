@@ -50,6 +50,21 @@ def get_stack_tag_value(stack, key: str) -> str:
     return results[0]["Value"]
 
 
+def get_stack_metadata_value(stack, key: str) -> str:
+    """
+    Get a stack template metadata value
+    :param stack: the boto3 stack resource
+    :param key: the metadata key
+    :return: str
+    """
+    summary = stack.meta.client.get_template_summary(StackName=stack.name)
+    metadata = json.loads(summary.get("Metadata", "{}"))
+    try:
+        return metadata[key]
+    except KeyError:
+        raise ValueError(f"could not find metadata with key {key} in stack")
+
+
 def setup_cli_env(stack, region: str) -> None:
     """
     Set the environment variables required by the scheduler
@@ -58,8 +73,12 @@ def setup_cli_env(stack, region: str) -> None:
     :return: None
     """
     os.environ["AWS_REGION"] = region
-    os.environ["SOLUTION_ID"] = get_stack_tag_value(stack, "SOLUTION_ID")
-    os.environ["SOLUTION_VERSION"] = f"{get_stack_tag_value(stack, 'SOLUTION_VERSION')}"
+    os.environ["SOLUTION_ID"] = get_stack_metadata_value(
+        stack, "aws:solutions:solution_id"
+    )
+    os.environ["SOLUTION_VERSION"] = get_stack_metadata_value(
+        stack, "aws:solutions:solution_version"
+    )
 
 
 @click.group()
@@ -90,7 +109,10 @@ def cli(
 
     cloudformation = boto3.resource("cloudformation", region_name=region)
     stack = cloudformation.Stack(stack)
-    setup_cli_env(stack, region)
+    try:
+        setup_cli_env(stack, region)
+    except ValueError as exc:
+        raise click.ClickException(exc)
 
     ctx.obj["SCHEDULER"] = Scheduler(
         table_name=get_stack_output_value(stack, scheduler_table_name_output),

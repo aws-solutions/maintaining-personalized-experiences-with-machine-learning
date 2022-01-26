@@ -14,7 +14,7 @@
 import re
 
 import pytest
-from aws_cdk.core import App, CfnParameter
+from aws_cdk import App, CfnParameter
 
 from aws_solutions.cdk.stack import (
     SolutionStack,
@@ -89,16 +89,18 @@ def test_validate_re_exception():
 
 def test_solution_stack():
     stack_id = "S00123"
+    solution_version = "v0.0.1"
     stack_description = "stack description"
     stack_filename = "stack-name.template"
 
-    app = App(context={"SOLUTION_ID": stack_id, "SOLUTION_VERSION": "v0.0.1"})
+    app = App(context={"SOLUTION_ID": stack_id, "SOLUTION_VERSION": solution_version})
     SolutionStack(app, "stack", stack_description, stack_filename)
 
     template = app.synth().stacks[0].template
 
     assert (
-        template["Description"] == f"({stack_id}) - {stack_description}. Version v0.0.1"
+        template["Description"]
+        == f"({stack_id}) - {stack_description}. Version {solution_version}"
     )
     assert template["Metadata"] == {
         "AWS::CloudFormation::Interface": {
@@ -106,6 +108,8 @@ def test_solution_stack():
             "ParameterLabels": {},
         },
         "aws:solutions:templatename": "stack-name.template",
+        "aws:solutions:solution_id": stack_id,
+        "aws:solutions:solution_version": solution_version,
     }
     assert template["Conditions"] == {
         "SendAnonymousUsageData": {

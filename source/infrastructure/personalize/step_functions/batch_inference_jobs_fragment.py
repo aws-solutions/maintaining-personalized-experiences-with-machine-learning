@@ -12,6 +12,7 @@
 # ######################################################################################################################
 from typing import List, Optional
 
+from aws_cdk import Duration
 from aws_cdk.aws_stepfunctions import (
     StateMachineFragment,
     State,
@@ -23,7 +24,7 @@ from aws_cdk.aws_stepfunctions import (
     Chain,
     StateMachine,
 )
-from aws_cdk.core import Construct, Duration
+from constructs import Construct
 
 from aws_solutions.scheduler.cdk.construct import Scheduler
 from aws_solutions.scheduler.cdk.scheduler_fragment import SchedulerFragment

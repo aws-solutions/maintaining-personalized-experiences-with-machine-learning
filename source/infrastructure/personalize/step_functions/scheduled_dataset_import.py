@@ -13,7 +13,7 @@
 from typing import Dict
 
 from aws_cdk.aws_stepfunctions import StateMachine, Chain, Parallel, TaskInput
-from aws_cdk.core import Construct
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression

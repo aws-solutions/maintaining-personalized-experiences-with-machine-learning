@@ -13,9 +13,15 @@
 
 import pytest
 
-from aws_lambda.create_filter.handler import lambda_handler
+from aws_lambda.create_filter.handler import (
+    lambda_handler,
+    RESOURCE,
+    STATUS,
+    CONFIG,
+)
 
 
-def test_create_filter():
+def test_create_filter(validate_handler_config):
+    validate_handler_config(RESOURCE, CONFIG, STATUS)
     with pytest.raises(ValueError):
         lambda_handler({}, None)

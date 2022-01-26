@@ -13,7 +13,8 @@
 
 from pathlib import Path
 
-from aws_cdk.core import Construct, Stack
+from aws_cdk import Stack
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.layer import SolutionsPythonLayerVersion
 

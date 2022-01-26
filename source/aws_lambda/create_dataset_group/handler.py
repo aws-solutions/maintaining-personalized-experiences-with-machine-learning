@@ -18,6 +18,36 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from shared.sfn_middleware import PersonalizeResource
 
+RESOURCE = "datasetGroup"
+STATUS = "datasetGroup.status"
+CONFIG = {
+    "name": {
+        "source": "event",
+        "path": "serviceConfig.name",
+    },
+    "domain": {
+        "source": "event",
+        "path": "serviceConfig.domain",
+        "default": "omit",
+    },
+    "roleArn": {
+        "source": "environment",
+        "path": "KMS_ROLE_ARN",
+        "default": "omit",
+    },
+    "kmsKeyArn": {
+        "source": "environment",
+        "path": "KMS_KEY_ARN",
+        "default": "omit",
+    },
+    "timeStarted": {
+        "source": "event",
+        "path": "workflowConfig.timeStarted",
+        "default": "omit",
+        "as": "iso8601",
+    },
+}
+
 tracer = Tracer()
 logger = Logger()
 metrics = Metrics()
@@ -26,30 +56,9 @@ metrics = Metrics()
 @metrics.log_metrics
 @tracer.capture_lambda_handler
 @PersonalizeResource(
-    resource="datasetGroup",
-    status="datasetGroup.status",
-    config={
-        "name": {
-            "source": "event",
-            "path": "serviceConfig.name",
-        },
-        "roleArn": {
-            "source": "environment",
-            "path": "KMS_ROLE_ARN",
-            "default": "omit",
-        },
-        "kmsKeyArn": {
-            "source": "environment",
-            "path": "KMS_KEY_ARN",
-            "default": "omit",
-        },
-        "timeStarted": {
-            "source": "event",
-            "path": "workflowConfig.timeStarted",
-            "default": "omit",
-            "as": "iso8601",
-        },
-    },
+    resource=RESOURCE,
+    status=STATUS,
+    config=CONFIG,
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
     """Create a dataset group in Amazon Personalize based on the configuration in `event`

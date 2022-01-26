@@ -13,7 +13,8 @@
 from typing import Optional
 
 import aws_cdk.aws_cloudwatch as cw
-from aws_cdk.core import Construct, Aws
+from aws_cdk import Aws
+from constructs import Construct
 
 GREEN = "#32cd32"
 RED = "#ff4500"
@@ -108,6 +109,11 @@ class Dashboard(Construct):
                                 "BatchInferenceJobCreated",
                                 "Batch Inference Jobs Created",
                             ),
+                            self._metric(
+                                "BatchSegmentJobCreated",
+                                "Batch Segment Jobs Created",
+                            ),
+                            self._metric("RecommenderCreated", "Recommenders Created"),
                             self._metric("FilterCreated", "Filters Created"),
                         ],
                         set_period_to_time_range=True,
@@ -135,7 +141,7 @@ class Dashboard(Construct):
         return cw.Metric(
             namespace=f"personalize_solution_{Aws.STACK_NAME}",
             metric_name=name,
-            dimensions={"service": service},
+            dimensions_map={"service": service},
             label=label,
             statistic="Sum",
             color=color,

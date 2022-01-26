@@ -3,14 +3,6 @@
   "context": {
     "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
     "SOLUTION_ID": "SO0170",
-    "SOLUTION_VERSION": "v1.1.0",
-    "@aws-cdk/core:newStyleStackSynthesis": "true",
-    "@aws-cdk/core:enableStackNameDuplicates": "true",
-    "aws-cdk:enableDiffNoFail": "true",
-    "@aws-cdk/core:stackRelativeExports": "true",
-    "@aws-cdk/aws-ecr-assets:dockerIgnoreSupport": true,
-    "@aws-cdk/aws-secretsmanager:parseOwnedSecretName": true,
-    "@aws-cdk/aws-kms:defaultKeyPolicies": true,
-    "@aws-cdk/aws-s3:grantWriteWithoutAcl": true
+    "SOLUTION_VERSION": "v1.2.0"
   }
 }

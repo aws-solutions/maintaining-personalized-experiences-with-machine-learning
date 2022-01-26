@@ -12,11 +12,11 @@
 # #####################################################################################################################
 from pathlib import Path
 
-from aws_cdk.core import (
-    Construct,
+from aws_cdk import (
     CfnResource,
     Stack,
 )
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression

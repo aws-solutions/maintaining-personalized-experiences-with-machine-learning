@@ -16,7 +16,7 @@
 import logging
 from pathlib import Path
 
-from aws_cdk import core as cdk
+from aws_cdk import App
 
 from aws_solutions.cdk import CDKSolution
 from personalize.stack import PersonalizeStack
@@ -30,7 +30,7 @@ solution = CDKSolution(cdk_json_path=Path(__file__).parent.absolute() / "cdk.jso
 @solution.context.requires("SOLUTION_VERSION")
 @solution.context.requires("BUCKET_NAME")
 def build_app(context):
-    app = cdk.App(context=context)
+    app = App(context=context)
     PersonalizeStack(
         app,
         "PersonalizeStack",

@@ -45,6 +45,7 @@ virtualenv .venv
 source .venv/bin/activate
 
 cd $source_dir
+pip install --upgrade pip
 pip install -r $source_dir/requirements-dev.txt
 cd -
 

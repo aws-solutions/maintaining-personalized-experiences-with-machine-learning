@@ -24,7 +24,7 @@ from aws_cdk.aws_stepfunctions import (
     Condition,
     JsonPath,
 )
-from aws_cdk.core import Construct
+from constructs import Construct
 
 from aws_solutions.scheduler.cdk.construct import Scheduler
 

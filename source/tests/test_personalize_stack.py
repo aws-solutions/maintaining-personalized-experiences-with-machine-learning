@@ -11,13 +11,13 @@
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
 
-import aws_cdk.core as cdk
+from aws_cdk import App
 
 from infrastructure.personalize.stack import PersonalizeStack
 
 
 def test_personalize_stack_email(solution):
-    app = cdk.App(context=solution.context)
+    app = App(context=solution.context)
     PersonalizeStack(
         app,
         "PersonalizeStack",
@@ -27,4 +27,4 @@ def test_personalize_stack_email(solution):
     synth = app.synth()
 
     # ensure the email parameter is present
-    assert synth.get_stack("PersonalizeStack").template["Parameters"]["Email"]
+    assert synth.get_stack_by_name("PersonalizeStack").template["Parameters"]["Email"]

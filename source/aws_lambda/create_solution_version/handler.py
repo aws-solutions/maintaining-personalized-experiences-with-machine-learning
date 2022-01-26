@@ -18,6 +18,36 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from shared.sfn_middleware import PersonalizeResource
 
+RESOURCE = "solutionVersion"
+STATUS = "solutionVersion.status"
+CONFIG = {
+    "solutionArn": {
+        "source": "event",
+        "path": "serviceConfig.solutionArn",
+    },
+    "trainingMode": {
+        "source": "event",
+        "path": "serviceConfig.trainingMode",
+        "default": "omit",
+    },
+    "maxAge": {
+        "source": "event",
+        "path": "workflowConfig.maxAge",
+        "default": "omit",
+        "as": "seconds",
+    },
+    "solutionVersionArn": {
+        "source": "event",
+        "path": "workflowConfig.solutionVersionArn",
+        "default": "omit",
+    },
+    "timeStarted": {
+        "source": "event",
+        "path": "workflowConfig.timeStarted",
+        "default": "omit",
+        "as": "iso8601",
+    },
+}
 logger = Logger()
 tracer = Tracer()
 metrics = Metrics()
@@ -26,36 +56,9 @@ metrics = Metrics()
 @metrics.log_metrics
 @tracer.capture_lambda_handler
 @PersonalizeResource(
-    resource="solutionVersion",
-    status="solutionVersion.status",
-    config={
-        "solutionArn": {
-            "source": "event",
-            "path": "serviceConfig.solutionArn",
-        },
-        "trainingMode": {
-            "source": "event",
-            "path": "serviceConfig.trainingMode",
-            "default": "omit",
-        },
-        "maxAge": {
-            "source": "event",
-            "path": "workflowConfig.maxAge",
-            "default": "omit",
-            "as": "seconds",
-        },
-        "solutionVersionArn": {
-            "source": "event",
-            "path": "workflowConfig.solutionVersionArn",
-            "default": "omit",
-        },
-        "timeStarted": {
-            "source": "event",
-            "path": "workflowConfig.timeStarted",
-            "default": "omit",
-            "as": "iso8601",
-        },
-    },
+    resource=RESOURCE,
+    status=STATUS,
+    config=CONFIG,
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
     """Create a solution version in Amazon Personalize based on the configuration in `event`

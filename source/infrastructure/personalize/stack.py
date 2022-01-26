@@ -11,7 +11,16 @@
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
 
-from aws_cdk import core as cdk
+from aws_cdk import (
+    CfnCondition,
+    Fn,
+    Aws,
+    Duration,
+    CfnOutput,
+    CfnParameter,
+    Tags,
+    Aspects,
+)
 from aws_cdk.aws_events import EventBus
 from aws_cdk.aws_s3 import EventType, NotificationKeyFilter
 from aws_cdk.aws_s3_notifications import LambdaDestination
@@ -21,7 +30,7 @@ from aws_cdk.aws_stepfunctions import (
     Parallel,
     TaskInput,
 )
-from aws_cdk.core import CfnCondition, Fn, Aws, Duration
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.aws_lambda.layers.aws_lambda_powertools import PowertoolsLayer
@@ -46,6 +55,8 @@ from personalize.aws_lambda.functions import (
     CreateBatchInferenceJob,
     CreateTimestamp,
     CreateConfig,
+    CreateBatchSegmentJob,
+    CreateRecommender,
 )
 from personalize.aws_lambda.functions.prepare_input import PrepareInput
 from personalize.aws_lambda.layers import SolutionsLayer
@@ -66,13 +77,11 @@ from personalize.step_functions.solution_fragment import SolutionFragment
 
 
 class PersonalizeStack(SolutionStack):
-    def __init__(
-        self, scope: cdk.Construct, construct_id: str, *args, **kwargs
-    ) -> None:
+    def __init__(self, scope: Construct, construct_id: str, *args, **kwargs) -> None:
         super().__init__(scope, construct_id, *args, **kwargs)
 
         # CloudFormation Parameters
-        self.email = cdk.CfnParameter(
+        self.email = CfnParameter(
             self,
             id="Email",
             type="String",
@@ -91,7 +100,7 @@ class PersonalizeStack(SolutionStack):
             expression=Fn.condition_not(Fn.condition_equals(self.email, "")),
         )
 
-        self.personalize_kms_key_arn = cdk.CfnParameter(
+        self.personalize_kms_key_arn = CfnParameter(
             self,
             id="PersonalizeKmsKeyArn",
             description="Provide Amazon Personalize with an alternate AWS Key Management (KMS) key to use to encrypt your datasets",
@@ -103,7 +112,7 @@ class PersonalizeStack(SolutionStack):
             "(Optional) KMS key ARN used to encrypt Datasets managed by Amazon Personalize",
             "Security Configuration",
         )
-        kms_enabled = cdk.CfnCondition(
+        kms_enabled = CfnCondition(
             self,
             "PersonalizeSseKmsEnabled",
             expression=Fn.condition_not(
@@ -184,6 +193,11 @@ class PersonalizeStack(SolutionStack):
             "Create Solution",
             layers=common_layers,
         )
+        create_recommender = CreateRecommender(
+            self,
+            "Create Recommender",
+            layers=common_layers,
+        )
         create_solution_version = CreateSolutionVersion(
             self,
             "Create Solution Version",
@@ -197,6 +211,12 @@ class PersonalizeStack(SolutionStack):
         create_batch_inference_job = CreateBatchInferenceJob(
             self,
             "Create Batch Inference Job",
+            layers=common_layers,
+            personalize_bucket=data_bucket,
+        )
+        create_batch_segment_job = CreateBatchSegmentJob(
+            self,
+            "Create Batch Segment Job",
             layers=common_layers,
             personalize_bucket=data_bucket,
         )
@@ -225,10 +245,12 @@ class PersonalizeStack(SolutionStack):
         create_dataset.grant_put_events(event_bus)
         create_dataset_import_job.grant_put_events(event_bus)
         create_event_tracker.grant_put_events(event_bus)
+        create_recommender.grant_put_events(event_bus)
         create_solution.grant_put_events(event_bus)
         create_solution_version.grant_put_events(event_bus)
         create_campaign.grant_put_events(event_bus)
         create_batch_inference_job.grant_put_events(event_bus)
+        create_batch_segment_job.grant_put_events(event_bus)
         create_filter.grant_put_events(event_bus)
 
         dataset_management_functions = {
@@ -262,8 +284,10 @@ class PersonalizeStack(SolutionStack):
             create_solution_version=create_solution_version,
             create_campaign=create_campaign,
             create_batch_inference_job=create_batch_inference_job,
+            create_batch_segment_job=create_batch_segment_job,
             create_timestamp=create_timestamp,
             notifications=notifications,
+            create_recommender=create_recommender,
         ).state_machine
 
         # scheduler and step function to schedule
@@ -297,6 +321,8 @@ class PersonalizeStack(SolutionStack):
             create_solution_version=create_solution_version,
             create_campaign=create_campaign,
             create_batch_inference_job=create_batch_inference_job,
+            create_batch_segment_job=create_batch_segment_job,
+            create_recommender=create_recommender,
             scheduler=scheduler,
             to_schedule=solution_maintenance_schedule_sfn,
         )
@@ -400,15 +426,13 @@ class PersonalizeStack(SolutionStack):
             ],
         )
 
-        cdk.Tags.of(self).add("SOLUTION_ID", self.node.try_get_context("SOLUTION_ID"))
-        cdk.Tags.of(self).add(
-            "SOLUTION_NAME", self.node.try_get_context("SOLUTION_NAME")
-        )
-        cdk.Tags.of(self).add(
+        Tags.of(self).add("SOLUTION_ID", self.node.try_get_context("SOLUTION_ID"))
+        Tags.of(self).add("SOLUTION_NAME", self.node.try_get_context("SOLUTION_NAME"))
+        Tags.of(self).add(
             "SOLUTION_VERSION", self.node.try_get_context("SOLUTION_VERSION")
         )
 
-        cdk.Aspects.of(self).add(
+        Aspects.of(self).add(
             CfnNagSuppressAll(
                 suppress=[
                     CfnNagSuppression(
@@ -437,43 +461,43 @@ class PersonalizeStack(SolutionStack):
         )
 
         # outputs
-        cdk.CfnOutput(
+        CfnOutput(
             self,
             "PersonalizeBucketName",
             value=data_bucket.bucket_name,
             export_name=f"{Aws.STACK_NAME}-PersonalizeBucketName",
         )
-        cdk.CfnOutput(
+        CfnOutput(
             self,
             "SchedulerTableName",
             value=scheduler.scheduler_table.table_name,
             export_name=f"{Aws.STACK_NAME}-SchedulerTableName",
         )
-        cdk.CfnOutput(
+        CfnOutput(
             self,
             "SchedulerStepFunctionArn",
             value=scheduler.state_machine_arn,
             export_name=f"{Aws.STACK_NAME}-SchedulerStepFunctionArn",
         )
-        cdk.CfnOutput(
+        CfnOutput(
             self,
             "Dashboard",
             value=self.dashboard.name,
             export_name=f"{Aws.STACK_NAME}-Dashboard",
         )
-        cdk.CfnOutput(
+        CfnOutput(
             self,
             "SNSTopicArn",
             value=notifications.topic.topic_arn,
             export_name=f"{Aws.STACK_NAME}-SNSTopicArn",
         )
-        cdk.CfnOutput(
+        CfnOutput(
             self,
             "EventBusArn",
             value=event_bus.event_bus_arn,
             export_name=f"{Aws.STACK_NAME}-EventBusArn",
         )
-        cdk.CfnOutput(
+        CfnOutput(
             self,
             "CreateConfigFunctionArn",
             value=create_config.function_arn,

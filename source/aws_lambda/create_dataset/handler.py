@@ -18,6 +18,29 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from shared.sfn_middleware import PersonalizeResource
 
+RESOURCE = "dataset"
+CONFIG = {
+    "name": {
+        "source": "event",
+        "path": "serviceConfig.name",
+    },
+    "datasetType": {
+        "source": "event",
+        "path": "serviceConfig.datasetType",
+    },
+    "datasetGroupArn": {
+        "source": "event",
+        "path": "serviceConfig.datasetGroupArn",
+    },
+    "schemaArn": {"source": "event", "path": "serviceConfig.schemaArn"},
+    "timeStarted": {
+        "source": "event",
+        "path": "workflowConfig.timeStarted",
+        "default": "omit",
+        "as": "iso8601",
+    },
+}
+
 logger = Logger()
 tracer = Tracer()
 metrics = Metrics()
@@ -26,28 +49,8 @@ metrics = Metrics()
 @metrics.log_metrics
 @tracer.capture_lambda_handler
 @PersonalizeResource(
-    resource="dataset",
-    config={
-        "name": {
-            "source": "event",
-            "path": "serviceConfig.name",
-        },
-        "datasetType": {
-            "source": "event",
-            "path": "serviceConfig.datasetType",
-        },
-        "datasetGroupArn": {
-            "source": "event",
-            "path": "serviceConfig.datasetGroupArn",
-        },
-        "schemaArn": {"source": "event", "path": "serviceConfig.schemaArn"},
-        "timeStarted": {
-            "source": "event",
-            "path": "workflowConfig.timeStarted",
-            "default": "omit",
-            "as": "iso8601",
-        },
-    },
+    resource=RESOURCE,
+    config=CONFIG,
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
     """Create a dataset in Amazon Personalize based on the configuration in `event`

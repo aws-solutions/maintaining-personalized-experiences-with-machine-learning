@@ -17,7 +17,7 @@ from typing import Optional
 import aws_cdk.aws_iam as iam
 from aws_cdk.aws_dynamodb import ITable
 from aws_cdk.aws_stepfunctions import IChainable
-from aws_cdk.core import Construct
+from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 

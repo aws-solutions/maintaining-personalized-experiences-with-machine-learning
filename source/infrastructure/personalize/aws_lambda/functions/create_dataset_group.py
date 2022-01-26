@@ -14,8 +14,9 @@ from pathlib import Path
 from typing import Optional
 
 import aws_cdk.aws_iam as iam
+from aws_cdk import Aws, CfnCondition, CfnParameter, Fn
 from aws_cdk.aws_stepfunctions import IChainable
-from aws_cdk.core import Construct, Aws, CfnCondition, CfnParameter, Fn
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_hash import ResourceHash
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression

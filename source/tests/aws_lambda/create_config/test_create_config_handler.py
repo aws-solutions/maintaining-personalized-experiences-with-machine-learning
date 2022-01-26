@@ -21,6 +21,7 @@ from shared.resource import (
     BatchInferenceJob,
     EventTracker,
     Schema,
+    BatchSegmentJob,
 )
 
 
@@ -83,6 +84,19 @@ def test_create_config(personalize_stubber):
                 {"batchInferenceJobArn": BatchInferenceJob().arn("dsgbatch")}
             ]
         },
+    )
+    personalize_stubber.add_response(
+        method="list_batch_segment_jobs",
+        service_response={
+            "batchSegmentJobs": [
+                {"batchSegmentJobArn": BatchSegmentJob().arn("dsgbatch")}
+            ]
+        },
+    )
+    personalize_stubber.add_response(
+        method="list_recommenders",
+        expected_params={"datasetGroupArn": dsg_arn},
+        service_response={"recommenders": []},
     )
     personalize_stubber.add_response(
         method="list_event_trackers",

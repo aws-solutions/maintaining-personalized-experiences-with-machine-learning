@@ -11,7 +11,7 @@
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
 import pytest
-from aws_cdk.core import App, Stack
+from aws_cdk import App, Stack
 
 from aws_solutions.cdk.mappings import Mappings
 

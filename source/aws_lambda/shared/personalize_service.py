@@ -47,6 +47,7 @@ from shared.resource import (
     Solution,
     SolutionVersion,
     BatchInferenceJob,
+    BatchSegmentJob,
     Schema,
     Filter,
     Campaign,
@@ -116,6 +117,8 @@ class Personalize:
             return self.describe_event_tracker(**kwargs)
         elif resource.name.camel == "batchInferenceJob":
             return self.describe_batch_inference_job(**kwargs)
+        elif resource.name.camel == "batchSegmentJob":
+            return self.describe_batch_segment_job(**kwargs)
         elif resource.name.camel == "campaign":
             return self.describe_with_update(resource, **kwargs)
         else:
@@ -388,6 +391,17 @@ class Personalize:
             **kwargs,
         )
 
+    def describe_batch_segment_job(self, **kwargs):
+        def is_active_batch_segment_job(job: Dict):
+            return self.is_current(new_job=kwargs, old_job=job, name_key="jobName")
+
+        return self._describe_from_parent(
+            resource=BatchSegmentJob(),
+            parent=SolutionVersion(),
+            condition=is_active_batch_segment_job,
+            **kwargs,
+        )
+
     @Notifies("UPDATING")
     def update(self, resource: Resource, **kwargs):
         update_fn_name = f"update_{resource.name.snake}"
@@ -547,6 +561,13 @@ class Configuration:
             ]
         },
         {
+            "recommenders": [
+                [
+                    "serviceConfig",
+                ]
+            ]
+        },
+        {
             "solutions": [
                 [
                     "serviceConfig",
@@ -554,6 +575,14 @@ class Configuration:
                     {"campaigns": [["serviceConfig"]]},
                     {
                         "batchInferenceJobs": [
+                            [
+                                "serviceConfig",
+                                {"workflowConfig": ["schedule", "maxAge"]},
+                            ]
+                        ]
+                    },
+                    {
+                        "batchSegmentJobs": [
                             [
                                 "serviceConfig",
                                 {"workflowConfig": ["schedule", "maxAge"]},
@@ -684,6 +713,18 @@ class Configuration:
                     batch_inference_jobs=batch_inference_jobs,
                 )
 
+            batch_segment_jobs = _solution.get("batchSegmentJobs", [])
+            if batch_segment_jobs and self._validate_type(
+                batch_segment_jobs,
+                list,
+                f"solutions[{idx}].batchSegmentJobs must be a list",
+            ):
+                self._validate_batch_segment_jobs(
+                    path=f"solutions[{idx}].batchSegmentJobs",
+                    solution_name=_solution.get("serviceConfig", {}).get("name", ""),
+                    batch_segment_jobs=batch_segment_jobs,
+                )
+
             _solution = _solution.get("serviceConfig")
             if not self._validate_type(
                 _solution, dict, f"solutions[{idx}].serviceConfig must be an object"
@@ -766,6 +807,39 @@ class Configuration:
                     }
                 )
                 self._validate_resource(BatchInferenceJob(), batch_job)
+
+    def _validate_batch_segment_jobs(
+        self, path, solution_name, batch_segment_jobs: List[Dict]
+    ):
+        for idx, batch_job_config in enumerate(batch_segment_jobs):
+            current_path = f"{path}.batchSegmentJobs[{idx}]"
+
+            batch_job = batch_job_config.get("serviceConfig")
+            if not self._validate_type(
+                batch_job, dict, f"{current_path}.batchSegmentJob must be an object"
+            ):
+                continue
+            else:
+                # service does not validate the batch job length client-side
+                job_name = f"batch_{solution_name}_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}"
+                if len(job_name) > 63:
+                    self._configuration_errors.append(
+                        f"The generated batch segment job name {job_name} is longer than 63 characters. Use a shorter solution name."
+                    )
+
+                # some values are provided by the solution - we introduce placeholders
+                batch_job.update(
+                    {
+                        "solutionVersionArn": SolutionVersion().arn("validation"),
+                        "jobName": job_name,
+                        "roleArn": "roleArn",
+                        "jobInput": {"s3DataSource": {"path": "s3://data-source"}},
+                        "jobOutput": {
+                            "s3DataDestination": {"path": "s3://data-destination"}
+                        },
+                    }
+                )
+                self._validate_resource(BatchSegmentJob(), batch_job)
 
     def _validate_rate(self, expression):
         rate_re = re.compile(

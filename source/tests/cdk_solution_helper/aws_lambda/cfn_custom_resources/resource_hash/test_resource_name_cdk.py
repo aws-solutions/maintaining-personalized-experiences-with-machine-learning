@@ -12,7 +12,7 @@
 # #####################################################################################################################
 
 import pytest
-from aws_cdk.core import Stack, App
+from aws_cdk import Stack, App
 from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name.name import (
@@ -31,7 +31,7 @@ class SomeStack(Stack):
 def resource_naming_stack():
     app = App()
     SomeStack(app, "some-test-naming")
-    yield app.synth().get_stack("some-test-naming").template
+    yield app.synth().get_stack_by_name("some-test-naming").template
 
 
 def test_resource_service_tokens(resource_naming_stack):

@@ -12,6 +12,7 @@
 # ######################################################################################################################
 from typing import List, Optional
 
+from aws_cdk import Duration
 from aws_cdk.aws_stepfunctions import (
     StateMachineFragment,
     State,
@@ -24,7 +25,7 @@ from aws_cdk.aws_stepfunctions import (
     Parallel,
     StateMachine,
 )
-from aws_cdk.core import Construct, Duration
+from constructs import Construct
 
 from aws_solutions.scheduler.cdk.construct import Scheduler
 from personalize.aws_lambda.functions import (
@@ -32,14 +33,18 @@ from personalize.aws_lambda.functions import (
     CreateSolutionVersion,
     CreateCampaign,
     CreateBatchInferenceJob,
+    CreateBatchSegmentJob,
+    CreateRecommender,
 )
 from personalize.step_functions.batch_inference_jobs_fragment import (
     BatchInferenceJobsFragment,
 )
+from personalize.step_functions.batch_segment_jobs_fragment import (
+    BatchSegmentJobsFragment,
+)
 from personalize.step_functions.scheduler_fragment import SchedulerFragment
 
 TEMPORARY_PATH = "$._tmp"
-BATCH_INFERENCE_JOB_PATH = "$.batchInferenceJob"
 BUCKET_PATH = "$.bucket"
 CURRENT_DATE_PATH = "$.currentDate"
 MINIMUM_TIME = "1 second"
@@ -54,6 +59,8 @@ class SolutionFragment(StateMachineFragment):
         create_solution_version: CreateSolutionVersion,
         create_campaign: CreateCampaign,
         create_batch_inference_job: CreateBatchInferenceJob,
+        create_batch_segment_job: CreateBatchSegmentJob,
+        create_recommender: CreateRecommender,
         scheduler: Optional[Scheduler] = None,
         to_schedule: Optional[StateMachine] = None,
     ):
@@ -69,7 +76,9 @@ class SolutionFragment(StateMachineFragment):
         }
 
         # fmt: off
+        self.recommenders_not_available = Pass(self, "Recommenders not Provided")
         self.solutions_not_available = Pass(self, "Solutions not Provided")
+        self.recommenders_available = Choice(self, "Check for Recommenders").otherwise(self.recommenders_not_available)
         self.solutions_available = Choice(self, "Check for Solutions").otherwise(self.solutions_not_available)
         campaigns_available = Choice(self, "Check for Campaigns").otherwise(Pass(self, "Campaigns not Provided"))
 
@@ -78,6 +87,12 @@ class SolutionFragment(StateMachineFragment):
             "Prepare Solution Input Data",
             input_path="$.datasetGroupArn",  # NOSONAR (python:S1192) - string for clarity
             result_path="$.solution.serviceConfig.datasetGroupArn",
+        )
+        _prepare_recommender_input = Pass(
+            self,
+            "Prepare Recommender Input Data",
+            input_path="$.datasetGroupArn", # NOSONAR (python:S1192) - string for clarity
+            result_path="$.recommender.serviceConfig.datasetGroupArn"
         )
 
         _prepare_solution_output = Pass(
@@ -125,6 +140,16 @@ class SolutionFragment(StateMachineFragment):
             result_selector={
                 "solutionArn.$": "$.solutionArn"
             }
+        )
+        _create_recommender = create_recommender.state(
+            self,
+            "Create Recommender",
+            result_path=TEMPORARY_PATH,
+            input_path="$.recommender",
+            result_selector={
+                "recommenderArn.$": "$.recommenderArn"
+            },
+            **retry_config
         )
 
         _create_solution_version = create_solution_version.state(
@@ -183,6 +208,14 @@ class SolutionFragment(StateMachineFragment):
             to_schedule=to_schedule,
         ).start_state
 
+        _create_batch_segment_jobs = BatchSegmentJobsFragment(
+            self,
+            "Create Batch Segment Jobs",
+            create_batch_segment_job=create_batch_segment_job,
+            scheduler=scheduler,
+            to_schedule=to_schedule,
+        ).start_state
+
         self.create_campaigns = campaigns_available.when(
             Condition.is_present("$.solution.campaigns[0]"),
             Map(
@@ -204,6 +237,7 @@ class SolutionFragment(StateMachineFragment):
         )
         campaigns_and_batch.branch(self.create_campaigns)
         campaigns_and_batch.branch(_create_batch_inference_jobs)
+        campaigns_and_batch.branch(_create_batch_segment_jobs)
         if scheduler and to_schedule:
             campaigns_and_batch.next(
                 SchedulerFragment(
@@ -285,6 +319,21 @@ class SolutionFragment(StateMachineFragment):
         )
         _check_solution_version.otherwise(_create_solution_version)
 
+        self._create_recommenders = Map(
+            self,
+            "Create Recommenders",
+            items_path="$.recommenders",
+            result_path=JsonPath.DISCARD,
+            parameters={
+                "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
+                "datasetGroupName.$": "$.datasetGroup.serviceConfig.name",
+                "recommender.$": "$$.Map.Item.Value",
+                "bucket.$": BUCKET_PATH,
+                "currentDate.$": CURRENT_DATE_PATH,  # NOSONAR (python:S1192) - string for clarity
+            }
+        ).iterator(_prepare_recommender_input
+                   .next(_create_recommender)
+        )
         self._create_solutions = Map(
             self,
             "Create Solutions",
@@ -301,15 +350,22 @@ class SolutionFragment(StateMachineFragment):
                    .next(_create_solution)
                    .next(_prepare_solution_output)
                    .next(_check_solution_version)
+                   )
+
+        self.recommenders_and_solutions = Parallel(self, "Recommenders and Solutions", result_path=JsonPath.DISCARD).branch(
+            self.solutions_available
+        ).branch(
+            self.recommenders_available
         )
 
         self.solutions_available.when(Condition.is_present("$.solutions[0]"), self._create_solutions)
+        self.recommenders_available.when(Condition.is_present("$.recommenders[0]"), self._create_recommenders)
         # fmt: on
 
     @property
     def start_state(self) -> State:
-        return self.solutions_available
+        return self.recommenders_and_solutions
 
     @property
     def end_states(self) -> List[INextable]:
-        return [self._create_solutions, self.solutions_not_available]
+        return [self.recommenders_and_solutions]

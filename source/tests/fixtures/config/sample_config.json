@@ -85,6 +85,34 @@
   "solutions": [
     {
       "serviceConfig": {
+        "name": "affinity_item",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity"
+      },
+      "batchSegmentJobs": [
+          {
+            "serviceConfig": {},
+            "workflowConfig": {
+              "schedule": "cron(0 3 * * ? *)"
+            }
+          }
+      ]
+    },
+    {
+      "serviceConfig": {
+        "name": "affinity_item_attribute",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-item-attribute-affinity"
+      },
+      "batchSegmentJobs": [
+        {
+          "serviceConfig": {},
+          "workflowConfig": {
+              "schedule": "cron(0 3 * * ? *)"
+          }
+        }
+      ]
+    },
+    {
+      "serviceConfig": {
         "name": "unit_test_sims_new",
         "recipeArn": "arn:aws:personalize:::recipe/aws-sims"
       },

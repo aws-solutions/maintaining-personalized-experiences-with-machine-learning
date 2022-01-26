@@ -12,6 +12,7 @@
 # ######################################################################################################################
 from typing import List
 
+from aws_cdk import Duration
 from aws_cdk.aws_stepfunctions import (
     StateMachineFragment,
     State,
@@ -20,7 +21,7 @@ from aws_cdk.aws_stepfunctions import (
     Pass,
     Condition,
 )
-from aws_cdk.core import Construct, Duration
+from constructs import Construct
 
 from personalize.aws_lambda.functions import (
     CreateEventTracker,

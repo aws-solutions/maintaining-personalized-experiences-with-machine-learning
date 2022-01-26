@@ -15,7 +15,8 @@ import shutil
 from pathlib import Path
 
 import pytest
-from aws_cdk.core import Construct, Stack, App
+from aws_cdk import Stack, App
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import (
     SolutionsPythonFunction,
@@ -72,7 +73,7 @@ def function_synth(python_lambda, caplog):
 
 
 def test_function_has_default_role(function_synth):
-    function_stack = function_synth.get_stack("test-function").template
+    function_stack = function_synth.get_stack_by_name("test-function").template
     func = function_stack["Resources"]["TestFunction"]
     assert func["Type"] == "AWS::Lambda::Function"
     assert (

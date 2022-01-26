@@ -13,7 +13,7 @@
 
 from pathlib import Path
 
-from aws_cdk.core import Construct
+from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 

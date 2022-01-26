@@ -32,7 +32,7 @@ def test_deploy(solution, cdk_entrypoint):
     extra_context = "EXTRA_CONTEXT"
     source_bucket = "SOURCE_BUCKET"
     synth = build_app({extra_context: extra_context, "BUCKET_NAME": source_bucket})
-    stack = synth.get_stack("PersonalizeStack")
+    stack = synth.get_stack_by_name("PersonalizeStack")
     assert solution.id in stack.template["Description"]
     assert (
         source_bucket == stack.template["Mappings"]["SourceCode"]["General"]["S3Bucket"]
@@ -56,7 +56,7 @@ def test_parameters(solution, cdk_entrypoint):
     extra_context = "EXTRA_CONTEXT"
     source_bucket = "SOURCE_BUCKET"
     synth = build_app({extra_context: extra_context, "BUCKET_NAME": source_bucket})
-    stack = synth.get_stack("PersonalizeStack").template
+    stack = synth.get_stack_by_name("PersonalizeStack").template
 
     assert (
         stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0][

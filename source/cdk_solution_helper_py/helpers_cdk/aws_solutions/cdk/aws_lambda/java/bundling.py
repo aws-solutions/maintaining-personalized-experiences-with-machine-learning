@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Union, Dict, Optional
 
 import jsii
-from aws_cdk.core import ILocalBundling, BundlingOptions
+from aws_cdk import ILocalBundling, BundlingOptions
 
 from aws_solutions.cdk.helpers import copytree
 
