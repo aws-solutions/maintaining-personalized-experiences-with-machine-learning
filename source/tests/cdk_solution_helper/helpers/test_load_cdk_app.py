@@ -17,7 +17,8 @@ import pytest
 from aws_solutions.cdk.helpers.loader import load_cdk_app, CDKLoaderException
 
 CDK_APP = """
-from aws_cdk.core import App, Stack, Construct
+from constructs import Construct
+from aws_cdk import App, Stack
 
 class EmptyStack(Stack): 
     def __init__(self, scope: Construct, construct_id: str, **kwargs):
@@ -85,8 +86,16 @@ def test_load_cdk_app(cdk_app):
     assert callable(cdk_entrypoint)
     result = cdk_entrypoint()
 
-    stack = result.get_stack("empty-stack")
-    assert stack.template == {}  # the stack generated should be empty
+    stack = result.get_stack_by_name("empty-stack")
+
+    # CDK will include the bootstrap version Parameter and CheckBootstrapVersion Rule
+    assert not stack.template.get("Metadata")
+    assert not stack.template.get("Description")
+    assert not stack.template.get("Mappings")
+    assert not stack.template.get("Conditions")
+    assert not stack.template.get("Transform")
+    assert not stack.template.get("Resources")
+    assert not stack.template.get("Outputs")
 
 
 @pytest.mark.parametrize(

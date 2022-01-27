@@ -12,8 +12,9 @@
 # ######################################################################################################################
 
 import pytest
+from aws_cdk import App, Stack, Aspects, CfnCondition, Fn
 from aws_cdk.aws_sqs import Queue, CfnQueue
-from aws_cdk.core import App, Stack, Construct, Aspects, CfnCondition, Fn
+from constructs import Construct
 
 from aws_solutions.cdk.aspects import ConditionalResources
 
@@ -44,7 +45,7 @@ class SomeStack(Stack):
 def stack_conditional():
     app = App()
     SomeStack(app, "some-test-queues")
-    yield app.synth().get_stack("some-test-queues").template
+    yield app.synth().get_stack_by_name("some-test-queues").template
 
 
 def test_conditional_resources(stack_conditional):

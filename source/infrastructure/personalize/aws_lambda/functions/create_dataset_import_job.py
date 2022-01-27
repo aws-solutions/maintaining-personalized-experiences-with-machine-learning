@@ -14,9 +14,10 @@ from pathlib import Path
 from typing import Optional
 
 import aws_cdk.aws_iam as iam
+from aws_cdk import Aws
 from aws_cdk.aws_s3 import IBucket
 from aws_cdk.aws_stepfunctions import IChainable
-from aws_cdk.core import Construct, Aws
+from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 

@@ -16,7 +16,8 @@ import shutil
 from pathlib import Path
 
 import pytest
-from aws_cdk.core import Construct, Stack, App
+from aws_cdk import Stack, App
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.layer import SolutionsPythonLayerVersion
 from aws_solutions.cdk.helpers.copytree import copytree
@@ -62,16 +63,24 @@ def layer_synth(python_layer_dir, caplog):
 
 @pytest.mark.no_cdk_lambda_mock
 def test_layer_version(layer_synth):
-    layer_synth.get_stack("test-layer-version").template
+    layer_synth.get_stack_by_name("test-layer-version").template
     directory = Path(layer_synth.directory)
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
 
-    asset_dir = (
-        directory
-        / manifest["artifacts"]["test-layer-version"]["metadata"][
-            "/test-layer-version"
-        ][0]["data"]["path"]
-    )
+    asset_file = manifest["artifacts"]["test-layer-version.assets"]["properties"][
+        "file"
+    ]
+    assets = json.loads((directory / asset_file).read_text(encoding="utf-8"))
+    asset_dir = next(
+        iter(
+            [
+                v
+                for v in assets["files"].values()
+                if v.get("source", {}).get("packaging") == "zip"
+            ]
+        )
+    )["source"]["path"]
+    asset_path = directory / asset_dir
 
     # check that the package was installed to the correct path
-    assert (asset_dir / "python" / "minimal").exists()
+    assert (asset_path / "python" / "minimal").exists()

@@ -13,11 +13,15 @@
 
 from pathlib import Path
 from typing import Union, List
+from uuid import uuid4
 
+from aws_cdk import BundlingOptions, DockerImage, AssetHashType
 from aws_cdk.aws_lambda import LayerVersion, Code
-from aws_cdk.core import Construct, BundlingOptions, BundlingDockerImage, AssetHashType
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonBundling
+
+DEPENDENCY_EXCLUDES = ["*.pyc"]
 
 
 class SolutionsPythonLayerVersion(LayerVersion):
@@ -61,12 +65,14 @@ class SolutionsPythonLayerVersion(LayerVersion):
         # create the layer version locally
         code_parameters = {
             "path": str(self.requirements_path),
-            "asset_hash_type": AssetHashType.SOURCE,
+            "asset_hash_type": AssetHashType.CUSTOM,
+            "asset_hash": uuid4().hex,
+            "exclude": DEPENDENCY_EXCLUDES,
         }
 
         code = Code.from_asset(
             bundling=BundlingOptions(
-                image=BundlingDockerImage.from_registry(
+                image=DockerImage.from_registry(
                     "scratch"
                 ),  # NEVER USED - FOR NOW ALL BUNDLING IS LOCAL
                 command=["not_used"],

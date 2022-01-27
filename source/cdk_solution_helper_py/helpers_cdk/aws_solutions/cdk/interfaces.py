@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Union, List
 
 import jsii
-from aws_cdk.core import (
+from aws_cdk import (
     ITemplateOptions,
     Stack,
     NestedStack,
@@ -102,6 +102,10 @@ class TemplateOptions:
                 },
             },
             "aws:solutions:templatename": self.filename,
+            "aws:solutions:solution_id": self.stack.node.try_get_context("SOLUTION_ID"),
+            "aws:solutions:solution_version": self.stack.node.try_get_context(
+                "SOLUTION_VERSION"
+            ),
         }
         self.stack.template_options.metadata = metadata
         return metadata

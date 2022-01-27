@@ -18,6 +18,49 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from shared.sfn_middleware import PersonalizeResource
 
+RESOURCE = "solution"
+STATUS = "solution.status"
+CONFIG = {
+    "name": {
+        "source": "event",
+        "path": "serviceConfig.name",
+    },
+    "performHPO": {
+        "source": "event",
+        "path": "serviceConfig.performHPO",
+        "default": "omit",
+    },
+    "performAutoML": {
+        "source": "event",
+        "path": "serviceConfig.performAutoML",
+        "default": "omit",
+    },
+    "recipeArn": {
+        "source": "event",
+        "path": "serviceConfig.recipeArn",
+        "default": "omit",
+    },
+    "datasetGroupArn": {
+        "source": "event",
+        "path": "serviceConfig.datasetGroupArn",
+    },
+    "eventType": {
+        "source": "event",
+        "path": "serviceConfig.eventType",
+        "default": "omit",
+    },
+    "solutionConfig": {
+        "source": "event",
+        "path": "serviceConfig.solutionConfig",
+        "default": "omit",
+    },
+    "timeStarted": {
+        "source": "event",
+        "path": "workflowConfig.timeStarted",
+        "default": "omit",
+        "as": "iso8601",
+    },
+}
 logger = Logger()
 tracer = Tracer()
 metrics = Metrics()
@@ -26,49 +69,9 @@ metrics = Metrics()
 @metrics.log_metrics
 @tracer.capture_lambda_handler
 @PersonalizeResource(
-    resource="solution",
-    status="solution.status",
-    config={
-        "name": {
-            "source": "event",
-            "path": "serviceConfig.name",
-        },
-        "performHPO": {
-            "source": "event",
-            "path": "serviceConfig.performHPO",
-            "default": "omit",
-        },
-        "performAutoML": {
-            "source": "event",
-            "path": "serviceConfig.performAutoML",
-            "default": "omit",
-        },
-        "recipeArn": {
-            "source": "event",
-            "path": "serviceConfig.recipeArn",
-            "default": "omit",
-        },
-        "datasetGroupArn": {
-            "source": "event",
-            "path": "serviceConfig.datasetGroupArn",
-        },
-        "eventType": {
-            "source": "event",
-            "path": "serviceConfig.eventType",
-            "default": "omit",
-        },
-        "solutionConfig": {
-            "source": "event",
-            "path": "serviceConfig.solutionConfig",
-            "default": "omit",
-        },
-        "timeStarted": {
-            "source": "event",
-            "path": "workflowConfig.timeStarted",
-            "default": "omit",
-            "as": "iso8601",
-        },
-    },
+    resource=RESOURCE,
+    status=STATUS,
+    config=CONFIG,
 )
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
     """Create a solution in Amazon Personalize based on the configuration in `event`

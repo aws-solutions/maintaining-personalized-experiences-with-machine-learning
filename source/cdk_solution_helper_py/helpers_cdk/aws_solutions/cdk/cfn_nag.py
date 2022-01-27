@@ -15,7 +15,8 @@ from dataclasses import dataclass
 from typing import List
 
 import jsii
-from aws_cdk.core import CfnResource, IAspect, IConstruct
+from aws_cdk import CfnResource, IAspect
+from constructs import IConstruct
 
 
 @dataclass

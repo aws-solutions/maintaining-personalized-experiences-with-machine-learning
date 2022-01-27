@@ -20,8 +20,8 @@ from pathlib import Path
 from typing import Dict, Union
 
 import jsii
+from aws_cdk import ILocalBundling, BundlingOptions
 from aws_cdk.aws_lambda import Runtime
-from aws_cdk.core import ILocalBundling, BundlingOptions
 
 from aws_solutions.cdk.helpers import copytree
 
@@ -165,7 +165,6 @@ class SolutionsPythonBundling:
             str(requirements_build_path),
             "-r",
             str(Path(output_dir) / REQUIREMENTS_TXT_FILE),
-            "--use-feature=in-tree-build",
         ]
         self._invoke_local_command("pip", command, cwd=self.to_bundle)
 

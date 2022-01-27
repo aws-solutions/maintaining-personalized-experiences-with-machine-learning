@@ -14,10 +14,11 @@
 from pathlib import Path
 from typing import Optional, List
 
+from aws_cdk import Duration
 from aws_cdk.aws_events import EventBus
 from aws_cdk.aws_lambda import Tracing, Runtime, RuntimeFamily
 from aws_cdk.aws_stepfunctions import IChainable, TaskInput, State
-from aws_cdk.core import Construct, Duration
+from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.environment import Environment
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction

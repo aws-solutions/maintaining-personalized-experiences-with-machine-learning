@@ -8,7 +8,7 @@ from aws_cdk.aws_stepfunctions import (
     State,
     INextable,
 )
-from aws_cdk.core import Construct
+from constructs import Construct
 
 from personalize.aws_lambda.functions import (
     CreateSchema,

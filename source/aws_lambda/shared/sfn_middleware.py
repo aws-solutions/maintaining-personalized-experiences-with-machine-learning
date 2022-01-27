@@ -82,8 +82,10 @@ def set_workflow_config(config: Dict) -> Dict:
     resources = {
         "datasetGroup": Arity.ONE,
         "solutions": Arity.MANY,
+        "recommenders": Arity.MANY,
         "campaigns": Arity.MANY,
         "batchInferenceJobs": Arity.MANY,
+        "batchSegmentJobs": Arity.MANY,
         "filters": Arity.MANY,
         "solutionVersion": Arity.ONE,
     }
@@ -126,9 +128,18 @@ def set_defaults(config: Dict) -> Dict:
     for s_idx, solution in enumerate(solutions):
         # by default, don't include a solution version
         config["solutions"][s_idx].setdefault("solutionVersions", [])
-        # by default, don't include a campaign or batch inference job
+        # by default, don't include a campaign or batch inference or segment job
         config["solutions"][s_idx].setdefault("campaigns", [])
         config["solutions"][s_idx].setdefault("batchInferenceJobs", [])
+        config["solutions"][s_idx].setdefault("batchSegmentJobs", [])
+
+    # by default, don't include a recommender
+    recommenders = config.setdefault("recommenders", [])
+    for r_idx, recommender in enumerate(recommenders):
+        # by default, don't include a campaign or batch inference or segment job
+        config["recommenders"][r_idx].setdefault("batchInferenceJobs", [])
+        config["recommenders"][r_idx].setdefault("batchSegmentJobs", [])
+
     return config
 
 
@@ -270,10 +281,11 @@ class PersonalizeResource:
                 "roleArn",
             }:
                 continue
-            if self.resource == "batchInferenceJob" and expected_key in {
+            if self.resource.startswith("batch") and expected_key in {
                 "jobName",
                 "jobInput",
                 "jobOutput",
+                "roleArn",
             }:
                 continue
             if self.resource == "solutionVersion" and expected_key == "trainingMode":

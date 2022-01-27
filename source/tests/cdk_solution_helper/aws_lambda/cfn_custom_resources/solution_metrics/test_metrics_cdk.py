@@ -12,7 +12,7 @@
 # #####################################################################################################################
 
 import pytest
-from aws_cdk.core import Stack, App
+from aws_cdk import Stack, App
 from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics.metrics import (
@@ -35,7 +35,7 @@ class SomeStack(Stack):
 def test_stack_metrics():
     app = App()
     SomeStack(app, "some-test-metrics")
-    yield app.synth().get_stack("some-test-metrics").template
+    yield app.synth().get_stack_by_name("some-test-metrics").template
 
 
 def test_metrics_valid(test_stack_metrics):

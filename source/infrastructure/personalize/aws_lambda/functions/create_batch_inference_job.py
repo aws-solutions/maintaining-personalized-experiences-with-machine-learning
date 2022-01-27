@@ -13,8 +13,9 @@
 from pathlib import Path
 
 import aws_cdk.aws_iam as iam
+from aws_cdk import Aws
 from aws_cdk.aws_s3 import IBucket
-from aws_cdk.core import Construct, Aws
+from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 
@@ -30,7 +31,7 @@ class CreateBatchInferenceJob(SolutionStep):
         self.personalize_bucket = personalize_bucket
         self.personalize_batch_inference_rw_role = iam.Role(
             scope,
-            "PersonalizeS3ReadWriteRole",
+            "PersonalizeInferenceS3ReadWriteRole",
             description="Grants Amazon Personalize access to read/write to S3 for batch inference jobs",
             assumed_by=iam.ServicePrincipal("personalize.amazonaws.com"),
             inline_policies={

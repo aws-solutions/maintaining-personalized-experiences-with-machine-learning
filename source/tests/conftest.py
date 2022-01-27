@@ -14,8 +14,9 @@ import os
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict
+from typing import Dict, Optional
 
+import boto3
 import jsii
 import pytest
 from aws_cdk.aws_lambda import (
@@ -26,8 +27,8 @@ from aws_cdk.aws_lambda import (
     LayerVersionProps,
     LayerVersion,
 )
-from aws_cdk.core import Construct
 from botocore.stub import Stubber
+from constructs import Construct
 
 from aws_solutions.core import get_service_client
 
@@ -188,3 +189,38 @@ def notifier_stubber(mocker):
     notifier = NotifierStub()
     mocker.patch("shared.events.NOTIFY_LIST", [notifier])
     yield notifier
+
+
+@pytest.fixture
+def validate_handler_config():
+    """Validates a handler configuration against the installed botocore shapes"""
+
+    def _validate_handler_config(
+        resource: str, config: Dict, status: Optional[str] = None
+    ):
+        cli = boto3.client("personalize")
+
+        shape = resource[0].upper() + resource[1:]
+        request_shape = cli.meta.service_model.shape_for(f"Create{shape}Request")
+        response_shape = cli.meta.service_model.shape_for(f"Describe{shape}Response")
+
+        # check config parameter
+        for k in config.keys():
+            if "workflowConfig" not in config[k].get("path"):
+                assert (
+                    k in request_shape.members.keys()
+                ), f"invalid key {k} not in Create{shape} API call"
+
+        for k in request_shape.members.keys():
+            assert k in config.keys(), "missing {k} in config"
+
+        # check status parameter
+        if status:
+            m = response_shape
+            for k in status.split("."):
+                assert (
+                    k in m.members.keys()
+                ), f"status component {k} not found in {m.keys()}"
+                m = m.members[k]
+
+    return _validate_handler_config

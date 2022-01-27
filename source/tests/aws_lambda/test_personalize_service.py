@@ -202,6 +202,11 @@ def test_service_model(personalize_stubber):
         service_response={"solutionVersions": []},
     )
     personalize_stubber.add_response(
+        method="list_recommenders",
+        expected_params={"datasetGroupArn": dataset_group_arn_1},
+        service_response={"recommenders": []},
+    )
+    personalize_stubber.add_response(
         method="list_event_trackers",
         expected_params={"datasetGroupArn": dataset_group_arn_1},
         service_response={"eventTrackers": []},
@@ -237,6 +242,11 @@ def test_service_model(personalize_stubber):
         method="list_solution_versions",
         expected_params={"solutionArn": solution_arn_2},
         service_response={"solutionVersions": []},
+    )
+    personalize_stubber.add_response(
+        method="list_recommenders",
+        expected_params={"datasetGroupArn": dataset_group_arn_2},
+        service_response={"recommenders": []},
     )
     personalize_stubber.add_response(
         method="list_event_trackers",

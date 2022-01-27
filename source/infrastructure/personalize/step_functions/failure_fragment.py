@@ -19,7 +19,7 @@ from aws_cdk.aws_stepfunctions import (
     Fail,
     TaskInput,
 )
-from aws_cdk.core import Construct
+from constructs import Construct
 
 from personalize.sns.notifications import Notifications
 

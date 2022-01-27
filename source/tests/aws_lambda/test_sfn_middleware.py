@@ -113,7 +113,7 @@ def test_set_defaults_1():
     defaults = set_defaults({})
     del defaults["currentDate"]
     del defaults["datasetGroup"]
-    assert defaults == {"solutions": []}
+    assert defaults == {"recommenders": [], "solutions": []}
 
 
 def test_set_defaults_2():
