@@ -30,12 +30,7 @@ class CreateRecommender(SolutionStep):
             scope,
             id,
             layers=layers,
-            entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_recommender"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_recommender" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
 

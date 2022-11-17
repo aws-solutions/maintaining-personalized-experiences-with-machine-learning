@@ -66,10 +66,7 @@ class CreateBatchSegmentJob(SolutionStep):
             id,
             layers=layers,
             entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_batch_segment_job"
-                / "handler.py"
+                Path(__file__).absolute().parents[4] / "aws_lambda" / "create_batch_segment_job" / "handler.py"
             ),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
@@ -106,6 +103,4 @@ class CreateBatchSegmentJob(SolutionStep):
                 resources=[self.personalize_batch_inference_rw_role.role_arn],
             )
         )
-        self.function.add_environment(
-            "ROLE_ARN", self.personalize_batch_inference_rw_role.role_arn
-        )
+        self.function.add_environment("ROLE_ARN", self.personalize_batch_inference_rw_role.role_arn)

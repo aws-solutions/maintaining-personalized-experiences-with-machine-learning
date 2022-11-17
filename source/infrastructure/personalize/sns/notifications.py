@@ -48,12 +48,7 @@ class Notifications(SolutionStep):
             id,
             layers=layers,
             failure_state=failure_state,
-            entrypoint=(
-                Path(__file__).absolute().parents[3]
-                / "aws_lambda"
-                / "sns_notification"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[3] / "aws_lambda" / "sns_notification" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[3] / "aws_lambda" / "shared"],
         )
 
@@ -66,9 +61,7 @@ class Notifications(SolutionStep):
             self,
             "NotificationConfiguration",
             existing_lambda_obj=self.function,
-            topic_props=TopicProps(
-                display_name=f"{self.node.try_get_context('SOLUTION_NAME')} Notifications"
-            ),
+            topic_props=TopicProps(display_name=f"{self.node.try_get_context('SOLUTION_NAME')} Notifications"),
         )
         topic = lambda_sns.sns_topic
         topic.node.default_child.override_logical_id("NotificationTopic")
@@ -89,9 +82,7 @@ class Notifications(SolutionStep):
 
     def _create_resources(self):
         self.topic = self.create_sns()
-        self.subscription = self.create_subscription(
-            email=self.email, email_provided=self.email_provided
-        )
+        self.subscription = self.create_subscription(email=self.email, email_provided=self.email_provided)
 
     def _set_permissions(self) -> None:
         self.topic.grant_publish(self.function)

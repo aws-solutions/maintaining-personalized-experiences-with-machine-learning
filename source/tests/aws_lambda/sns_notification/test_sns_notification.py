@@ -83,9 +83,7 @@ def test_sns_notification(context, sqs_mock):
         )["Message"]
     )
 
-    error_default = (
-        f"The personalization workflow for {DATASET_GROUP_NAME} completed with errors"
-    )
+    error_default = f"The personalization workflow for {DATASET_GROUP_NAME} completed with errors"
     error_json = {
         "datasetGroup": DATASET_GROUP_NAME,
         "status": "UPDATE FAILED",
@@ -119,9 +117,7 @@ def test_sns_notification_trace(sqs_mock, trace_enabled, context):
         )["Message"]
     )
 
-    error_default = (
-        f"The personalization workflow for {DATASET_GROUP_NAME} completed with errors"
-    )
+    error_default = f"The personalization workflow for {DATASET_GROUP_NAME} completed with errors"
     error_json = {
         "datasetGroup": f"{DATASET_GROUP_NAME}",
         "status": "UPDATE FAILED",

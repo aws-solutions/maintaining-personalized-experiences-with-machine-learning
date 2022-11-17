@@ -20,6 +20,7 @@ from aws_cdk import Stack, App
 from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.layer import SolutionsPythonLayerVersion
+from aws_solutions.cdk.aws_lambda.python.hash_utils import LayerHash
 from aws_solutions.cdk.helpers.copytree import copytree
 
 
@@ -67,20 +68,38 @@ def test_layer_version(layer_synth):
     directory = Path(layer_synth.directory)
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
 
-    asset_file = manifest["artifacts"]["test-layer-version.assets"]["properties"][
-        "file"
-    ]
+    asset_file = manifest["artifacts"]["test-layer-version.assets"]["properties"]["file"]
     assets = json.loads((directory / asset_file).read_text(encoding="utf-8"))
-    asset_dir = next(
-        iter(
-            [
-                v
-                for v in assets["files"].values()
-                if v.get("source", {}).get("packaging") == "zip"
-            ]
-        )
-    )["source"]["path"]
+    asset_dir = next(iter([v for v in assets["files"].values() if v.get("source", {}).get("packaging") == "zip"]))[
+        "source"
+    ]["path"]
     asset_path = directory / asset_dir
 
     # check that the package was installed to the correct path
     assert (asset_path / "python" / "minimal").exists()
+
+
+def test_layer_hash(python_layer_dir):
+    requirements = python_layer_dir
+    requirements_file = requirements / "requirements.txt"
+
+    h1 = LayerHash.hash(requirements)
+    h2 = LayerHash.hash(requirements)
+    assert h1 == h2
+
+    # adding another package to the requirements should result in a new version
+    package_2 = (Path(__file__).parent / "fixtures" / "packages" / "package2").resolve()
+    with open(requirements_file, "a") as f:
+        f.write(f"\n{str(package_2)}\n")
+    h3 = LayerHash.hash(requirements)
+    assert h3 != h1
+
+    # adding a file to a package should result in a new version
+    (python_layer_dir / "package" / "minimal" / "new_file.py").write_text("VALUE = 1")
+    h4 = LayerHash.hash(requirements)
+    assert h4 != h3 != h1
+
+    # changing a file in a package should result in a new version
+    (python_layer_dir / "package" / "minimal" / "new_file.py").write_text("VALUE = 2")
+    h5 = LayerHash.hash(requirements)
+    assert h5 != h4 != h3 != h1

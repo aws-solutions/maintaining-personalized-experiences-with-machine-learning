@@ -60,9 +60,7 @@ class ScheduledSolutionMaintenance(Construct):
             definition=Chain.start(
                 Parallel(self, "Manage Solution Maintenance")
                 .branch(
-                    create_timestamp.state(
-                        self, "Set Current Timestamp", result_path="$.currentDate"
-                    )
+                    create_timestamp.state(self, "Set Current Timestamp", result_path="$.currentDate")
                     .next(prepare_input.state(self, "Prepare Input"))
                     .next(
                         SolutionFragment(
@@ -86,21 +84,15 @@ class ScheduledSolutionMaintenance(Construct):
                     notifications.state(
                         self,
                         "Success",
-                        payload=TaskInput.from_object(
-                            {"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}
-                        ),
+                        payload=TaskInput.from_object({"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}),
                     )
                 )
             ),
         )
         add_cfn_nag_suppressions(
-            self.state_machine.role.node.try_find_child(
-                "DefaultPolicy"
-            ).node.find_child("Resource"),
+            self.state_machine.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
             [
-                CfnNagSuppression(
-                    "W12", "IAM policy for AWS X-Ray requires an allow on *"
-                ),
+                CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *"),
                 CfnNagSuppression(
                     "W76",
                     "Large step functions need larger IAM roles to access all managed AWS Lambda functions",

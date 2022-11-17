@@ -36,25 +36,19 @@ from aws_solutions.scheduler.common import (
 @pytest.fixture
 def scheduler_stepfunctions_target_arn():
     stepfunction_name = "personalizestack-personalize-target"
-    stepfunction_arn = (
-        f"arn:aws:states:us-east-1:{ACCOUNT_ID}:stateMachine:{stepfunction_name}"
-    )
+    stepfunction_arn = f"arn:aws:states:us-east-1:{ACCOUNT_ID}:stateMachine:{stepfunction_name}"
     return stepfunction_arn
 
 
 @pytest.fixture
 def scheduler_stepfunctions_scheduler_arn():
     stepfunction_name = "personalizestack-personalize-scheduler"
-    stepfunction_arn = (
-        f"arn:aws:states:us-east-1:{ACCOUNT_ID}:stateMachine:{stepfunction_name}"
-    )
+    stepfunction_arn = f"arn:aws:states:us-east-1:{ACCOUNT_ID}:stateMachine:{stepfunction_name}"
     return stepfunction_arn
 
 
 @pytest.fixture
-def scheduler_stepfunctions(
-    scheduler_stepfunctions_target_arn, scheduler_stepfunctions_scheduler_arn
-):
+def scheduler_stepfunctions(scheduler_stepfunctions_target_arn, scheduler_stepfunctions_scheduler_arn):
     with mock_stepfunctions():
         sfn = boto3.client("stepfunctions")
         definition = json.dumps(
@@ -122,9 +116,7 @@ def scheduler(scheduler_table, scheduler_stepfunctions, mocker):
     _scheduler = Scheduler()
     _scheduler.sfn_cli = sfn_cli
     _scheduler.stepfunction = sfn_arn
-    mocker.patch(
-        "aws_solutions.scheduler.cdk.aws_lambda.scheduler.handler.scheduler", _scheduler
-    )
+    mocker.patch("aws_solutions.scheduler.cdk.aws_lambda.scheduler.handler.scheduler", _scheduler)
 
     yield _scheduler
 

@@ -70,9 +70,7 @@ class Schedule:
         match = cron_re.match(schedule)
 
         if not match:
-            self._configuration_errors.append(
-                f"invalid cron ScheduleExpression {schedule}. Should have 6 fields"
-            )
+            self._configuration_errors.append(f"invalid cron ScheduleExpression {schedule}. Should have 6 fields")
         else:
             minutes = match.group("minutes")
             hours = match.group("hours")
@@ -88,22 +86,14 @@ class Schedule:
 
             # validate the majority of the ScheduleExpression
             try:
-                cronex.CronExpression(
-                    f"{minutes} {hours} {day_of_month} {month} {day_of_week}"
-                )
+                cronex.CronExpression(f"{minutes} {hours} {day_of_month} {month} {day_of_week}")
             except ValueError as exc:
-                self._configuration_errors.append(
-                    f"invalid cron ScheduleExpression: {exc}"
-                )
+                self._configuration_errors.append(f"invalid cron ScheduleExpression: {exc}")
 
             # cronex does not validate the year - validate separately
             try:
                 cronex.parse_atom(year, CRON_MIN_MAX_YEAR)
             except ValueError as exc:
-                self._configuration_errors.append(
-                    f"invalid cron ScheduleExpression year: {exc}"
-                )
+                self._configuration_errors.append(f"invalid cron ScheduleExpression year: {exc}")
 
-            return (
-                f"cron({minutes} {hours} {day_of_month} {month} {day_of_week} {year})"
-            )
+            return f"cron({minutes} {hours} {day_of_month} {month} {day_of_week} {year})"

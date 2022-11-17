@@ -101,9 +101,7 @@ def test_sync(mocker, default_build_environment):
     type(mock.Popen.return_value.__enter__.return_value).stderr = mocker.PropertyMock(
         return_value=["sync stderr result"]
     )
-    type(
-        mock.Popen.return_value.__enter__.return_value
-    ).returncode = mocker.PropertyMock(return_value=0)
+    type(mock.Popen.return_value.__enter__.return_value).returncode = mocker.PropertyMock(return_value=0)
     # fmt: off
     mocker.patch("aws_solutions.cdk.scripts.build_s3_cdk_dist.subprocess", mock)  # NOSONAR (python:S1192) - string for clarity
     # fmt: on
@@ -130,9 +128,7 @@ def test_sync_fail_no_successful_awscli(mocker, default_build_environment):
     # fmt: off
     mocker.patch("aws_solutions.cdk.scripts.build_s3_cdk_dist.subprocess", mock)  # NOSONAR (python:S1192) - string for clarity
     # fmt: on
-    type(
-        mock.Popen.return_value.__enter__.return_value
-    ).returncode = mocker.PropertyMock(return_value=1)
+    type(mock.Popen.return_value.__enter__.return_value).returncode = mocker.PropertyMock(return_value=1)
 
     with pytest.raises(click.ClickException):
         packager.sync()

@@ -52,14 +52,8 @@ class SolutionStep(Construct):
             libraries=libraries,
         )
         add_cfn_nag_suppressions(
-            self.function.role.node.try_find_child("DefaultPolicy").node.find_child(
-                "Resource"
-            ),
-            [
-                CfnNagSuppression(
-                    "W12", "IAM policy for AWS X-Ray requires an allow on *"
-                )
-            ],
+            self.function.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
+            [CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *")],
         )
 
         self._input_path = input_path

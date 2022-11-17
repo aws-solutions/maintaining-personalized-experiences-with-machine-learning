@@ -1,16 +1,16 @@
-aws_cdk_lib>=2.7.0
+aws_cdk_lib==2.44.0
 black
-boto3>=1.17.49
-requests>=2.24.0
-crhelper>=2.0.6
+boto3>=1.24.90
+requests>=2.28.1
+crhelper>=2.0.11
 Click
 moto
 pipenv
 poetry
 pytest
-pytest-cov>=2.11.1
-pytest-mock>=3.5.1
+pytest-cov>=4.0.0
+pytest-mock>=3.9.0
 tox
 tox-pyenv
--e helpers_cdk
--e helpers_common
+-e ./source/cdk_solution_helper_py/helpers_cdk
+-e ./source/cdk_solution_helper_py/helpers_common

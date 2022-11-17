@@ -25,15 +25,12 @@ class CfnNagSuppression:
     reason: str
 
 
-def add_cfn_nag_suppressions(
-    resource: CfnResource, suppressions: List[CfnNagSuppression]
-):
+def add_cfn_nag_suppressions(resource: CfnResource, suppressions: List[CfnNagSuppression]):
     resource.add_metadata(
         "cfn_nag",
         {
             "rules_to_suppress": [
-                {"id": suppression.rule_id, "reason": suppression.reason}
-                for suppression in suppressions
+                {"id": suppression.rule_id, "reason": suppression.reason} for suppression in suppressions
             ]
         },
     )
@@ -53,7 +50,6 @@ class CfnNagSuppressAll:
                 add_cfn_nag_suppressions(node, self.suppressions)
 
         elif "is_cfn_element" in dir(node.node.default_child) and (
-            getattr(node.node.default_child, "cfn_resource_type", None)
-            == self.resource_type
+            getattr(node.node.default_child, "cfn_resource_type", None) == self.resource_type
         ):
             add_cfn_nag_suppressions(node.node.default_child, self.suppressions)

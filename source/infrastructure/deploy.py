@@ -16,10 +16,11 @@
 import logging
 from pathlib import Path
 
-from aws_cdk import App
+import aws_cdk as cdk
 
 from aws_solutions.cdk import CDKSolution
 from personalize.stack import PersonalizeStack
+from aspects.app_registry import AppRegistry
 
 logger = logging.getLogger("cdk-helper")
 solution = CDKSolution(cdk_json_path=Path(__file__).parent.absolute() / "cdk.json")
@@ -30,14 +31,16 @@ solution = CDKSolution(cdk_json_path=Path(__file__).parent.absolute() / "cdk.jso
 @solution.context.requires("SOLUTION_VERSION")
 @solution.context.requires("BUCKET_NAME")
 def build_app(context):
-    app = App(context=context)
-    PersonalizeStack(
+    app = cdk.App(context=context)
+    stack = PersonalizeStack(
         app,
         "PersonalizeStack",
         description=f"Deploy, deliver and maintain personalized experiences with Amazon Personalize",
         template_filename="maintaining-personalized-experiences-with-machine-learning.template",
         synthesizer=solution.synthesizer,
     )
+
+    cdk.Aspects.of(app).add(AppRegistry(stack, "AppRegistryAspect"))
     return app.synth()
 
 

@@ -87,14 +87,8 @@ def test_get_stack_tag_value_not_present(stack):
 
 
 def test_get_stack_metadata(stack, mocker):
-    assert (
-        get_stack_metadata_value(stack, "aws:solutions:solution_id")
-        == "solution_id_value"
-    )
-    assert (
-        get_stack_metadata_value(stack, "aws:solutions:solution_version")
-        == "solution_version_value"
-    )
+    assert get_stack_metadata_value(stack, "aws:solutions:solution_id") == "solution_id_value"
+    assert get_stack_metadata_value(stack, "aws:solutions:solution_version") == "solution_version_value"
 
 
 def test_get_stack_metadata_not_present(stack, mocker):

@@ -53,28 +53,17 @@ class BuildEnvironment:
         self.template_dist_dir = os.path.join(self.template_dir, "global-s3-assets")
         self.build_dir = os.path.join(self.template_dir, "build-s3-assets")
         self.build_dist_dir = os.path.join(self.template_dir, "regional-s3-assets")
-        self.source_dir = os.path.normpath(
-            os.path.join(self.template_dir, os.pardir, "source")
-        )
+        self.source_dir = os.path.normpath(os.path.join(self.template_dir, os.pardir, "source"))
         self.infrastructure_dir = os.path.join(self.source_dir, "infrastructure")
         self.open_source_dir = os.path.join(self.template_dir, "open-source")
-        self.github_dir = os.path.normpath(
-            os.path.join(self.template_dir, os.pardir, ".github")
-        )
+        self.github_dir = os.path.normpath(os.path.join(self.template_dir, os.pardir, ".github"))
 
         logger.debug("build environment template directory: %s" % self.template_dir)
-        logger.debug(
-            "build environment template distribution directory: %s"
-            % self.template_dist_dir
-        )
+        logger.debug("build environment template distribution directory: %s" % self.template_dist_dir)
         logger.debug("build environment build directory: %s" % self.build_dir)
-        logger.debug(
-            "build environment build distribution directory: %s" % self.build_dist_dir
-        )
+        logger.debug("build environment build distribution directory: %s" % self.build_dist_dir)
         logger.debug("build environment source directory: %s" % self.source_dir)
-        logger.debug(
-            "build environment infrastructure directory: %s" % self.infrastructure_dir
-        )
+        logger.debug("build environment infrastructure directory: %s" % self.infrastructure_dir)
         logger.debug("open source dir: %s" % self.open_source_dir)
 
     def clean_for_scan(self):
@@ -165,7 +154,9 @@ class RegionalAssetPackager(BaseAssetPackager):
     def __init__(self, build_env: BuildEnvironment, region="us-east-1"):
         self.build_env = build_env
         self.local_asset_path = build_env.build_dist_dir
-        self.s3_asset_path = f"s3://{build_env.source_bucket_name}-{region}/{build_env.solution_name}/{build_env.version_code}"
+        self.s3_asset_path = (
+            f"s3://{build_env.source_bucket_name}-{region}/{build_env.solution_name}/{build_env.version_code}"
+        )
 
     def package(self):
         logger.info("packaging regional assets")
@@ -195,9 +186,7 @@ def validate_version_code(ctx, param, value):
     if re.match(re_semver, value):
         return value
     else:
-        raise click.BadParameter(
-            "please specifiy major, minor and patch versions, e.g. v1.0.0"
-        )
+        raise click.BadParameter("please specifiy major, minor and patch versions, e.g. v1.0.0")
 
 
 @click.group()
@@ -232,7 +221,7 @@ def source_code_package(ctx, ignore, solution_name):
     env.clean_for_open_source()
 
     # set up some default ignore directories
-    ignored = [
+    ignored = {
         "**/cdk.out/*",
         "**/__pycache__/*",
         "*.pyc",
@@ -244,8 +233,8 @@ def source_code_package(ctx, ignore, solution_name):
         "**/.pytest_cache/*",
         "**/*.egg-info",
         "**/__pycache__",
-    ]
-    ignored.extend(ignore)
+    }
+    ignored.update(ignore)
 
     required_files = [
         "LICENSE.txt",
@@ -257,27 +246,33 @@ def source_code_package(ctx, ignore, solution_name):
         ".gitignore",
     ]
 
+    # read the gitignore
+    gitignore = Path(env.source_dir).parent.resolve() / ".gitignore"
+    if gitignore.exists() and gitignore.is_file():
+        with open(gitignore, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and not line.startswith("!") and line not in ignored:
+                    logger.debug(f"adding gitignore pattern for {line}")
+                    ignored.update([line])
+
     # copy source directory
     try:
         copytree(
-            env.source_dir, os.path.join(env.open_source_dir, "source"), ignore=ignored
+            env.source_dir,
+            os.path.join(env.open_source_dir, "source"),
+            ignore=list(ignored),
         )
         copytree(env.github_dir, os.path.join(env.open_source_dir, ".github"))
     except FileNotFoundError:
-        raise click.ClickException(
-            "The solution requires a `source` folder and a `.github` folder"
-        )
+        raise click.ClickException("The solution requires a `source` folder and a `.github` folder")
 
     # copy all required files
     for name in required_files:
         try:
-            shutil.copyfile(
-                Path(env.source_dir).parent / name, Path(env.open_source_dir) / name
-            )
+            shutil.copyfile(Path(env.source_dir).parent / name, Path(env.open_source_dir) / name)
         except FileNotFoundError:
-            raise click.ClickException(
-                f"The solution is missing the required file {name}"
-            )
+            raise click.ClickException(f"The solution is missing the required file {name}")
 
     # copy the required run-unit-tests.sh
     (Path(env.open_source_dir) / "deployment").mkdir()
@@ -287,9 +282,7 @@ def source_code_package(ctx, ignore, solution_name):
             Path(env.open_source_dir) / "deployment" / "run-unit-tests.sh",
         )
     except FileNotFoundError:
-        raise click.ClickException(
-            f"The solution is missing deployment/run-unit-tests.sh"
-        )
+        raise click.ClickException(f"The solution is missing deployment/run-unit-tests.sh")
 
     shutil.make_archive(
         base_name=os.path.join(env.template_dir, solution_name),
@@ -300,9 +293,7 @@ def source_code_package(ctx, ignore, solution_name):
 
     # finalize by deleting the open-source folder data and copying the zip file over
     env.clean_for_open_source()
-    shutil.move(
-        os.path.join(env.template_dir, f"{solution_name}.zip"), env.open_source_dir
-    )
+    shutil.move(os.path.join(env.template_dir, f"{solution_name}.zip"), env.open_source_dir)
 
 
 @cli.command()

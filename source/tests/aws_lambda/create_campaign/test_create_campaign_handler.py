@@ -180,10 +180,8 @@ def test_describe_campaign_response_updating(personalize_stubber, notifier_stubb
                 "solutionVersionArn": sv_arn_old,
                 "minProvisionedTPS": 1,
                 "status": "ACTIVE",
-                "lastUpdatedDateTime": datetime.now(tzlocal())
-                - timedelta(seconds=1000),
-                "creationDateTime": datetime.now(tz=tzlocal())
-                - timedelta(seconds=1100),
+                "lastUpdatedDateTime": datetime.now(tzlocal()) - timedelta(seconds=1000),
+                "creationDateTime": datetime.now(tz=tzlocal()) - timedelta(seconds=1100),
                 "latestCampaignUpdate": {
                     "minProvisionedTPS": 1,
                     "solutionVersionArn": sv_arn_new,
@@ -233,15 +231,12 @@ def test_describe_campaign_response_updated(personalize_stubber, notifier_stubbe
                 "solutionVersionArn": sv_arn_new,
                 "minProvisionedTPS": 1,
                 "status": "ACTIVE",
-                "lastUpdatedDateTime": datetime.now(tzlocal())
-                - timedelta(seconds=1000),
-                "creationDateTime": datetime.now(tz=tzlocal())
-                - timedelta(seconds=1100),
+                "lastUpdatedDateTime": datetime.now(tzlocal()) - timedelta(seconds=1000),
+                "creationDateTime": datetime.now(tz=tzlocal()) - timedelta(seconds=1100),
                 "latestCampaignUpdate": {
                     "minProvisionedTPS": 1,
                     "solutionVersionArn": sv_arn_new,
-                    "creationDateTime": datetime.now(tzlocal())
-                    - timedelta(seconds=100),
+                    "creationDateTime": datetime.now(tzlocal()) - timedelta(seconds=100),
                     "lastUpdatedDateTime": datetime.now(tzlocal()),
                     "status": "ACTIVE",
                 },
@@ -269,10 +264,6 @@ def test_describe_campaign_response_updated(personalize_stubber, notifier_stubbe
     assert not notifier_stubber.has_notified_for_creation
     assert notifier_stubber.latest_notification_status == "ACTIVE"
 
-    last_updated = isoparse(
-        notifier_stubber.get_resource_last_updated(Campaign(), {"campaign": result})
-    )
-    created = isoparse(
-        notifier_stubber.get_resource_created(Campaign(), {"campaign": result})
-    )
+    last_updated = isoparse(notifier_stubber.get_resource_last_updated(Campaign(), {"campaign": result}))
+    created = isoparse(notifier_stubber.get_resource_created(Campaign(), {"campaign": result}))
     assert (last_updated - created).seconds == 100

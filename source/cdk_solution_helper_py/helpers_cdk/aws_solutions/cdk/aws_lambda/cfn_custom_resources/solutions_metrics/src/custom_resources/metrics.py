@@ -36,9 +36,7 @@ def _sanitize_data(event):
     resource_properties.pop("UUID", None)
 
     # Add some useful fields related to stack change
-    resource_properties["CFTemplate"] = (
-        event["RequestType"] + "d"
-    )  # Created, Updated, or Deleted
+    resource_properties["CFTemplate"] = event["RequestType"] + "d"  # Created, Updated, or Deleted
 
     return resource_properties
 
@@ -62,9 +60,7 @@ def send_metrics(event, _):
 
         logger.info(f"Sending payload: {payload}")
         response = requests.post(METRICS_ENDPOINT, json=payload, headers=headers)
-        logger.info(
-            f"Response from metrics endpoint: {response.status_code} {response.reason}"
-        )
+        logger.info(f"Response from metrics endpoint: {response.status_code} {response.reason}")
         if "stackTrace" in response.text:
             logger.exception("Error submitting usage data: %s" % response.text)
         # raise when there is an HTTP error (non success code)

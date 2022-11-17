@@ -20,8 +20,8 @@ from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import (
     SolutionsPythonFunction,
-    DirectoryHash,
 )
+from aws_solutions.cdk.aws_lambda.python.hash_utils import DirectoryHash
 from aws_solutions.cdk.helpers.copytree import copytree
 
 PYTHON_FUNCTION_NAME = "user_python_lambda_function.py"
@@ -76,10 +76,7 @@ def test_function_has_default_role(function_synth):
     function_stack = function_synth.get_stack_by_name("test-function").template
     func = function_stack["Resources"]["TestFunction"]
     assert func["Type"] == "AWS::Lambda::Function"
-    assert (
-        func["Properties"]["Handler"]
-        == PYTHON_FUNCTION_NAME.split(".")[0] + "." + PYTHON_FUNCTION_HANDLER_NAME
-    )
+    assert func["Properties"]["Handler"] == PYTHON_FUNCTION_NAME.split(".")[0] + "." + PYTHON_FUNCTION_HANDLER_NAME
     assert func["Properties"]["Runtime"] == "python3.7"
 
     role = function_stack["Resources"][func["Properties"]["Role"]["Fn::GetAtt"][0]]
@@ -158,9 +155,7 @@ def test_library_packaging(python_lambda):
     synth = app.synth()
     print(f"CDK synth directory: {synth.directory}")
 
-    assert (
-        next(Path(synth.directory).glob("asset.*")) / "shared" / "__init__.py"
-    ).exists()
+    assert (next(Path(synth.directory).glob("asset.*")) / "shared" / "__init__.py").exists()
     assert (next(Path(synth.directory).glob("asset.*")) / "shared" / "lib.py").exists()
 
 

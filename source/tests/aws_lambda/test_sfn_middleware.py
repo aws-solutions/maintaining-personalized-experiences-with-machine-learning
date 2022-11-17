@@ -66,16 +66,12 @@ def test_personalize_status_invalid(personalize_resource):
 
 
 @mock_sts
-def test_personalize_resource_decorator(
-    personalize_resource, personalize_stubber, notifier_stubber
-):
+def test_personalize_resource_decorator(personalize_resource, personalize_stubber, notifier_stubber):
     """
     The typical workflow is to describe, then create, then raise ResourcePending
     """
     dsg_name = "dsgName"
-    personalize_stubber.add_client_error(
-        "describe_dataset_group", "ResourceNotFoundException"
-    )
+    personalize_stubber.add_client_error("describe_dataset_group", "ResourceNotFoundException")
     personalize_stubber.add_response(
         "create_dataset_group",
         service_response={"datasetGroupArn": DatasetGroup().arn(dsg_name)},
@@ -128,15 +124,11 @@ def test_set_defaults_2():
 
 def test_set_defaults_3():
     defaults = set_defaults({})
-    assert (
-        defaults.get("datasetGroup").get("workflowConfig").get("maxAge") == "365 days"
-    )
+    assert defaults.get("datasetGroup").get("workflowConfig").get("maxAge") == "365 days"
 
 
 def test_set_defaults_4():
-    defaults = set_defaults(
-        {"datasetGroup": {"workflowConfig": {"maxAge": "1 second"}}}
-    )
+    defaults = set_defaults({"datasetGroup": {"workflowConfig": {"maxAge": "1 second"}}})
     assert defaults["datasetGroup"]["workflowConfig"]["maxAge"] == "1 second"
 
 
@@ -174,10 +166,7 @@ def test_parse_datetime(time_string, seconds, caplog):
     with caplog.at_level(logging.WARNING):
         assert parse_datetime(time_string) == seconds
         if "month" in time_string or "year" in time_string:
-            assert (
-                "they are based off of the calendar of the start of year 1 CE"
-                in caplog.text
-            )
+            assert "they are based off of the calendar of the start of year 1 CE" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -263,22 +252,11 @@ def test_set_workflow_config():
     assert all(s.get("workflowConfig") for s in result["solutions"])
     assert all(f.get("workflowConfig") for f in result["filters"])
     assert all(c.get("workflowConfig") for c in result["solutions"][0]["campaigns"])
-    assert all(
-        c.get("workflowConfig") for c in result["solutions"][0]["batchInferenceJobs"]
-    )
+    assert all(c.get("workflowConfig") for c in result["solutions"][0]["batchInferenceJobs"])
 
     # keys under serviceConfig should not change
-    assert (
-        result.get("datasetGroup").get("serviceConfig").get("datasetGroup")
-        == "should-not-change"
-    )
-    assert (
-        result.get("solutions")[0].get("serviceConfig").get("datasetGroup")
-        == "should-not-change"
-    )
+    assert result.get("datasetGroup").get("serviceConfig").get("datasetGroup") == "should-not-change"
+    assert result.get("solutions")[0].get("serviceConfig").get("datasetGroup") == "should-not-change"
 
     # overrides to the default must remain unchanged
-    assert (
-        result.get("solutions")[0]["campaigns"][0]["workflowConfig"]["maxAge"]
-        == "should-not-change"
-    )
+    assert result.get("solutions")[0]["campaigns"][0]["workflowConfig"]["maxAge"] == "should-not-change"

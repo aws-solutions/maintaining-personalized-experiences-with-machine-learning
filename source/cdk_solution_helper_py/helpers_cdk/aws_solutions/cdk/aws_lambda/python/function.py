@@ -11,8 +11,6 @@
 #  the specific language governing permissions and limitations under the License.                                     #
 # #####################################################################################################################
 
-import hashlib
-import os
 from pathlib import Path
 from typing import List, Union
 
@@ -27,42 +25,10 @@ from aws_cdk.aws_lambda import Function, Runtime, RuntimeFamily, Code
 from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.bundling import SolutionsPythonBundling
+from aws_solutions.cdk.aws_lambda.python.hash_utils import DirectoryHash
 
 DEFAULT_RUNTIME = Runtime.PYTHON_3_7
 DEPENDENCY_EXCLUDES = ["*.pyc"]
-
-
-class DirectoryHash:
-    # fmt: off
-    _hash = hashlib.sha1()  # NOSONAR - safe to hash; side-effect of collision is to create new bundle
-    # fmt: on
-
-    @classmethod
-    def hash(cls, *directories: Path):
-        DirectoryHash._hash = hashlib.sha1()  # NOSONAR - safe to hash; see above
-        if isinstance(directories, Path):
-            directories = [directories]
-        for directory in sorted(directories):
-            DirectoryHash._hash_dir(str(directory.absolute()))
-        return DirectoryHash._hash.hexdigest()
-
-    @classmethod
-    def _hash_dir(cls, directory: Path):
-        for path, dirs, files in os.walk(directory):
-            for file in sorted(files):
-                DirectoryHash._hash_file(Path(path) / file)
-            for directory in sorted(dirs):
-                DirectoryHash._hash_dir(str((Path(path) / directory).absolute()))
-            break
-
-    @classmethod
-    def _hash_file(cls, file: Path):
-        with file.open("rb") as f:
-            while True:
-                block = f.read(2 ** 10)
-                if not block:
-                    break
-                DirectoryHash._hash.update(block)
 
 
 class SolutionsPythonFunction(Function):
@@ -83,20 +49,14 @@ class SolutionsPythonFunction(Function):
 
         # validate source path
         if not self.source_path.is_dir():
-            raise ValueError(
-                f"entrypoint {entrypoint} must not be a directory, but rather a .py file"
-            )
+            raise ValueError(f"entrypoint {entrypoint} must not be a directory, but rather a .py file")
 
         # validate libraries
         self.libraries = libraries or []
-        self.libraries = (
-            self.libraries if isinstance(self.libraries, list) else [self.libraries]
-        )
+        self.libraries = self.libraries if isinstance(self.libraries, list) else [self.libraries]
         for lib in self.libraries:
             if lib.is_file():
-                raise ValueError(
-                    f"library {lib} must not be a file, but rather a directory"
-                )
+                raise ValueError(f"library {lib} must not be a file, but rather a directory")
 
         # create default least privileged role for this function unless a role is passed
         if not kwargs.get("role"):
@@ -108,9 +68,7 @@ class SolutionsPythonFunction(Function):
 
         # validate that the user is using a python runtime for AWS Lambda
         if kwargs["runtime"].family != RuntimeFamily.PYTHON:
-            raise ValueError(
-                f"SolutionsPythonFunction must use a Python runtime ({kwargs['runtime']} was provided)"
-            )
+            raise ValueError(f"SolutionsPythonFunction must use a Python runtime ({kwargs['runtime']} was provided)")
 
         # build the handler based on the entrypoint Path and function name
         if kwargs.get("handler"):
@@ -148,9 +106,7 @@ class SolutionsPythonFunction(Function):
         # to enable docker only bundling, use image=self._get_bundling_docker_image(bundling, runtime=runtime)
         code = Code.from_asset(
             bundling=BundlingOptions(
-                image=DockerImage.from_registry(
-                    "scratch"
-                ),  # NOT USED - FOR NOW ALL BUNDLING IS LOCAL
+                image=DockerImage.from_registry("scratch"),  # NOT USED - FOR NOW ALL BUNDLING IS LOCAL
                 command=["NOT-USED"],
                 entrypoint=["NOT-USED"],
                 local=bundling,

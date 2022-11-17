@@ -34,14 +34,9 @@ def test_deploy(solution, cdk_entrypoint):
     synth = build_app({extra_context: extra_context, "BUCKET_NAME": source_bucket})
     stack = synth.get_stack_by_name("PersonalizeStack")
     assert solution.id in stack.template["Description"]
-    assert (
-        source_bucket == stack.template["Mappings"]["SourceCode"]["General"]["S3Bucket"]
-    )
+    assert source_bucket == stack.template["Mappings"]["SourceCode"]["General"]["S3Bucket"]
     assert solution.id == stack.template["Mappings"]["Solution"]["Data"]["ID"]
-    assert (
-        "Yes"
-        == stack.template["Mappings"]["Solution"]["Data"]["SendAnonymousUsageData"]
-    )
+    assert "Yes" == stack.template["Mappings"]["Solution"]["Data"]["SendAnonymousUsageData"]
     assert stack.template["Outputs"]["PersonalizeBucketName"]
     assert stack.template["Outputs"]["SchedulerTableName"]
     assert stack.template["Outputs"]["SNSTopicArn"]
@@ -59,23 +54,12 @@ def test_parameters(solution, cdk_entrypoint):
     stack = synth.get_stack_by_name("PersonalizeStack").template
 
     assert (
-        stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0][
-            "Label"
-        ]["default"]
+        stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0]["Label"]["default"]
         == "Solution Configuration"
     )
-    assert stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0][
-        "Parameters"
-    ] == ["Email"]
+    assert stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0]["Parameters"] == ["Email"]
+    assert stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"]["Email"]["default"] == "Email"
     assert (
-        stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"]["Email"][
-            "default"
-        ]
-        == "Email"
-    )
-    assert (
-        stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"][
-            "PersonalizeKmsKeyArn"
-        ]["default"]
+        stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"]["PersonalizeKmsKeyArn"]["default"]
         == "(Optional) KMS key ARN used to encrypt Datasets managed by Amazon Personalize"
     )

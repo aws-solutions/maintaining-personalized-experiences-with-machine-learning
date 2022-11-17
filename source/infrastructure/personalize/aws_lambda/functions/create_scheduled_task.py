@@ -28,12 +28,7 @@ class CreateScheduledTask(SolutionStep):
             scope,
             id,
             layers=layers,
-            entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_scheduled_task"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_scheduled_task" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
 

@@ -70,13 +70,9 @@ class SolutionsJavaBundling:
         if self.distribution_path.is_dir():
             children = [child for child in self.distribution_path.iterdir()]
             if len(children) != 1:
-                raise ValueError(
-                    "if the distribution path is a path it should only contain one jar or zip file"
-                )
+                raise ValueError("if the distribution path is a path it should only contain one jar or zip file")
             if children[0].suffix not in (".jar", ".zip"):
-                raise ValueError(
-                    "the distribution path does not include a single .jar or .zip file"
-                )
+                raise ValueError("the distribution path does not include a single .jar or .zip file")
             copytree(self.distribution_path, output_dir)
         elif self.distribution_path.is_file():
             suffix = self.distribution_path.suffix

@@ -102,9 +102,7 @@ def lambda_handler(event, context):
 
     for record in event.records:
         key = record.s3.get_object.key
-        logger.info(
-            f"processing Amazon S3 event notification record for s3://{bucket}/{key}"
-        )
+        logger.info(f"processing Amazon S3 event notification record for s3://{bucket}/{key}")
         metrics.add_metric("ConfigurationsProcessed", unit=MetricUnit.Count, value=1)
 
         s3_config = s3.get_object(Bucket=bucket, Key=key)
@@ -115,22 +113,16 @@ def lambda_handler(event, context):
         configuration.load(config_text)
         if configuration.errors:
             send_configuration_error(configuration)
-            metrics.add_metric(
-                "ConfigurationsProcessedFailures", unit=MetricUnit.Count, value=1
-            )
+            metrics.add_metric("ConfigurationsProcessedFailures", unit=MetricUnit.Count, value=1)
             return
 
         # configuration has loaded, validate it
         configuration.validate()
         if configuration.errors:
-            metrics.add_metric(
-                "ConfigurationsProcessedFailures", unit=MetricUnit.Count, value=1
-            )
+            metrics.add_metric("ConfigurationsProcessedFailures", unit=MetricUnit.Count, value=1)
             send_configuration_error(configuration)
         else:
             config = configuration.config_dict
             config = set_bucket(config, bucket, key)
-            metrics.add_metric(
-                "ConfigurationsProcessedSuccesses", unit=MetricUnit.Count, value=1
-            )
+            metrics.add_metric("ConfigurationsProcessedSuccesses", unit=MetricUnit.Count, value=1)
             start_execution(config)

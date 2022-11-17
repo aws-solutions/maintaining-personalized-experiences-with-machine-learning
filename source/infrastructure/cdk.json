@@ -3,6 +3,8 @@
   "context": {
     "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
     "SOLUTION_ID": "SO0170",
-    "SOLUTION_VERSION": "v1.2.0"
+    "SOLUTION_VERSION": "v1.3.0",
+    "APP_REGISTRY_NAME": "personalized-experiences-ML",
+    "APPLICATION_TYPE": "AWS-Solutions"
   }
 }
