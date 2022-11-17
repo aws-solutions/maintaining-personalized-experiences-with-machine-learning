@@ -67,9 +67,7 @@ class S3:
                 for o in bucket.objects.filter(Prefix=self.key + "/", Delimiter="/")
                 if o.key.endswith(self.expected_suffix)
             ]
-            latest = next(
-                iter(sorted(objects, key=lambda k: k.last_modified, reverse=True)), None
-            )
+            latest = next(iter(sorted(objects, key=lambda k: k.last_modified, reverse=True)), None)
         except botocore.exceptions.ClientError as exc:
             if exc.response["Error"]["Code"] == "404":
                 return False

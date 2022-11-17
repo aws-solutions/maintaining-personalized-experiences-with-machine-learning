@@ -47,9 +47,7 @@ def _cdk_json_present(func):
             log_error(f"failed to find `app` in cdk.json")
 
         if "python3" not in cdk_app:
-            log_error(
-                f"this helper only supports python3 CDK apps at this time - yours was declared as {cdk_app}"
-            )
+            log_error(f"this helper only supports python3 CDK apps at this time - yours was declared as {cdk_app}")
 
         return func(cdk_app_path, cdk_app_name)
 
@@ -83,12 +81,8 @@ def load_cdk_app(cdk_app_path, cdk_app_name):
     try:
         cdk_function = getattr(module, cdk_app_entrypoint)
     except AttributeError as exc:
-        log_error(
-            f"could not find CDK entrypoint `{cdk_app_entrypoint}` in `{cdk_app_name}`"
-        )
+        log_error(f"could not find CDK entrypoint `{cdk_app_entrypoint}` in `{cdk_app_name}`")
 
     logger.info(f"loaded AWS CDK app from {cdk_app_path}")
-    logger.info(
-        f"loaded AWS CDK app at {cdk_app_name}, entrypoint is {cdk_app_entrypoint}"
-    )
+    logger.info(f"loaded AWS CDK app at {cdk_app_name}, entrypoint is {cdk_app_entrypoint}")
     return cdk_function

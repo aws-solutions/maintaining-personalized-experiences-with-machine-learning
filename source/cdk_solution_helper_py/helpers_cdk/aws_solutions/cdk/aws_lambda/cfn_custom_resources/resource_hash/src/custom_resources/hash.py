@@ -34,15 +34,13 @@ class StackId:
 
     @property
     def hash(self):
-        digest = md5()  # NOSONAR - safe to hash, not for cryptographic purposes
+        digest = md5()  # nosec NOSONAR - safe to hash, not for cryptographic purposes
         digest.update(bytes(f"{self.stack_id.rsplit('/', 1)[0]}", "ascii"))
         return digest.hexdigest().upper()
 
 
 def get_property(event, property_name, property_default=None):
-    resource_prop = event.get("ResourceProperties", {}).get(
-        property_name, property_default
-    )
+    resource_prop = event.get("ResourceProperties", {}).get(property_name, property_default)
     if not resource_prop:
         raise ValueError(f"missing required property {property_name}")
     return resource_prop

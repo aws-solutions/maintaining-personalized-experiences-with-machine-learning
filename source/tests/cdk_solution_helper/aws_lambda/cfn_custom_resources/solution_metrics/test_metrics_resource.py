@@ -24,8 +24,12 @@ from aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics.src.cus
     _sanitize_data,
 )
 
-MOCKER_METRICS_ENDPOINT = "aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics.src.custom_resources.metrics.METRICS_ENDPOINT"
-MOCKER_REQUESTS = "aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics.src.custom_resources.metrics.requests"
+MOCKER_METRICS_ENDPOINT = (
+    "aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics.src.custom_resources.metrics.METRICS_ENDPOINT"
+)
+MOCKER_REQUESTS = (
+    "aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics.src.custom_resources.metrics.requests"
+)
 
 
 @pytest.fixture(params=["Create", "Update", "Delete"])
@@ -118,16 +122,12 @@ def test_request_exception(mocker, test_event, caplog):
     requests_mock = mocker.MagicMock()
     mocker.patch(MOCKER_REQUESTS, requests_mock)
     requests_mock.exceptions.RequestException = requests.exceptions.RequestException
-    requests_mock.post.side_effect = requests.exceptions.ConnectionError(
-        "there was a connection error"
-    )
+    requests_mock.post.side_effect = requests.exceptions.ConnectionError("there was a connection error")
 
     with caplog.at_level(logging.INFO):
         send_metrics(test_event, None)
 
-    assert (
-        "Could not send usage data: there was a connection error"
-    ) in caplog.messages
+    assert ("Could not send usage data: there was a connection error") in caplog.messages
 
 
 def test_general_exception(mocker, test_event, caplog):
@@ -139,6 +139,4 @@ def test_general_exception(mocker, test_event, caplog):
     with caplog.at_level(logging.INFO):
         send_metrics(test_event, None)
 
-    assert (
-        "Unknown error when trying to send usage data: general exception"
-    ) in caplog.messages
+    assert ("Unknown error when trying to send usage data: general exception") in caplog.messages

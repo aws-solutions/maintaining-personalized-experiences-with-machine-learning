@@ -57,9 +57,7 @@ def test_validate_solution_id_invalid(invalid_solution_id):
     ],
 )
 def test_validate_template_filename_valid(valid_template_filename):
-    assert (
-        validate_template_filename(valid_template_filename) == valid_template_filename
-    )
+    assert validate_template_filename(valid_template_filename) == valid_template_filename
 
 
 @pytest.mark.parametrize(
@@ -98,10 +96,7 @@ def test_solution_stack():
 
     template = app.synth().stacks[0].template
 
-    assert (
-        template["Description"]
-        == f"({stack_id}) - {stack_description}. Version {solution_version}"
-    )
+    assert template["Description"] == f"({stack_id}) - {stack_description}. Version {solution_version}"
     assert template["Metadata"] == {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [],
@@ -134,24 +129,13 @@ def test_stack_parameter_ordering(execution_number):
 
     template = app.synth().stacks[0].template
 
+    assert template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0]["Label"]["default"] == "group 1"
+    assert template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0]["Parameters"] == ["parameter1"]
     assert (
-        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0][
-            "Label"
-        ]["default"]
-        == "group 1"
-    )
-    assert template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"][0][
-        "Parameters"
-    ] == ["parameter1"]
-    assert (
-        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"][
-            "parameter1"
-        ]["default"]
+        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"]["parameter1"]["default"]
         == "parameter 1"
     )
     assert (
-        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"][
-            "parameter2"
-        ]["default"]
+        template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"]["parameter2"]["default"]
         == "parameter 2"
     )

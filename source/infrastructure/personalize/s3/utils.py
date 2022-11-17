@@ -34,15 +34,9 @@ class SecureBucket(Bucket):
     ):
         self.construct_id = construct_id
 
-        kwargs = self.override_configuration(
-            kwargs, "removal_policy", RemovalPolicy.RETAIN
-        )
-        kwargs = self.override_configuration(
-            kwargs, "encryption", BucketEncryption.S3_MANAGED
-        )
-        kwargs = self.override_configuration(
-            kwargs, "block_public_access", BlockPublicAccess.BLOCK_ALL
-        )
+        kwargs = self.override_configuration(kwargs, "removal_policy", RemovalPolicy.RETAIN)
+        kwargs = self.override_configuration(kwargs, "encryption", BucketEncryption.S3_MANAGED)
+        kwargs = self.override_configuration(kwargs, "block_public_access", BlockPublicAccess.BLOCK_ALL)
 
         super().__init__(scope, construct_id, **kwargs)
 

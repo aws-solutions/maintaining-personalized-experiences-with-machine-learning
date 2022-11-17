@@ -56,12 +56,10 @@ class BatchInferenceJobsFragment(StateMachineFragment):
             "max_attempts": 100,
         }
 
-        self.batch_inference_jobs_not_available = Pass(
-            self, "Batch Inference Jobs Not Provided"
+        self.batch_inference_jobs_not_available = Pass(self, "Batch Inference Jobs Not Provided")
+        batch_inference_jobs_available = Choice(self, "Check for Batch Inference Jobs").otherwise(
+            self.batch_inference_jobs_not_available
         )
-        batch_inference_jobs_available = Choice(
-            self, "Check for Batch Inference Jobs"
-        ).otherwise(self.batch_inference_jobs_not_available)
 
         _prepare_batch_inference_job_input_job_name = Pass(
             self,
@@ -100,9 +98,7 @@ class BatchInferenceJobsFragment(StateMachineFragment):
         )
 
         _prepare_batch_inference_job_input = Chain.start(
-            _prepare_batch_inference_job_input_job_name.next(
-                _prepare_batch_inference_job_input_solution_version_arn
-            )
+            _prepare_batch_inference_job_input_job_name.next(_prepare_batch_inference_job_input_solution_version_arn)
             .next(_prepare_batch_inference_job_job_input)
             .next(_prepare_batch_inference_job_job_output)
         )
@@ -162,9 +158,7 @@ class BatchInferenceJobsFragment(StateMachineFragment):
                     "datasetGroupArn.$": "$.datasetGroupArn",
                     "solution.$": "$.solution",
                 },
-            ).iterator(
-                _prepare_batch_inference_job_input.next(_create_batch_inference_job)
-            ),
+            ).iterator(_prepare_batch_inference_job_input.next(_create_batch_inference_job)),
         )
 
     @property

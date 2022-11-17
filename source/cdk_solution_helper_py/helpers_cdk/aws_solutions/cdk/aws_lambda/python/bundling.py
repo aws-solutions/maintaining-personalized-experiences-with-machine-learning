@@ -52,17 +52,12 @@ class SolutionsPythonBundling:
     def platform_supports_bundling(self):
         os_platform = platform.system()
         os_platform_can_bundle = os_platform in ["Darwin", "Linux"]
-        logger.info(
-            "local bundling %s supported for %s"
-            % ("is" if os_platform_can_bundle else "is not", os_platform)
-        )
+        logger.info("local bundling %s supported for %s" % ("is" if os_platform_can_bundle else "is not", os_platform))
         return os_platform_can_bundle
 
     def try_bundle(self, output_dir: str, options: BundlingOptions) -> bool:
         if not self.platform_supports_bundling:
-            raise SolutionsPythonBundlingException(
-                "this platform does not support bundling"
-            )
+            raise SolutionsPythonBundlingException("this platform does not support bundling")
 
         source = Path(self.to_bundle).absolute()
 
@@ -80,9 +75,7 @@ class SolutionsPythonBundling:
             self._local_bundle_with_pipenv(output_dir)
             self._local_bundle_with_pip(output_dir)
         except subprocess.CalledProcessError as cpe:
-            raise SolutionsPythonBundlingException(
-                f"local bundling was tried but failed: {cpe}"
-            )
+            raise SolutionsPythonBundlingException(f"local bundling was tried but failed: {cpe}")
 
         return True
 
@@ -95,9 +88,7 @@ class SolutionsPythonBundling:
         cwd: Union[str, Path, None] = None,
     ):
         if save_stdout and save_stdout.exists():
-            raise SolutionsPythonBundlingException(
-                f"{save_stdout} already exists - abandoning"
-            )
+            raise SolutionsPythonBundlingException(f"{save_stdout} already exists - abandoning")
 
         if save_stdout:
             save_file = open(save_stdout, "w")
@@ -142,9 +133,7 @@ class SolutionsPythonBundling:
 
     def _required_package_exists(self, package):
         if not importlib.util.find_spec(package):
-            missing_package = (
-                f"required package {package} was not installed - please install it"
-            )
+            missing_package = f"required package {package} was not installed - please install it"
             logger.warning(missing_package)
             raise SolutionsPythonBundlingException(missing_package)
         return True
@@ -173,9 +162,7 @@ class SolutionsPythonBundling:
             return  # no Pipenv file found - do not bundle with Pipenv
 
         if self._source_file_exists(REQUIREMENTS_TXT_FILE, output_dir):
-            logger.error(
-                "both a Pipenv and requirements.txt file were found - use one or the other"
-            )
+            logger.error("both a Pipenv and requirements.txt file were found - use one or the other")
             raise SolutionsPythonBundlingException(
                 "confusing Python package bundling - use one of requirements.txt (pip), pipenv (Pipenv) or pyproject.toml (poetry)"
             )
@@ -203,9 +190,7 @@ class SolutionsPythonBundling:
             return  # no pyproject.toml file found - do not bundle with poetry
 
         if self._source_file_exists(REQUIREMENTS_TXT_FILE, output_dir):
-            logger.error(
-                "both a pyproject.toml and requirements.txt file were found - use one or the other"
-            )
+            logger.error("both a pyproject.toml and requirements.txt file were found - use one or the other")
             raise SolutionsPythonBundlingException(
                 "confusing Python package bundling - use one of requirements.txt (pip), pipenv (Pipenv) or pyproject.toml (poetry)"
             )

@@ -34,12 +34,7 @@ class CreateSchema(SolutionStep):
             id,
             layers=layers,
             failure_state=failure_state,
-            entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_schema"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_schema" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
 
@@ -51,8 +46,6 @@ class CreateSchema(SolutionStep):
                     "personalize:CreateSchema",
                 ],
                 effect=iam.Effect.ALLOW,
-                resources=[
-                    f"arn:{Aws.PARTITION}:personalize:{Aws.REGION}:{Aws.ACCOUNT_ID}:schema/*"
-                ],
+                resources=[f"arn:{Aws.PARTITION}:personalize:{Aws.REGION}:{Aws.ACCOUNT_ID}:schema/*"],
             )
         )

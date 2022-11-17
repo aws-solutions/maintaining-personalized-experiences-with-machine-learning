@@ -42,12 +42,7 @@ class CreateDatasetGroup(SolutionStep):
             id,
             layers=layers,
             failure_state=failure_state,
-            entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_dataset_group"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_dataset_group" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
             **kwargs,
         )
@@ -135,9 +130,7 @@ class CreateDatasetGroup(SolutionStep):
                     "personalize:CreateDatasetGroup",
                 ],
                 effect=iam.Effect.ALLOW,
-                resources=[
-                    f"arn:{Aws.PARTITION}:personalize:{Aws.REGION}:{Aws.ACCOUNT_ID}:dataset-group/*"
-                ],
+                resources=[f"arn:{Aws.PARTITION}:personalize:{Aws.REGION}:{Aws.ACCOUNT_ID}:dataset-group/*"],
             )
         )
 
@@ -160,13 +153,9 @@ class CreateDatasetGroup(SolutionStep):
 
         self.function.add_environment(
             "KMS_ROLE_ARN",
-            Fn.condition_if(
-                self.kms_enabled.node.id, kms_role.role_arn, ""
-            ).to_string(),
+            Fn.condition_if(self.kms_enabled.node.id, kms_role.role_arn, "").to_string(),
         )
         self.function.add_environment(
             "KMS_KEY_ARN",
-            Fn.condition_if(
-                self.kms_enabled.node.id, self.kms_key.value_as_string, ""
-            ).to_string(),
+            Fn.condition_if(self.kms_enabled.node.id, self.kms_key.value_as_string, "").to_string(),
         )

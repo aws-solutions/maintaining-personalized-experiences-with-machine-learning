@@ -73,12 +73,8 @@ def setup_cli_env(stack, region: str) -> None:
     :return: None
     """
     os.environ["AWS_REGION"] = region
-    os.environ["SOLUTION_ID"] = get_stack_metadata_value(
-        stack, "aws:solutions:solution_id"
-    )
-    os.environ["SOLUTION_VERSION"] = get_stack_metadata_value(
-        stack, "aws:solutions:solution_version"
-    )
+    os.environ["SOLUTION_ID"] = get_stack_metadata_value(stack, "aws:solutions:solution_id")
+    os.environ["SOLUTION_VERSION"] = get_stack_metadata_value(stack, "aws:solutions:solution_version")
 
 
 @click.group()
@@ -285,21 +281,15 @@ def get_payload(
         payload.setdefault("schedules", {})["import"] = import_schedule
     if update_schedule:
         for solution, schedule in update_schedule:
-            payload.setdefault("schedules", {}).setdefault("solutions", {})[
-                solution
-            ] = {"update": schedule}
+            payload.setdefault("schedules", {}).setdefault("solutions", {})[solution] = {"update": schedule}
     if full_schedule:
         for solution, schedule in full_schedule:
-            payload.setdefault("schedules", {}).setdefault("solutions", {})[
-                solution
-            ] = {"full": schedule}
+            payload.setdefault("schedules", {}).setdefault("solutions", {})[solution] = {"full": schedule}
     return payload
 
 
 @cli.command()
-@click.option(
-    "-d", "--dataset-group", required=True, help="dataset group name to import"
-)
+@click.option("-d", "--dataset-group", required=True, help="dataset group name to import")
 @click.option("-p", "--path", required=True, callback=_validate_path, help="s3 key")
 @click.option("-i", "--import-schedule", help="cron schedule for dataset import")
 @click.option(
@@ -317,9 +307,7 @@ def get_payload(
     help="cron schedules for UPDATE solution version updates",
 )
 @click.pass_context
-def import_dataset_group(
-    ctx, dataset_group, path, import_schedule, full_schedule, update_schedule
-):
+def import_dataset_group(ctx, dataset_group, path, import_schedule, full_schedule, update_schedule):
     """
     Create a new configuration from an existing dataset group in Amazon Personalize and add scheduled tasks
     \f
@@ -355,14 +343,10 @@ def import_dataset_group(
     )
     status = result.get("StatusCode")
     if status != 200:
-        raise click.ClickException(
-            "there was an error generating configuration ({status})"
-        )
+        raise click.ClickException("there was an error generating configuration ({status})")
     if result.get("FunctionError"):
         error_message = json.loads(result.get("Payload").read()).get("errorMessage")
-        raise click.ClickException(
-            f"Could not generate configuration for {dataset_group}: {error_message}"
-        )
+        raise click.ClickException(f"Could not generate configuration for {dataset_group}: {error_message}")
 
     # to trigger the workflow and set up new schedules, upload the returned configuration to S3.
     cli_s3.upload_fileobj(

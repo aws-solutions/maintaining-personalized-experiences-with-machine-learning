@@ -42,18 +42,13 @@ class Metrics(Construct):
         self._metrics_function = SolutionsPythonFunction(
             self,
             "MetricsFunction",
-            entrypoint=Path(__file__).parent
-            / "src"
-            / "custom_resources"
-            / "metrics.py",
+            entrypoint=Path(__file__).parent / "src" / "custom_resources" / "metrics.py",
             function="handler",
         )
         add_cfn_nag_suppressions(
             resource=self._metrics_function.node.default_child,
             suppressions=[
-                CfnNagSuppression(
-                    "W89", "This AWS Lambda Function is not deployed to a VPC"
-                ),
+                CfnNagSuppression("W89", "This AWS Lambda Function is not deployed to a VPC"),
                 CfnNagSuppression(
                     "W92",
                     "This AWS Lambda Function does not require reserved concurrency",
@@ -64,9 +59,7 @@ class Metrics(Construct):
         self._send_anonymous_usage_data = CfnCondition(
             self,
             "SendAnonymousUsageData",
-            expression=Fn.condition_equals(
-                Fn.find_in_map("Solution", "Data", "SendAnonymousUsageData"), "Yes"
-            ),
+            expression=Fn.condition_equals(Fn.find_in_map("Solution", "Data", "SendAnonymousUsageData"), "Yes"),
         )
         self._send_anonymous_usage_data.override_logical_id("SendAnonymousUsageData")
 

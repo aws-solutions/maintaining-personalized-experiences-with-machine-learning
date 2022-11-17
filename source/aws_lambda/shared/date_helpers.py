@@ -21,13 +21,9 @@ logger = Logger()
 
 def parse_datetime(tm: str) -> int:
     if "month" in tm:
-        logger.warning(
-            "while months are supported, they are based off of the calendar of the start of year 1 CE"
-        )
+        logger.warning("while months are supported, they are based off of the calendar of the start of year 1 CE")
     if "year" in tm:
-        logger.warning(
-            "while years are supported, they are based off of the calendar of the start of year 1 CE"
-        )
+        logger.warning("while years are supported, they are based off of the calendar of the start of year 1 CE")
 
     start_of_time = datetime.datetime.min
     cal = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)

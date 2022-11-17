@@ -29,9 +29,7 @@ class SolutionContext:
         self.cdk_json_path = cdk_json_path
         self.context = self._load_cdk_context()
 
-    def requires(  # NOSONAR - higher cognitive complexity allowed
-        self, context_var_name, context_var_value=None
-    ):
+    def requires(self, context_var_name, context_var_value=None):  # NOSONAR - higher cognitive complexity allowed
         context = self.context
 
         def cdk_context_decorator(f):

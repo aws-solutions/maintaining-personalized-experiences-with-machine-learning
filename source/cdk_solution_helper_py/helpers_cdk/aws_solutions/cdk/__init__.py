@@ -38,4 +38,4 @@ class CDKSolution:
         Get a new synthesizer for this CDKSolution - useful for testing
         :return: None
         """
-        self.synthesizer = SolutionStackSubstitions(qualifier=self.qualifier)
+        self.synthesizer = SolutionStackSubstitions(qualifier=self.qualifier, generate_bootstrap_version_rule=False)

@@ -46,12 +46,7 @@ class CreateEventTracker(SolutionStep):
             result_path="$.eventTracker.serviceConfig",
             layers=layers,
             failure_state=failure_state,
-            entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_event_tracker"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_event_tracker" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
 

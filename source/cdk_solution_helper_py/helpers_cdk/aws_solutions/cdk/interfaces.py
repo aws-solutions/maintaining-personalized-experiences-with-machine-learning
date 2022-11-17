@@ -65,12 +65,8 @@ class TemplateOptions:
 
         # if this stack is a nested stack, record its CDK ID in the parent stack's resource to it
         if getattr(stack, "nested_stack_resource"):
-            stack.nested_stack_resource.add_metadata(
-                "aws:solutions:templateid", construct_id
-            )
-            stack.nested_stack_resource.add_metadata(
-                "aws:solutions:templatename", filename
-            )
+            stack.nested_stack_resource.add_metadata("aws:solutions:templateid", construct_id)
+            stack.nested_stack_resource.add_metadata("aws:solutions:templatename", filename)
 
     @property
     def metadata(self) -> dict:
@@ -78,34 +74,23 @@ class TemplateOptions:
 
     def _get_metadata(self) -> dict:
         pgs = set()
-        parameter_groups = [
-            p.group
-            for p in self._parameters
-            if p.group not in pgs and not pgs.add(p.group)
-        ]
+        parameter_groups = [p.group for p in self._parameters if p.group not in pgs and not pgs.add(p.group)]
         metadata = {
             "AWS::CloudFormation::Interface": {
                 "ParameterGroups": [
                     {
                         "Label": {"default": parameter_group},
                         "Parameters": [
-                            parameter.name
-                            for parameter in self._parameters
-                            if parameter.group == parameter_group
+                            parameter.name for parameter in self._parameters if parameter.group == parameter_group
                         ],
                     }
                     for parameter_group in parameter_groups
                 ],
-                "ParameterLabels": {
-                    parameter.name: {"default": parameter.label}
-                    for parameter in self._parameters
-                },
+                "ParameterLabels": {parameter.name: {"default": parameter.label} for parameter in self._parameters},
             },
             "aws:solutions:templatename": self.filename,
             "aws:solutions:solution_id": self.stack.node.try_get_context("SOLUTION_ID"),
-            "aws:solutions:solution_version": self.stack.node.try_get_context(
-                "SOLUTION_VERSION"
-            ),
+            "aws:solutions:solution_version": self.stack.node.try_get_context("SOLUTION_VERSION"),
         }
         self.stack.template_options.metadata = metadata
         return metadata

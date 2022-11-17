@@ -36,10 +36,7 @@ def stacks():
     TemplateOptions(nested_nestedstack, "id_3", "description_3", "stack_3.template")
 
     synth = app.synth()
-    stacks = [
-        json.loads(path.read_text())
-        for path in Path(synth.directory).glob("*.template.json")
-    ]
+    stacks = [json.loads(path.read_text()) for path in Path(synth.directory).glob("*.template.json")]
 
     return stacks
 
@@ -59,25 +56,12 @@ def test_template_options(stacks):
         stack_description = stack["Description"]
         stack_template_name = stack["Metadata"]["aws:solutions:templatename"]
 
-        assert (
-            stack_description.split("_")[-1]
-            == stack_template_name.split("_")[-1].split(".")[0]
-        )
+        assert stack_description.split("_")[-1] == stack_template_name.split("_")[-1].split(".")[0]
 
         # the only stack with resources will point to the nested stack
         if stack.get("Resources"):
-            assert (
-                list(stack["Resources"].values())[0]["Metadata"][
-                    "aws:solutions:templateid"
-                ]
-                == "id_3"
-            )
-            assert (
-                list(stack["Resources"].values())[0]["Metadata"][
-                    "aws:solutions:templatename"
-                ]
-                == "stack_3.template"
-            )
+            assert list(stack["Resources"].values())[0]["Metadata"]["aws:solutions:templateid"] == "id_3"
+            assert list(stack["Resources"].values())[0]["Metadata"]["aws:solutions:templatename"] == "stack_3.template"
             assert len(stack["Resources"]) == 1
 
 
@@ -92,9 +76,7 @@ def test_template_suffix():
 def test_template_options_add_parameters():
     app = App()
     stack = Stack(app, "stack-id-1")
-    template_options = TemplateOptions(
-        stack, "id_1", "description_1", "stack_1.template"
-    )
+    template_options = TemplateOptions(stack, "id_1", "description_1", "stack_1.template")
     template_options.add_parameter(
         parameter=CfnParameter(stack, "parameter_1"),
         label="parameter label 1",
@@ -113,12 +95,8 @@ def test_template_options_add_parameters():
 
     template = app.synth().stacks[0].template
 
-    parameter_groups = template["Metadata"]["AWS::CloudFormation::Interface"][
-        "ParameterGroups"
-    ]
-    parameter_labels = template["Metadata"]["AWS::CloudFormation::Interface"][
-        "ParameterLabels"
-    ]
+    parameter_groups = template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterGroups"]
+    parameter_labels = template["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"]
 
     assert len(parameter_groups) == 2
     assert {

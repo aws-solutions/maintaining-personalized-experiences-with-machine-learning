@@ -31,12 +31,8 @@ def s3_event():
                 "awsRegion": "us-west-2",
                 "eventTime": "The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when Amazon S3 finished processing the request",
                 "eventName": "event-type",
-                "userIdentity": {
-                    "principalId": "Amazon-customer-ID-of-the-user-who-caused-the-event"
-                },
-                "requestParameters": {
-                    "sourceIPAddress": "ip-address-where-request-came-from"
-                },
+                "userIdentity": {"principalId": "Amazon-customer-ID-of-the-user-who-caused-the-event"},
+                "requestParameters": {"sourceIPAddress": "ip-address-where-request-came-from"},
                 "responseElements": {
                     "x-amz-request-id": "Amazon S3 generated request ID",
                     "x-amz-id-2": "Amazon S3 host that processed the request",
@@ -46,9 +42,7 @@ def s3_event():
                     "configurationId": "ID found in the bucket notification configuration",
                     "bucket": {
                         "name": "bucket-name",
-                        "ownerIdentity": {
-                            "principalId": "Amazon-customer-ID-of-the-bucket-owner"
-                        },
+                        "ownerIdentity": {"principalId": "Amazon-customer-ID-of-the-bucket-owner"},
                         "arn": "bucket-ARN",
                     },
                     "object": {
@@ -134,9 +128,7 @@ def test_s3_event_handler(s3_event, sns_mocked, s3_mocked, stepfunctions_mocked)
 
 
 @mock_sts
-def test_s3_event_handler_working(
-    s3_event, sns_mocked, s3_mocked, stepfunctions_mocked
-):
+def test_s3_event_handler_working(s3_event, sns_mocked, s3_mocked, stepfunctions_mocked):
     s3_mocked.put_object(
         Bucket="bucket-name",
         Key="train/object-key.json",
@@ -152,9 +144,7 @@ def test_s3_event_handler_working(
 
 
 @mock_sts
-def test_s3_event_handler_bad_json(
-    s3_event, sns_mocked, s3_mocked, stepfunctions_mocked
-):
+def test_s3_event_handler_bad_json(s3_event, sns_mocked, s3_mocked, stepfunctions_mocked):
     s3_mocked.put_object(Bucket="bucket-name", Key="train/object-key.json", Body="{")
     lambda_handler(s3_event, None)
 
@@ -166,9 +156,7 @@ def test_s3_event_handler_bad_json(
 
 
 @mock_sts
-def test_s3_event_handler_bad_config(
-    s3_event, sns_mocked, s3_mocked, stepfunctions_mocked
-):
+def test_s3_event_handler_bad_config(s3_event, sns_mocked, s3_mocked, stepfunctions_mocked):
     s3_mocked.put_object(
         Bucket="bucket-name",
         Key="train/object-key.json",

@@ -40,12 +40,12 @@ setuptools.setup(
     author="Amazon Web Services",
     url="https://aws.amazon.com/solutions/implementations",
     license="Apache License 2.0",
-    packages=setuptools.find_namespace_packages(),
+    packages=setuptools.find_namespace_packages(exclude=["build*"]),
     install_requires=[
-        "pip>=21.3",
-        "aws_cdk_lib>=2.7.0",
+        "pip>=22.2.2",
+        "aws_cdk_lib==2.44.0",
         "Click>=7.1.2",
-        "boto3>=1.17.52",
+        "boto3>=1.24.90",
     ],
     python_requires=">=3.7",
     classifiers=[

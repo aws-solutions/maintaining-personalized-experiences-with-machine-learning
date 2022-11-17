@@ -21,9 +21,7 @@ helper = CfnResource(log_level=getenv("LOG_LEVEL", "WARNING"))
 
 
 def get_property(event, property_name, property_default=None):
-    resource_prop = event.get("ResourceProperties", {}).get(
-        property_name, property_default
-    )
+    resource_prop = event.get("ResourceProperties", {}).get(property_name, property_default)
     if not resource_prop:
         raise ValueError(f"missing required property {property_name}")
     return resource_prop

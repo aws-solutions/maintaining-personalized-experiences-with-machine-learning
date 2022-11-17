@@ -67,12 +67,8 @@ def test_aws_solution_wrong_param_type():
 def test_aws_solution(cdk_json_path):
     context = SolutionContext(cdk_json_path=cdk_json_path)
     override = "overridden context"
-    solution_name = environ.get(
-        "SOLUTION_NAME", SOLUTION_NAME
-    )  # environment variable always wins
-    version = environ.get(
-        "SOLUTION_VERSION", "1.2.3"
-    )  # environment variable always wins
+    solution_name = environ.get("SOLUTION_NAME", SOLUTION_NAME)  # environment variable always wins
+    version = environ.get("SOLUTION_VERSION", "1.2.3")  # environment variable always wins
 
     @context.requires("SOLUTION_NAME")
     @context.requires("SOLUTION_VERSION", version)

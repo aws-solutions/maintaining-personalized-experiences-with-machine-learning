@@ -90,9 +90,7 @@ class SchedulerPermissionsAspect:
                 )
 
             add_cfn_nag_suppressions(
-                self.scheduler.state_machine.role.node.try_find_child(
-                    "DefaultPolicy"
-                ).node.find_child("Resource"),
+                self.scheduler.state_machine.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
                 [
                     CfnNagSuppression(
                         "W12",
@@ -233,9 +231,7 @@ class Scheduler(Construct):
         choice_get_next_trigger.afterwards().next(invoke_step_function)
         choice_get_next_trigger.otherwise(invoke_step_function)
 
-        self._scheduler_definition = Chain.start(
-            read_scheduled_task_state.next(choice_get_next_trigger)
-        )
+        self._scheduler_definition = Chain.start(read_scheduled_task_state.next(choice_get_next_trigger))
 
         self.state_machine = StateMachine(
             self,
@@ -370,21 +366,14 @@ class Scheduler(Construct):
 
         return tasks_table
 
-    def _scheduler_function(
-        self, scope: Construct, construct_id: str
-    ) -> SolutionsJavaFunction:
+    def _scheduler_function(self, scope: Construct, construct_id: str) -> SolutionsJavaFunction:
         """
         Creates the AWS Lambda Function for getting the next scheduled task time from a cron expression
         :param scope: the scope of the function
         :param construct_id: the construct ID of the function
         :return: SolutionsJavaFunction
         """
-        project_path = (
-            Path(__file__).absolute().parents[1]
-            / "cdk"
-            / "aws_lambda"
-            / "get_next_scheduled_event"
-        )
+        project_path = Path(__file__).absolute().parents[1] / "cdk" / "aws_lambda" / "get_next_scheduled_event"
         distribution_path = project_path / "build" / "distributions"
 
         function = SolutionsJavaFunction(
@@ -398,13 +387,7 @@ class Scheduler(Construct):
             tracing=Tracing.ACTIVE,
         )
         add_cfn_nag_suppressions(
-            function.role.node.try_find_child("DefaultPolicy").node.find_child(
-                "Resource"
-            ),
-            [
-                CfnNagSuppression(
-                    "W12", "IAM policy for AWS X-Ray requires an allow on *"
-                )
-            ],
+            function.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
+            [CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *")],
         )
         return function

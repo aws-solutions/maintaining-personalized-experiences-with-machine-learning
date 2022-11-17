@@ -28,12 +28,7 @@ class CreateTimestamp(SolutionStep):
             scope,
             id,
             layers=layers,
-            entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_timestamp"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_timestamp" / "handler.py"),
         )
 
     def _set_permissions(self):

@@ -34,9 +34,7 @@ class ScheduledDatasetImport(Construct):
     ):
         super().__init__(scope, construct_id)
 
-        state_machine_namer = ResourceName(
-            self, "StateMachineName", purpose="periodic-dataset-import", max_length=80
-        )
+        state_machine_namer = ResourceName(self, "StateMachineName", purpose="periodic-dataset-import", max_length=80)
         self.state_machine = StateMachine(
             self,
             "PeriodicDatasetImport",
@@ -44,16 +42,10 @@ class ScheduledDatasetImport(Construct):
             definition=Chain.start(
                 Parallel(self, "Manage The Execution")
                 .branch(
-                    create_timestamp.state(
-                        self, "Set Current Timestamp", result_path="$.currentDate"
-                    )
+                    create_timestamp.state(self, "Set Current Timestamp", result_path="$.currentDate")
                     .next(prepare_input.state(self, "Prepare Input"))
                     .next(
-                        DatasetImportsFragment(
-                            self,
-                            "Handle Periodic Dataset Imports",
-                            **dataset_management_functions
-                        )
+                        DatasetImportsFragment(self, "Handle Periodic Dataset Imports", **dataset_management_functions)
                     )
                 )
                 .add_catch(
@@ -65,21 +57,15 @@ class ScheduledDatasetImport(Construct):
                     notifications.state(
                         self,
                         "Success",
-                        payload=TaskInput.from_object(
-                            {"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}
-                        ),
+                        payload=TaskInput.from_object({"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}),
                     )
                 )
             ),
         )
         add_cfn_nag_suppressions(
-            self.state_machine.role.node.try_find_child(
-                "DefaultPolicy"
-            ).node.find_child("Resource"),
+            self.state_machine.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
             [
-                CfnNagSuppression(
-                    "W12", "IAM policy for AWS X-Ray requires an allow on *"
-                ),
+                CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *"),
                 CfnNagSuppression(
                     "W76",
                     "Large step functions need larger IAM roles to access all managed AWS Lambda functions",

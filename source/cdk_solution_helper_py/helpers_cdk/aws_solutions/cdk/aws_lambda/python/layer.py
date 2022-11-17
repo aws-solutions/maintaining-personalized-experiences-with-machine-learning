@@ -20,8 +20,9 @@ from aws_cdk.aws_lambda import LayerVersion, Code
 from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonBundling
+from aws_solutions.cdk.aws_lambda.python.hash_utils import LayerHash
 
-DEPENDENCY_EXCLUDES = ["*.pyc"]
+DEPENDENCY_EXCLUDES = ["*.pyc", "*.egg-info", "build*"]
 
 
 class SolutionsPythonLayerVersion(LayerVersion):
@@ -48,13 +49,9 @@ class SolutionsPythonLayerVersion(LayerVersion):
         libraries = [] if not libraries else libraries
         for lib in libraries:
             if lib.is_file():
-                raise ValueError(
-                    f"library {lib} must not be a file, but rather a directory"
-                )
+                raise ValueError(f"library {lib} must not be a file, but rather a directory")
 
-        bundling = SolutionsPythonBundling(
-            self.requirements_path, libraries=libraries, install_path="python"
-        )
+        bundling = SolutionsPythonBundling(self.requirements_path, libraries=libraries, install_path="python")
 
         kwargs["code"] = self._get_code(bundling)
 
@@ -66,15 +63,13 @@ class SolutionsPythonLayerVersion(LayerVersion):
         code_parameters = {
             "path": str(self.requirements_path),
             "asset_hash_type": AssetHashType.CUSTOM,
-            "asset_hash": uuid4().hex,
+            "asset_hash": LayerHash.hash(self.requirements_path),
             "exclude": DEPENDENCY_EXCLUDES,
         }
 
         code = Code.from_asset(
             bundling=BundlingOptions(
-                image=DockerImage.from_registry(
-                    "scratch"
-                ),  # NEVER USED - FOR NOW ALL BUNDLING IS LOCAL
+                image=DockerImage.from_registry("scratch"),  # NEVER USED - FOR NOW ALL BUNDLING IS LOCAL
                 command=["not_used"],
                 entrypoint=["not_used"],
                 local=bundling,

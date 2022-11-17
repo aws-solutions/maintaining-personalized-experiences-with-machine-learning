@@ -34,9 +34,7 @@ class SomeStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        condition = CfnCondition(
-            self, "SomeCondition", expression=Fn.condition_equals("1", "1")
-        )
+        condition = CfnCondition(self, "SomeCondition", expression=Fn.condition_equals("1", "1"))
         queues = SomeConstruct(self, "SomeQueues")
         Aspects.of(queues).add(ConditionalResources(condition))
 

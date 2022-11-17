@@ -29,10 +29,5 @@ def test_mappings(send_data, result):
     assert template["Mappings"]["Solution"]["Data"]["Version"] == "%%SOLUTION_VERSION%%"
     assert template["Mappings"]["Solution"]["Data"]["SendAnonymousUsageData"] == result
 
-    assert (
-        template["Mappings"]["SourceCode"]["General"]["S3Bucket"] == "%%BUCKET_NAME%%"
-    )
-    assert (
-        template["Mappings"]["SourceCode"]["General"]["KeyPrefix"]
-        == "%%SOLUTION_NAME%%/%%SOLUTION_VERSION%%"
-    )
+    assert template["Mappings"]["SourceCode"]["General"]["S3Bucket"] == "%%BUCKET_NAME%%"
+    assert template["Mappings"]["SourceCode"]["General"]["KeyPrefix"] == "%%SOLUTION_NAME%%/%%SOLUTION_VERSION%%"

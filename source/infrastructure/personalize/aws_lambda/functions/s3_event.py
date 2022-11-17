@@ -27,24 +27,11 @@ from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppressio
 
 class S3EventHandler(SolutionsPythonFunction):
     def __init__(
-        self,
-        scope: Construct,
-        construct_id: str,
-        state_machine: StateMachine,
-        bucket: Bucket,
-        topic: Topic,
-        **kwargs
+        self, scope: Construct, construct_id: str, state_machine: StateMachine, bucket: Bucket, topic: Topic, **kwargs
     ):
-        entrypoint = (
-            Path(__file__).absolute().parents[4]
-            / "aws_lambda"
-            / "s3_event"
-            / "handler.py"
-        )
+        entrypoint = Path(__file__).absolute().parents[4] / "aws_lambda" / "s3_event" / "handler.py"
         function = "lambda_handler"
-        kwargs["libraries"] = [
-            Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"
-        ]
+        kwargs["libraries"] = [Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"]
         kwargs["tracing"] = Tracing.ACTIVE
         kwargs["timeout"] = Duration.seconds(15)
         kwargs["runtime"] = Runtime("python3.9", RuntimeFamily.PYTHON)
@@ -56,11 +43,7 @@ class S3EventHandler(SolutionsPythonFunction):
 
         add_cfn_nag_suppressions(
             self.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
-            [
-                CfnNagSuppression(
-                    "W12", "IAM policy for AWS X-Ray requires an allow on *"
-                )
-            ],
+            [CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *")],
         )
 
         bucket.grant_read(self, objects_key_pattern="train/*")

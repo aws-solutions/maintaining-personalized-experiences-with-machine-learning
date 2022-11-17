@@ -121,9 +121,7 @@ def test_load_cdk_app(cdk_app):
         "missing_python3",
     ],
 )
-def test_load_cdk_app_invalid(
-    cdk_app_bad, deploy_py_content, cdk_json_content, entrypoint
-):
+def test_load_cdk_app_invalid(cdk_app_bad, deploy_py_content, cdk_json_content, entrypoint):
     tmp_path, deploy_py, cdk_json = cdk_app_bad
 
     if deploy_py_content:
