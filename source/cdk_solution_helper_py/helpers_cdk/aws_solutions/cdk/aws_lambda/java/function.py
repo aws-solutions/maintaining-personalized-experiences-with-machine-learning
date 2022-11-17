@@ -46,9 +46,7 @@ class SolutionsJavaFunction(Function):
         self.gradle_test = gradle_test
 
         if not project_path.is_dir():
-            raise ValueError(
-                f"project_path {project_path} must be a directory, not a file"
-            )
+            raise ValueError(f"project_path {project_path} must be a directory, not a file")
 
         # create default least privileged role for this function unless a role is passed
         if not kwargs.get("role"):
@@ -59,9 +57,7 @@ class SolutionsJavaFunction(Function):
             kwargs["runtime"] = Runtime.JAVA_11
 
         if kwargs["runtime"].family != RuntimeFamily.JAVA:
-            raise ValueError(
-                f"SolutionsJavaFunction must use a Java runtime ({kwargs['runtime']} was provided)"
-            )
+            raise ValueError(f"SolutionsJavaFunction must use a Java runtime ({kwargs['runtime']} was provided)")
 
         # This Construct will handle the creation of the 'code' parameter
         if kwargs.get("code"):

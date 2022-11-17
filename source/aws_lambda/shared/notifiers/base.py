@@ -74,15 +74,11 @@ class Notifier(ABC):
         logger.debug(f"{resource.name.camel} status update ({status}) on {result}")
 
         if self._is_create(resource, result):
-            logger.info(
-                f"notifier {self.name} starting for creation of {resource.name.camel}"
-            )
+            logger.info(f"notifier {self.name} starting for creation of {resource.name.camel}")
             self.notify_create(status, resource, result)
             self.notified = True
         elif self._resource_stable(resource, result):
-            logger.info(
-                f"notifier {self.name} starting for completion of {resource.name.camel}"
-            )
+            logger.info(f"notifier {self.name} starting for completion of {resource.name.camel}")
             self.notify_complete(status, resource, result)
             self.notified = True
 
@@ -116,9 +112,7 @@ class Notifier(ABC):
         last_updated = self.get_resource_last_updated(resource, result)
         created = self.get_resource_created(resource, result)
         status = self.get_resource_status(resource, result)
-        latest_campaign_update = self.get_resource_latest_campaign_update(
-            resource, result
-        )
+        latest_campaign_update = self.get_resource_latest_campaign_update(resource, result)
 
         if not last_updated or not created:
             logger.info(
@@ -136,9 +130,7 @@ class Notifier(ABC):
             logger.info(f"{resource.name.camel} is updating, and not yet active")
             return False
         elif not self.cutoff:
-            logger.debug(
-                f"{resource.name.camel} has no cutoff specified for notification"
-            )
+            logger.debug(f"{resource.name.camel} has no cutoff specified for notification")
             return False
         elif last_updated <= self.cutoff:
             logger.info(f"{resource.name.camel} does not require update at this time")
@@ -147,9 +139,7 @@ class Notifier(ABC):
             logger.info(f"{resource.name.camel} is ready for notification")
             return True
 
-    def get_resource_latest_campaign_update(
-        self, resource: Resource, result: Dict
-    ) -> Dict:
+    def get_resource_latest_campaign_update(self, resource: Resource, result: Dict) -> Dict:
         """
         Campaigns track their update status separately from the top-level status - return the update status
         :param resource: the Campaign resource
@@ -165,9 +155,7 @@ class Notifier(ABC):
         :param result: the resource as returned from the SDK
         :return: datetime
         """
-        return jmespath.search(
-            TIME_FMT.format(name=resource.name.camel, date="creationDateTime"), result
-        )
+        return jmespath.search(TIME_FMT.format(name=resource.name.camel, date="creationDateTime"), result)
 
     def get_resource_last_updated(self, resource: Resource, result: Dict) -> datetime:
         """

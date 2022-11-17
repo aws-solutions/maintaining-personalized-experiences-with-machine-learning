@@ -30,12 +30,7 @@ class CreateSolution(SolutionStep):
             scope,
             id,
             layers=layers,
-            entrypoint=(
-                Path(__file__).absolute().parents[4]
-                / "aws_lambda"
-                / "create_solution"
-                / "handler.py"
-            ),
+            entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_solution" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
 

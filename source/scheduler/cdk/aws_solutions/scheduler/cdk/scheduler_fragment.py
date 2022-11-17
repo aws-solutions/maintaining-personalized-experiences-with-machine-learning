@@ -45,9 +45,7 @@ class SchedulerFragment(StateMachineFragment):
         super().__init__(scope, construct_id)
 
         if not schedule_input_path and not schedule_input:
-            raise ValueError(
-                "schedule_input_path or schedule_input must be provided, not both"
-            )
+            raise ValueError("schedule_input_path or schedule_input must be provided, not both")
         schedule_input = schedule_input or schedule_input_path
 
         schedule_input_key = "input"
@@ -56,9 +54,7 @@ class SchedulerFragment(StateMachineFragment):
 
         # set up the schedule name
         schedule_for_task_name = re.sub(r"[^0-9A-Za-z-_]", "-", schedule_for)[:80]
-        schedule_for_task_name = (
-            f"States.Format('{schedule_for_task_name}-{{}}', {schedule_for_suffix})"
-        )
+        schedule_for_task_name = f"States.Format('{schedule_for_task_name}-{{}}', {schedule_for_suffix})"
 
         self.not_required = Pass(self, f"{schedule_for.title()} Schedule Not Required")
         self.create_schedule = scheduler.create_scheduled_task.state(

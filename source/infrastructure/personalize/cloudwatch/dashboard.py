@@ -55,12 +55,8 @@ class Dashboard(Construct):
                         title="Personalization Configurations Processed",
                         metrics=[
                             self._metric("ConfigurationsProcessed", "Processed", BLUE),
-                            self._metric(
-                                "ConfigurationsProcessedSuccesses", "Succeeded", GREEN
-                            ),
-                            self._metric(
-                                "ConfigurationsProcessedFailures", "Failures", RED
-                            ),
+                            self._metric("ConfigurationsProcessedSuccesses", "Succeeded", GREEN),
+                            self._metric("ConfigurationsProcessedFailures", "Failures", RED),
                         ],
                         set_period_to_time_range=True,
                         width=12,
@@ -69,9 +65,7 @@ class Dashboard(Construct):
                     cw.SingleValueWidget(
                         title="Personalization Workflow Status",
                         metrics=[
-                            self._metric(
-                                "JobSuccess", "Workflow Jobs Succeeded", GREEN
-                            ),
+                            self._metric("JobSuccess", "Workflow Jobs Succeeded", GREEN),
                             self._metric("JobFailure", "Workflow Jobs Failed", RED),
                             self._metric(
                                 "JobsCreated",
@@ -93,17 +87,11 @@ class Dashboard(Construct):
                     cw.SingleValueWidget(
                         title="Amazon Personalize Resources Created",
                         metrics=[
-                            self._metric(
-                                "DatasetGroupCreated", "Dataset Groups Created"
-                            ),
+                            self._metric("DatasetGroupCreated", "Dataset Groups Created"),
                             self._metric("DatasetCreated", "Datasets Created"),
-                            self._metric(
-                                "EventTrackerCreated", "Event Trackers Created"
-                            ),
+                            self._metric("EventTrackerCreated", "Event Trackers Created"),
                             self._metric("SolutionCreated", "Solutions Created"),
-                            self._metric(
-                                "SolutionVersionCreated", "Solution Versions Created"
-                            ),
+                            self._metric("SolutionVersionCreated", "Solution Versions Created"),
                             self._metric("CampaignCreated", "Campaigns Created"),
                             self._metric(
                                 "BatchInferenceJobCreated",
@@ -135,9 +123,7 @@ class Dashboard(Construct):
             )
         )
 
-    def _metric(
-        self, name: str, label: str, color: Optional[str] = None, service="Workflow"
-    ) -> cw.Metric:
+    def _metric(self, name: str, label: str, color: Optional[str] = None, service="Workflow") -> cw.Metric:
         return cw.Metric(
             namespace=f"personalize_solution_{Aws.STACK_NAME}",
             metric_name=name,

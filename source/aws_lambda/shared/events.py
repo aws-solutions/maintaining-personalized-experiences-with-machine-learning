@@ -58,9 +58,7 @@ class Notifies:
 
         return wrapper
 
-    def notify(
-        self, resource: Resource, result: Dict, cutoff: Optional[datetime]
-    ) -> None:
+    def notify(self, resource: Resource, result: Dict, cutoff: Optional[datetime]) -> None:
         """
         Notify each target in the NOTIFY_LIST
         :param resource: the subject of the notification
@@ -73,6 +71,4 @@ class Notifies:
             try:
                 notifier.notify(self.status, resource, result)
             except NotificationError as exc:
-                logger.error(
-                    f"notifier {notifier.name} failed: {str(exc)}"
-                )  # log and continue through notifiers
+                logger.error(f"notifier {notifier.name} failed: {str(exc)}")  # log and continue through notifiers

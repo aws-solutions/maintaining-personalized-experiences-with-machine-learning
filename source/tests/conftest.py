@@ -12,6 +12,7 @@
 # ######################################################################################################################
 import os
 import sys
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Dict, Optional
@@ -51,6 +52,8 @@ class Solution:
             "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
             "SOLUTION_ID": self.id,
             "SOLUTION_VERSION": self.version,
+            "APP_REGISTRY_NAME": "personalized-experiences-ML",
+            "APPLICATION_TYPE": "AWS-Solutions",
         }
 
 
@@ -61,15 +64,9 @@ def solution():
 
 @pytest.fixture(scope="session", autouse=True)
 def solution_env():
-    os.environ[
-        "SNS_TOPIC_ARN"
-    ] = f"arn:aws:sns:us-east-1:{'1'*12}:some-personalize-notification-topic"
-    os.environ[
-        "STATE_MACHINE_ARN"
-    ] = f"arn:aws:states:us-east-1:{'1'*12}:stateMachine:personalize-workflow"
-    os.environ[
-        "EVENT_BUS_ARN"
-    ] = f"arn:aws:events:us-east-1:{'1'*12}:event-bus/PersonalizeEventBus"
+    os.environ["SNS_TOPIC_ARN"] = f"arn:aws:sns:us-east-1:{'1'*12}:some-personalize-notification-topic"
+    os.environ["STATE_MACHINE_ARN"] = f"arn:aws:states:us-east-1:{'1'*12}:stateMachine:personalize-workflow"
+    os.environ["EVENT_BUS_ARN"] = f"arn:aws:events:us-east-1:{'1'*12}:event-bus/PersonalizeEventBus"
     yield
 
 
@@ -195,21 +192,23 @@ def notifier_stubber(mocker):
 def validate_handler_config():
     """Validates a handler configuration against the installed botocore shapes"""
 
-    def _validate_handler_config(
-        resource: str, config: Dict, status: Optional[str] = None
-    ):
+    def _validate_handler_config(resource: str, config: Dict, status: Optional[str] = None):
         cli = boto3.client("personalize")
 
         shape = resource[0].upper() + resource[1:]
         request_shape = cli.meta.service_model.shape_for(f"Create{shape}Request")
+        del request_shape.members["tags"]
+        if "importMode" in request_shape.members:
+            del request_shape.members["importMode"]
+
         response_shape = cli.meta.service_model.shape_for(f"Describe{shape}Response")
 
-        # check config parameter
         for k in config.keys():
-            if "workflowConfig" not in config[k].get("path"):
-                assert (
-                    k in request_shape.members.keys()
-                ), f"invalid key {k} not in Create{shape} API call"
+            if isinstance(config[k], dict):
+                if "workflowConfig" not in config[k].get("path"):
+                    assert k in request_shape.members.keys(), f"invalid key {k} not in Create{shape} API call"
+            else:
+                assert k in request_shape.members.keys(), f"invalid key {k} not in Create{shape} API call"
 
         for k in request_shape.members.keys():
             assert k in config.keys(), "missing {k} in config"
@@ -218,9 +217,15 @@ def validate_handler_config():
         if status:
             m = response_shape
             for k in status.split("."):
-                assert (
-                    k in m.members.keys()
-                ), f"status component {k} not found in {m.keys()}"
+                assert k in m.members.keys(), f"status component {k} not found in {m.keys()}"
                 m = m.members[k]
 
     return _validate_handler_config
+
+
+@pytest.fixture(scope="module")
+def cdk_json():
+    path = Path(__file__).parent.parent.absolute() / "infrastructure" / "cdk.json"
+    read_cdk_json = json.loads(path.read_text())
+    read_cdk_json["context"]["BUCKET_NAME"] = "SOURCE_BUCKET"
+    return read_cdk_json

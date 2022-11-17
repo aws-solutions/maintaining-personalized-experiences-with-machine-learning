@@ -284,6 +284,8 @@ batch/
             └── job_config.json.out   
 ```
 
+Note: It is not recommended to use `performAutoML` as this feature will be deprecated in the future. Please take the time to select the most appropriate recipe for the use-case and skip this feature. Refer [FAQs](https://github.com/aws-samples/amazon-personalize-samples/blob/master/PersonalizeCheatSheet2.0.md).
+
 ## Creating a custom build 
 To customize the solution, follow the steps below: 
 
@@ -293,8 +295,8 @@ The following procedures assumes that all the OS-level configuration has been co
 * [AWS Command Line Interface](https://aws.amazon.com/cli/)
 * [Python](https://www.python.org/) 3.9 or newer
 * [Node.js](https://nodejs.org/en/) 16.x or newer 
-* [AWS CDK](https://aws.amazon.com/cdk/) 2.7.0 or newer 
-* [Amazon Corretto OpenJDK](https://docs.aws.amazon.com/corretto/) 11 
+* [AWS CDK](https://aws.amazon.com/cdk/) 2.44.0 or newer 
+* [Amazon Corretto OpenJDK](https://docs.aws.amazon.com/corretto/) 17.0.4.1
 
 > **Please ensure you test the templates before updating any production deployments.**
 
@@ -350,12 +352,12 @@ export VERSION=my-version
 export REGION_NAME=my-region
 
 build-s3-cdk-dist deploy \
-  --source-bucket-name DIST_BUCKET_PREFIX \
-  --solution-name SOLUTION_NAME \
-  --version_code VERSION \
+  --source-bucket-name $DIST_BUCKET_PREFIX \
+  --solution-name $SOLUTION_NAME \
+  --version_code $VERSION \
   --cdk-app-path ../source/infrastructure/deploy.py \
   --cdk-app-entrypoint deploy:build_app \
-  --region REGION_NAME \
+  --region $REGION_NAME \
   --sync
 ```
 

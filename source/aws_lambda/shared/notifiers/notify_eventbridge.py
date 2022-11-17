@@ -65,9 +65,7 @@ class NotifyEventBridge(Notifier):
         seconds = int((updated - created).total_seconds())
         self._notify(status, arn, resource, duration=seconds)
 
-    def _notify(
-        self, status: str, arn: str, resource: Resource, duration: int = 0
-    ) -> None:
+    def _notify(self, status: str, arn: str, resource: Resource, duration: int = 0) -> None:
         """
         The EventBridge notification implementation
         :param status: the resource status
@@ -93,6 +91,4 @@ class NotifyEventBridge(Notifier):
         )
         if result["FailedEntryCount"] > 0:
             for entry in result["Entries"]:
-                logger.error(
-                    f"EventBridge failure ({entry['ErrorCode']}) {entry['ErrorMessage']}"
-                )
+                logger.error(f"EventBridge failure ({entry['ErrorCode']}) {entry['ErrorMessage']}")

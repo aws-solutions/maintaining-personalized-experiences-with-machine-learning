@@ -73,9 +73,7 @@ class FilterFragment(StateMachineFragment):
             Choice(self, "Check if Filters Required")
             .when(
                 Condition.is_present("$.filters[0]"),
-                self.create_filters.iterator(
-                    self.prepare_filter_input.next(self.create_filter)
-                ),
+                self.create_filters.iterator(self.prepare_filter_input.next(self.create_filter)),
             )
             .otherwise(self.not_required)
         )

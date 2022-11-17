@@ -42,8 +42,5 @@ def test_metrics_valid(test_stack_metrics):
     metric_resource = test_stack_metrics["Resources"]["SolutionMetricsAnonymousData"]
 
     assert metric_resource["Type"] == "Custom::AnonymousData"
-    assert all(
-        metric_resource["Properties"][k] == v
-        for k, v in ADDITIONAL_METRICS_VALID.items()
-    )
+    assert all(metric_resource["Properties"][k] == v for k, v in ADDITIONAL_METRICS_VALID.items())
     assert metric_resource["Properties"]["Region"]["Ref"] == "AWS::Region"

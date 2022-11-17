@@ -33,18 +33,17 @@ class Mappings:
                 "Data": {
                     "ID": solution_id,
                     "Version": "%%SOLUTION_VERSION%%",
-                    "SendAnonymousUsageData": "Yes"
-                    if send_anonymous_usage_data
-                    else "No",
+                    "SendAnonymousUsageData": "Yes" if send_anonymous_usage_data else "No",
+                    "SolutionName": "%%SOLUTION_NAME%%",
+                    "AppRegistryName": "%%APP_REGISTRY_NAME%%",
+                    "ApplicationType": "AWS-Solutions",
                 }
             },
+            lazy=False,
         )
 
         # track the s3 bucket, key prefix and (optional) quicksight template source
-        general = {
-            "S3Bucket": "%%BUCKET_NAME%%",
-            "KeyPrefix": "%%SOLUTION_NAME%%/%%SOLUTION_VERSION%%",
-        }
+        general = {"S3Bucket": "%%BUCKET_NAME%%", "KeyPrefix": "%%SOLUTION_NAME%%/%%SOLUTION_VERSION%%"}
         if quicksight_template_arn:
             general["QuickSightSourceTemplateArn"] = "%%QUICKSIGHT_SOURCE%%"
 
@@ -52,4 +51,5 @@ class Mappings:
             parent,
             "SourceCode",
             mapping={"General": general},
+            lazy=False,
         )

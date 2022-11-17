@@ -54,12 +54,10 @@ class BatchSegmentJobsFragment(StateMachineFragment):
             "max_attempts": 100,
         }
 
-        self.batch_segment_jobs_not_available = Pass(
-            self, "Batch Segment Jobs Not Provided"
+        self.batch_segment_jobs_not_available = Pass(self, "Batch Segment Jobs Not Provided")
+        batch_segment_jobs_available = Choice(self, "Check for Batch Segment Jobs").otherwise(
+            self.batch_segment_jobs_not_available
         )
-        batch_segment_jobs_available = Choice(
-            self, "Check for Batch Segment Jobs"
-        ).otherwise(self.batch_segment_jobs_not_available)
 
         _prepare_batch_segment_job_input_job_name = Pass(
             self,
@@ -98,9 +96,7 @@ class BatchSegmentJobsFragment(StateMachineFragment):
         )
 
         _prepare_batch_segment_job_input = Chain.start(
-            _prepare_batch_segment_job_input_job_name.next(
-                _prepare_batch_segment_job_input_solution_version_arn
-            )
+            _prepare_batch_segment_job_input_job_name.next(_prepare_batch_segment_job_input_solution_version_arn)
             .next(_prepare_batch_segment_job_job_input)
             .next(_prepare_batch_segment_job_job_output)
         )
@@ -160,9 +156,7 @@ class BatchSegmentJobsFragment(StateMachineFragment):
                     "datasetGroupArn.$": "$.datasetGroupArn",
                     "solution.$": "$.solution",
                 },
-            ).iterator(
-                _prepare_batch_segment_job_input.next(_create_batch_segment_job)
-            ),
+            ).iterator(_prepare_batch_segment_job_input.next(_create_batch_segment_job)),
         )
 
     @property

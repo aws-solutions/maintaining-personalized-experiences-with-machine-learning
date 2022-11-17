@@ -61,9 +61,7 @@ class Config:
     @property
     def botocore_config(self) -> botocore.config.Config:
         if not self._botocore_config:
-            self._botocore_config = botocore.config.Config(
-                **self._botocore_config_defaults
-            )
+            self._botocore_config = botocore.config.Config(**self._botocore_config_defaults)
         return self._botocore_config
 
     @botocore_config.setter

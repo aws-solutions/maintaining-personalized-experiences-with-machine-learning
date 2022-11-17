@@ -41,16 +41,11 @@ class DeleteScheduledTask(SolutionStep):
             layers=layers,
             failure_state=failure_state,
             function="delete_schedule",
-            entrypoint=Path(__file__).parents[1].resolve()
-            / "aws_lambda"
-            / "scheduler"
-            / "handler.py",
+            entrypoint=Path(__file__).parents[1].resolve() / "aws_lambda" / "scheduler" / "handler.py",
         )
 
     def _set_permissions(self):
-        self.function.add_environment(
-            "DDB_SCHEDULER_STEPFUNCTION", self.state_machine_arn
-        )
+        self.function.add_environment("DDB_SCHEDULER_STEPFUNCTION", self.state_machine_arn)
         self.function.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["states:StartExecution"],
@@ -60,6 +55,4 @@ class DeleteScheduledTask(SolutionStep):
         )
 
         self.scheduler_table.grant_read_write_data(self.function)
-        self.function.add_environment(
-            "DDB_SCHEDULES_TABLE", self.scheduler_table.table_name
-        )
+        self.function.add_environment("DDB_SCHEDULES_TABLE", self.scheduler_table.table_name)

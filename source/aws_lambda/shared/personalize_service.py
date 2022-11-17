@@ -80,7 +80,9 @@ class Personalize:
         self.cli = get_service_client("personalize")
 
     def arn(self, resource: Resource, name: str):
-        arn = f"arn:{get_aws_partition()}:personalize:{get_aws_region()}:{get_aws_account()}:{resource.name.dash}/{name}"
+        arn = (
+            f"arn:{get_aws_partition()}:personalize:{get_aws_region()}:{get_aws_account()}:{resource.name.dash}/{name}"
+        )
         return {f"{resource.name.camel}Arn": arn}
 
     def list(self, resource: Resource, filters: Optional[Dict] = None):
@@ -90,11 +92,7 @@ class Personalize:
         paginator = self.cli.get_paginator(list_fn_name)
         iterator = paginator.paginate(**filters)
         for page in iterator:
-            resource_key = [
-                k
-                for k in list(page.keys())
-                if k not in ("ResponseMetadata", "nextToken")
-            ].pop()
+            resource_key = [k for k in list(page.keys()) if k not in ("ResponseMetadata", "nextToken")].pop()
             for item in page[resource_key]:
                 yield item
 
@@ -174,9 +172,7 @@ class Personalize:
                 self._check_solution(expected, received)
 
             if result[resource.name.camel].get(k) != v:
-                raise ResourceNeedsUpdate(
-                    result[resource.name.camel][f"{resource.name.camel}Arn"]
-                )
+                raise ResourceNeedsUpdate(result[resource.name.camel][f"{resource.name.camel}Arn"])
         return result
 
     def _remove_workflow_parameters(self, resource: Resource, kwargs):
@@ -190,9 +186,7 @@ class Personalize:
                 kwargs.pop(key, None)
         return kwargs
 
-    def _describe_from_parent(
-        self, resource: Resource, parent: Resource, condition: Callable = None, **kwargs
-    ):
+    def _describe_from_parent(self, resource: Resource, parent: Resource, condition: Callable = None, **kwargs):
         """
         Describe a resource from Amazon Personalize by listing from its parent, then filtering the list on `condition`
         :param resource: the Amazon Personalize resource (e.g. dataset)
@@ -269,17 +263,13 @@ class Personalize:
                 logger.info(f"{new_job_name} may be current")
                 return True
         else:
-            arn_key = next(
-                iter(key for key in old_job.keys() if key.endswith("Arn")), "UNKNOWN"
-            )
+            arn_key = next(iter(key for key in old_job.keys() if key.endswith("Arn")), "UNKNOWN")
             old_job_name = old_job.get(arn_key, "UNKNOWN")
 
         # check if the job is active/ creating, otherwise filter out
         old_job_status = old_job["status"]
         if old_job_status not in STATUS_CREATING:
-            logger.debug(
-                f"{old_job_name} has status {old_job_status} which is not active or creating"
-            )
+            logger.debug(f"{old_job_name} has status {old_job_status} which is not active or creating")
             return False
 
         # check if the job is within maxAge if provided
@@ -302,14 +292,10 @@ class Personalize:
                 logger.debug(f"{old_job_name} is not current")
                 return False
             elif job_past_max_age and not new_data_available:
-                logger.info(
-                    f"{old_job_name} is not current, but no new data is available"
-                )
+                logger.info(f"{old_job_name} is not current, but no new data is available")
                 return True
             elif not job_past_max_age:
-                logger.info(
-                    f"{old_job_name} remains current ({int(max_age - job_age)}s remaining)"
-                )
+                logger.info(f"{old_job_name} remains current ({int(max_age - job_age)}s remaining)")
                 return True
         elif max_age and old_job_status != "ACTIVE":
             # this handles the case where we're working with solution version updates (since they do not have a name)
@@ -467,9 +453,7 @@ class Personalize:
             current_metrics = metrics.serialize_metric_set()
             print(json.dumps(current_metrics))
         except SchemaValidationError as exc:
-            logger.info(
-                f"metrics not flushed: {str(exc)}"
-            )  # no metrics to serialize or no namespace
+            logger.info(f"metrics not flushed: {str(exc)}")  # no metrics to serialize or no namespace
         metrics.clear_metrics()
 
     def _record_offline_metrics(self, solution_version: Dict) -> None:
@@ -482,9 +466,7 @@ class Personalize:
 
         # change the metric dimensions for tracking personalize solution metrics
         metrics.add_dimension("service", "SolutionMetrics")
-        metrics.add_dimension(
-            "solutionArn", solution_version["solutionVersion"]["solutionArn"]
-        )
+        metrics.add_dimension("solutionArn", solution_version["solutionVersion"]["solutionArn"])
         metrics._metric_units.append("None")
 
         metrics_response = self.cli.get_solution_metrics(
@@ -654,9 +636,7 @@ class Configuration:
     def _validate_dataset_group(self, path="datasetGroup.serviceConfig"):
         dataset_group = jmespath.search(path, self.config_dict)
         if not dataset_group:
-            self._configuration_errors.append(
-                f"A datasetGroup must be provided at path datasetGroup"
-            )
+            self._configuration_errors.append(f"A datasetGroup must be provided at path datasetGroup")
         else:
             self._validate_resource(DatasetGroup(), dataset_group)
             if isinstance(dataset_group, dict):
@@ -678,9 +658,7 @@ class Configuration:
     def _validate_filters(self, path="filters[].serviceConfig"):
         filters = jmespath.search(path, self.config_dict) or {}
         for idx, _filter in enumerate(filters):
-            if not self._validate_type(
-                _filter, dict, f"filters[{idx}].serviceConfig must be an object"
-            ):
+            if not self._validate_type(_filter, dict, f"filters[{idx}].serviceConfig must be an object"):
                 continue
 
             _filter["datasetGroupArn"] = DatasetGroup().arn("validation")
@@ -696,9 +674,7 @@ class Configuration:
         solutions = jmespath.search(path, self.config_dict) or {}
         for idx, _solution in enumerate(solutions):
             campaigns = _solution.get("campaigns", [])
-            if self._validate_type(
-                campaigns, list, f"solutions[{idx}].campaigns must be a list"
-            ):
+            if self._validate_type(campaigns, list, f"solutions[{idx}].campaigns must be a list"):
                 self._validate_campaigns(f"solutions[{idx}].campaigns", campaigns)
 
             batch_inference_jobs = _solution.get("batchInferenceJobs", [])
@@ -726,9 +702,7 @@ class Configuration:
                 )
 
             _solution = _solution.get("serviceConfig")
-            if not self._validate_type(
-                _solution, dict, f"solutions[{idx}].serviceConfig must be an object"
-            ):
+            if not self._validate_type(_solution, dict, f"solutions[{idx}].serviceConfig must be an object"):
                 continue
 
             _solution["datasetGroupArn"] = DatasetGroup().arn("validation")
@@ -767,24 +741,18 @@ class Configuration:
             current_path = f"{path}.campaigns[{idx}]"
 
             campaign = campaign_config.get("serviceConfig")
-            if not self._validate_type(
-                campaign, dict, f"{current_path}.serviceConfig must be an object"
-            ):
+            if not self._validate_type(campaign, dict, f"{current_path}.serviceConfig must be an object"):
                 continue
             else:
                 campaign["solutionVersionArn"] = SolutionVersion().arn("validation")
                 self._validate_resource(Campaign(), campaign)
 
-    def _validate_batch_inference_jobs(
-        self, path, solution_name, batch_inference_jobs: List[Dict]
-    ):
+    def _validate_batch_inference_jobs(self, path, solution_name, batch_inference_jobs: List[Dict]):
         for idx, batch_job_config in enumerate(batch_inference_jobs):
             current_path = f"{path}.batchInferenceJobs[{idx}]"
 
             batch_job = batch_job_config.get("serviceConfig")
-            if not self._validate_type(
-                batch_job, dict, f"{current_path}.batchInferenceJob must be an object"
-            ):
+            if not self._validate_type(batch_job, dict, f"{current_path}.batchInferenceJob must be an object"):
                 continue
             else:
                 # service does not validate the batch job length client-side
@@ -801,23 +769,17 @@ class Configuration:
                         "jobName": job_name,
                         "roleArn": "roleArn",
                         "jobInput": {"s3DataSource": {"path": "s3://data-source"}},
-                        "jobOutput": {
-                            "s3DataDestination": {"path": "s3://data-destination"}
-                        },
+                        "jobOutput": {"s3DataDestination": {"path": "s3://data-destination"}},
                     }
                 )
                 self._validate_resource(BatchInferenceJob(), batch_job)
 
-    def _validate_batch_segment_jobs(
-        self, path, solution_name, batch_segment_jobs: List[Dict]
-    ):
+    def _validate_batch_segment_jobs(self, path, solution_name, batch_segment_jobs: List[Dict]):
         for idx, batch_job_config in enumerate(batch_segment_jobs):
             current_path = f"{path}.batchSegmentJobs[{idx}]"
 
             batch_job = batch_job_config.get("serviceConfig")
-            if not self._validate_type(
-                batch_job, dict, f"{current_path}.batchSegmentJob must be an object"
-            ):
+            if not self._validate_type(batch_job, dict, f"{current_path}.batchSegmentJob must be an object"):
                 continue
             else:
                 # service does not validate the batch job length client-side
@@ -834,27 +796,19 @@ class Configuration:
                         "jobName": job_name,
                         "roleArn": "roleArn",
                         "jobInput": {"s3DataSource": {"path": "s3://data-source"}},
-                        "jobOutput": {
-                            "s3DataDestination": {"path": "s3://data-destination"}
-                        },
+                        "jobOutput": {"s3DataDestination": {"path": "s3://data-destination"}},
                     }
                 )
                 self._validate_resource(BatchSegmentJob(), batch_job)
 
     def _validate_rate(self, expression):
-        rate_re = re.compile(
-            r"rate\((?P<value>\d+) (?P<unit>(minutes?|hours?|day?s)\))"
-        )
+        rate_re = re.compile(r"rate\((?P<value>\d+) (?P<unit>(minutes?|hours?|day?s)\))")
         match = rate_re.match(expression)
 
         if not match:
-            self._configuration_errors.append(
-                f"invalid rate ScheduleExpression {expression}"
-            )
+            self._configuration_errors.append(f"invalid rate ScheduleExpression {expression}")
 
-    def _validate_cron_expressions(  # NOSONAR - allow higher complexity
-        self, *paths: List[str]
-    ) -> None:
+    def _validate_cron_expressions(self, *paths: List[str]) -> None:  # NOSONAR - allow higher complexity
         """
         Validate all cron expressions found in paths
         :param paths: the list of jmespath paths to validate as cron expressions
@@ -873,13 +827,9 @@ class Configuration:
                     if isinstance(item, str):
                         expressions.append(item)
                     else:
-                        self._configuration_errors.append(
-                            f"unexpected type at path {path}, expected string"
-                        )
+                        self._configuration_errors.append(f"unexpected type at path {path}, expected string")
             else:
-                self._configuration_errors.append(
-                    f"unexpected type at path {path}, expected string or list"
-                )
+                self._configuration_errors.append(f"unexpected type at path {path}, expected string or list")
         for expression in expressions:
             try:
                 Schedule(expression=expression)
@@ -901,15 +851,9 @@ class Configuration:
             return
 
         datasets = {
-            "users": jmespath.search(
-                "datasets.users.dataset.serviceConfig", self.config_dict
-            ),
-            "items": jmespath.search(
-                "datasets.items.dataset.serviceConfig", self.config_dict
-            ),
-            "interactions": jmespath.search(
-                "datasets.interactions.dataset.serviceConfig", self.config_dict
-            ),
+            "users": jmespath.search("datasets.users.dataset.serviceConfig", self.config_dict),
+            "items": jmespath.search("datasets.items.dataset.serviceConfig", self.config_dict),
+            "interactions": jmespath.search("datasets.interactions.dataset.serviceConfig", self.config_dict),
         }
 
         if not datasets["interactions"]:
@@ -919,9 +863,7 @@ class Configuration:
 
         for dataset_name, dataset in datasets.items():
             if dataset:
-                if not self._validate_type(
-                    dataset, dict, f"datasets.{dataset_name} must be an object"
-                ):
+                if not self._validate_type(dataset, dict, f"datasets.{dataset_name} must be an object"):
                     return
 
                 # some values are provided by the solution - we introduce placeholders
@@ -940,15 +882,9 @@ class Configuration:
         Perform a validation of the schemas up front
         :return: None
         """
-        users_schema = jmespath.search(
-            "datasets.users.schema.serviceConfig", self.config_dict
-        )
-        items_schema = jmespath.search(
-            "datasets.items.schema.serviceConfig", self.config_dict
-        )
-        interactions_schema = jmespath.search(
-            "datasets.interactions.schema.serviceConfig", self.config_dict
-        )
+        users_schema = jmespath.search("datasets.users.schema.serviceConfig", self.config_dict)
+        items_schema = jmespath.search("datasets.items.schema.serviceConfig", self.config_dict)
+        interactions_schema = jmespath.search("datasets.interactions.schema.serviceConfig", self.config_dict)
 
         self._validate_schema("users", users_schema)
         self._validate_schema("items", items_schema)
@@ -972,9 +908,7 @@ class Configuration:
             try:
                 avro.schema.parse(json.dumps(avro_schema))
             except avro.schema.SchemaParseException as exc:
-                self._configuration_errors.append(
-                    f"The {name} schema is not valid: {exc}"
-                )
+                self._configuration_errors.append(f"The {name} schema is not valid: {exc}")
 
         self._validate_resource(
             Schema(),
@@ -1002,9 +936,7 @@ class Configuration:
         elif isinstance(config, dict):
             self._validate_dict(config, schema, path)
         else:
-            self._configuration_errors.append(
-                f"an unknown validation error occurred at {path}"
-            )
+            self._configuration_errors.append(f"an unknown validation error occurred at {path}")
 
     def _validate_list(self, config: List, schema: List, path=""):
         for idx, item in enumerate(config):
@@ -1012,23 +944,14 @@ class Configuration:
             self._validate_keys(item, schema[0], current_path)
 
     def _validate_dict(self, config: Dict, schema: List, path=""):
-        allowed = [
-            k
-            if isinstance(k, str)
-            else next(iter(k.keys()))
-            if isinstance(k, dict)
-            else k[0]
-            for k in schema
-        ]
+        allowed = [k if isinstance(k, str) else next(iter(k.keys())) if isinstance(k, dict) else k[0] for k in schema]
         sub_validations = [i for i in schema if isinstance(i, dict)]
 
         for key, value in config.items():
             current_path = [path, key]
             current_path = ".".join([i for i in current_path if i])
             if key not in allowed:
-                self._configuration_errors.append(
-                    f"key {current_path} is not an allowed key"
-                )
+                self._configuration_errors.append(f"key {current_path} is not an allowed key")
 
             try:
                 sub_validation = [v for v in sub_validations if v.get(key)].pop()
@@ -1046,9 +969,5 @@ class Configuration:
 
     def _validate_naming(self):
         """Validate that names of resources don't overlap in ways that might cause issues"""
-        self._validate_no_duplicates(
-            name="campaign names", path="solutions[].campaigns[].serviceConfig.name"
-        )
-        self._validate_no_duplicates(
-            name="solution names", path="solutions[].serviceConfig.name"
-        )
+        self._validate_no_duplicates(name="campaign names", path="solutions[].campaigns[].serviceConfig.name")
+        self._validate_no_duplicates(name="solution names", path="solutions[].serviceConfig.name")

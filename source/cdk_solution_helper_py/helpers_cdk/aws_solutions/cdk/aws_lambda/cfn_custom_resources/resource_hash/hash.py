@@ -42,18 +42,13 @@ class ResourceHash(Construct):
             self._resource_name_function = SolutionsPythonFunction(
                 stack,
                 uuid,
-                entrypoint=Path(__file__).parent
-                / "src"
-                / "custom_resources"
-                / "hash.py",
+                entrypoint=Path(__file__).parent / "src" / "custom_resources" / "hash.py",
                 function="handler",
             )
             add_cfn_nag_suppressions(
                 resource=self._resource_name_function.node.default_child,
                 suppressions=[
-                    CfnNagSuppression(
-                        "W89", "This AWS Lambda Function is not deployed to a VPC"
-                    ),
+                    CfnNagSuppression("W89", "This AWS Lambda Function is not deployed to a VPC"),
                     CfnNagSuppression(
                         "W92",
                         "This AWS Lambda Function does not require reserved concurrency",

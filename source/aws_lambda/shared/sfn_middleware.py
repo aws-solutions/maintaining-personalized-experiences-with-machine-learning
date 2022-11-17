@@ -52,9 +52,7 @@ WORKFLOW_PARAMETERS = {
     "maxAge",
     "timeStarted",
 }
-WORKFLOW_CONFIG_DEFAULT = {
-    "timeStarted": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-}
+WORKFLOW_CONFIG_DEFAULT = {"timeStarted": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}
 
 
 class Arity(Enum):
@@ -196,17 +194,13 @@ class Parameter:
         elif self.source == "environment":
             resolved = os.environ.get(self.path)
         else:
-            raise ValueError(
-                f"Missing or misconfigured event `source` (got {self.source})"
-            )
+            raise ValueError(f"Missing or misconfigured event `source` (got {self.source})")
 
         if not resolved:
             resolved = self.get_default()
 
         if not resolved and self.default != "omit":
-            raise ValueError(
-                f"missing configuration for {self.key}, expected from {self.source} at path {self.path}"
-            )
+            raise ValueError(f"missing configuration for {self.key}, expected from {self.source} at path {self.path}")
 
         if resolved:
             return self.format(resolved)
@@ -246,16 +240,12 @@ class ResourceConfiguration:
 
 
 class PersonalizeResource:
-    def __init__(
-        self, resource: str, status: str = None, config: Optional[Dict] = None
-    ):
+    def __init__(self, resource: str, status: str = None, config: Optional[Dict] = None):
         self.resource: str = resource
         self.status: str = status
         self.config: Dict[str, Dict] = config if config else {}
 
-    def check_status(  # NOSONAR - allow higher complexity
-        self, resource: Dict[str, Any], **expected
-    ) -> Dict:
+    def check_status(self, resource: Dict[str, Any], **expected) -> Dict:  # NOSONAR - allow higher complexity
         # Check for resource property mismatch (filters, solutions are not scoped to their dataset group)
         received = resource.get(self.resource)
         mismatch = []
@@ -294,9 +284,7 @@ class PersonalizeResource:
                 continue
 
             if actual_value != expected_value:
-                mismatch.append(
-                    f"expected {expected_key} to be {expected_value} but got {actual_value}"
-                )
+                mismatch.append(f"expected {expected_key} to be {expected_value} but got {actual_value}")
         if mismatch:
             raise ResourceFailed(
                 f"{'. '.join(mismatch)}. This can happen if a user modifies a resource out-of-band "
@@ -347,11 +335,7 @@ class PersonalizeResource:
             self.check_status(resource, **kwargs)
 
             # convert any non-processable fields to something we can handle
-            event["resource"] = json.loads(
-                json.dumps(
-                    jmespath.search(self.resource, resource), default=json_handler
-                )
-            )
+            event["resource"] = json.loads(json.dumps(jmespath.search(self.resource, resource), default=json_handler))
             return func(event, context)
 
         return decorator

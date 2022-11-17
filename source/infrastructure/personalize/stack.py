@@ -91,9 +91,7 @@ class PersonalizeStack(SolutionStack):
             allowed_pattern=r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$|^$)",
             constraint_description="Must be a valid email address or blank",
         )
-        self.solutions_template_options.add_parameter(
-            self.email, "Email", "Solution Configuration"
-        )
+        self.solutions_template_options.add_parameter(self.email, "Email", "Solution Configuration")
         self.email_provided = CfnCondition(
             self,
             "EmailProvided",
@@ -115,9 +113,7 @@ class PersonalizeStack(SolutionStack):
         kms_enabled = CfnCondition(
             self,
             "PersonalizeSseKmsEnabled",
-            expression=Fn.condition_not(
-                Fn.condition_equals(self.personalize_kms_key_arn, "")
-            ),
+            expression=Fn.condition_not(Fn.condition_equals(self.personalize_kms_key_arn, "")),
         )
 
         # layers
@@ -221,15 +217,11 @@ class PersonalizeStack(SolutionStack):
             personalize_bucket=data_bucket,
         )
         create_filter = CreateFilter(self, "Create Filter", layers=common_layers)
-        create_timestamp = CreateTimestamp(
-            self, "Create Timestamp", layers=[layer_powertools]
-        )
+        create_timestamp = CreateTimestamp(self, "Create Timestamp", layers=[layer_powertools])
 
         # EventBridge events can be triggered for resource creation and update
         # Note: https://github.com/aws/aws-cdk/issues/17338
-        bus_name = (
-            f"aws-solutions-{self.node.try_get_context('SOLUTION_ID')}-{Aws.STACK_NAME}"
-        )
+        bus_name = f"aws-solutions-{self.node.try_get_context('SOLUTION_ID')}-{Aws.STACK_NAME}"
         event_bus = EventBus(
             self,
             id="Notifications",
@@ -262,9 +254,7 @@ class PersonalizeStack(SolutionStack):
         success = notifications.state(
             self,
             "Success",
-            payload=TaskInput.from_object(
-                {"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}
-            ),
+            payload=TaskInput.from_object({"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}),
         )
 
         dataset_import_schedule_sfn = ScheduledDatasetImport(
@@ -367,9 +357,7 @@ class PersonalizeStack(SolutionStack):
         )
         # fmt: on
 
-        state_machine_namer = ResourceName(
-            self, "StateMachineName", purpose="personalize-workflow", max_length=80
-        )
+        state_machine_namer = ResourceName(self, "StateMachineName", purpose="personalize-workflow", max_length=80)
         state_machine = StateMachine(
             self,
             "PersonalizeStateMachine",
@@ -378,13 +366,9 @@ class PersonalizeStack(SolutionStack):
             tracing_enabled=True,
         )
         add_cfn_nag_suppressions(
-            state_machine.role.node.try_find_child("DefaultPolicy").node.find_child(
-                "Resource"
-            ),
+            state_machine.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
             [
-                CfnNagSuppression(
-                    "W12", "IAM policy for AWS X-Ray requires an allow on *"
-                ),
+                CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *"),
                 CfnNagSuppression(
                     "W76",
                     "Large step functions need larger IAM roles to access all managed AWS Lambda functions",
@@ -428,9 +412,7 @@ class PersonalizeStack(SolutionStack):
 
         Tags.of(self).add("SOLUTION_ID", self.node.try_get_context("SOLUTION_ID"))
         Tags.of(self).add("SOLUTION_NAME", self.node.try_get_context("SOLUTION_NAME"))
-        Tags.of(self).add(
-            "SOLUTION_VERSION", self.node.try_get_context("SOLUTION_VERSION")
-        )
+        Tags.of(self).add("SOLUTION_VERSION", self.node.try_get_context("SOLUTION_VERSION"))
 
         Aspects.of(self).add(
             CfnNagSuppressAll(

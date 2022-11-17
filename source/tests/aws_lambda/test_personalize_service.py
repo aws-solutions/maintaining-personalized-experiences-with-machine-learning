@@ -65,12 +65,8 @@ def describe_solution_version_response():
             "trainingHours": 1.546,
             "trainingMode": "FULL",
             "status": "ACTIVE",
-            "creationDateTime": datetime(
-                2021, 9, 2, 14, 54, 56, 406000, tzinfo=tzlocal()
-            ),
-            "lastUpdatedDateTime": datetime(
-                2021, 9, 2, 15, 16, 23, 424000, tzinfo=tzlocal()
-            ),
+            "creationDateTime": datetime(2021, 9, 2, 14, 54, 56, 406000, tzinfo=tzlocal()),
+            "lastUpdatedDateTime": datetime(2021, 9, 2, 15, 16, 23, 424000, tzinfo=tzlocal()),
         },
         "ResponseMetadata": {},
     }
@@ -136,28 +132,16 @@ def test_service_model(personalize_stubber):
     filter_name_2 = "filter2"
     campaign_name_1 = "campaign1"
     campaign_name_2 = "campaign2"
-    dataset_group_arn_1 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:dataset-group/{dataset_group_name_1}"
-    )
-    dataset_group_arn_2 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:dataset-group/{dataset_group_name_2}"
-    )
+    dataset_group_arn_1 = f"arn:aws:personalize:us-east-1:{'1' * 12}:dataset-group/{dataset_group_name_1}"
+    dataset_group_arn_2 = f"arn:aws:personalize:us-east-1:{'1' * 12}:dataset-group/{dataset_group_name_2}"
     dataset_arn_1 = f"arn:aws:personalize:us-east-1:{'1' * 12}:dataset/{dataset_group_name_1}/INTERACTIONS"
     dataset_arn_2 = f"arn:aws:personalize:us-east-1:{'1' * 12}:dataset/{dataset_group_name_2}/INTERACTIONS"
-    solution_arn_1 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:solution/{solution_name_1}"
-    )
-    solution_arn_2 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:solution/{solution_name_2}"
-    )
+    solution_arn_1 = f"arn:aws:personalize:us-east-1:{'1' * 12}:solution/{solution_name_1}"
+    solution_arn_2 = f"arn:aws:personalize:us-east-1:{'1' * 12}:solution/{solution_name_2}"
     filter_arn_1 = f"arn:aws:personalize:us-east-1:{'1' * 12}:filter/{filter_name_1}"
     filter_arn_2 = f"arn:aws:personalize:us-east-1:{'1' * 12}:filter/{filter_name_2}"
-    campaign_arn_1 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:campaign/{campaign_name_1}"
-    )
-    campaign_arn_2 = (
-        f"arn:aws:personalize:us-east-1:{'1' * 12}:campaign/{campaign_name_2}"
-    )
+    campaign_arn_1 = f"arn:aws:personalize:us-east-1:{'1' * 12}:campaign/{campaign_name_1}"
+    campaign_arn_2 = f"arn:aws:personalize:us-east-1:{'1' * 12}:campaign/{campaign_name_2}"
 
     # all dataset groups
     personalize_stubber.add_response(
@@ -324,15 +308,10 @@ def test_describe_with_update(mocker):
     }
     personalize.describe_default = describe_mock
 
-    assert (
-        personalize.describe_with_update(resource=Campaign(), solutionVersionArn=arn)
-        == describe_mock.return_value
-    )
+    assert personalize.describe_with_update(resource=Campaign(), solutionVersionArn=arn) == describe_mock.return_value
 
     with pytest.raises(ResourceNeedsUpdate):
-        personalize.describe_with_update(
-            resource=Campaign(), solutionVersionArn=arn.replace("aaaaaaaa", "bbbbbbbb")
-        )
+        personalize.describe_with_update(resource=Campaign(), solutionVersionArn=arn.replace("aaaaaaaa", "bbbbbbbb"))
 
 
 @pytest.mark.parametrize(
@@ -372,22 +351,14 @@ def test_new_resource_solution_version(personalize_stubber):
         service_response={
             "solutionVersions": [
                 {
-                    "creationDateTime": datetime(
-                        1999, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
-                    "lastUpdatedDateTime": datetime(
-                        2000, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
+                    "creationDateTime": datetime(1999, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()),
+                    "lastUpdatedDateTime": datetime(2000, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()),
                     "status": "ACTIVE",
                     "solutionVersionArn": sv_arn_old,
                 },
                 {
-                    "creationDateTime": datetime(
-                        1999, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
-                    "lastUpdatedDateTime": datetime(
-                        2000, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
+                    "creationDateTime": datetime(1999, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()),
+                    "lastUpdatedDateTime": datetime(2000, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()),
                     "status": "ACTIVE",
                     "solutionVersionArn": sv_arn_new,
                 },
@@ -433,22 +404,14 @@ def test_new_resource_solution_version(personalize_stubber):
         service_response={
             "solutionVersions": [
                 {
-                    "creationDateTime": datetime(
-                        1999, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
-                    "lastUpdatedDateTime": datetime(
-                        2000, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
+                    "creationDateTime": datetime(1999, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()),
+                    "lastUpdatedDateTime": datetime(2000, 1, 1, 0, 0, 0, tzinfo=tz.tzlocal()),
                     "status": "ACTIVE",
                     "solutionVersionArn": sv_arn_old,
                 },
                 {
-                    "creationDateTime": datetime(
-                        1999, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
-                    "lastUpdatedDateTime": datetime(
-                        2000, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()
-                    ),
+                    "creationDateTime": datetime(1999, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()),
+                    "lastUpdatedDateTime": datetime(2000, 1, 2, 0, 0, 0, tzinfo=tz.tzlocal()),
                     "status": "ACTIVE",
                     "solutionVersionArn": sv_arn_new,
                 },
@@ -473,9 +436,7 @@ def test_new_resource_solution_version(personalize_stubber):
         )
 
 
-def test_record_offline_metrics(
-    personalize_stubber, capsys, describe_solution_version_response
-):
+def test_record_offline_metrics(personalize_stubber, capsys, describe_solution_version_response):
     personalize = Personalize()
     personalize_stubber.add_response(
         method="get_solution_metrics",
@@ -494,9 +455,7 @@ def test_record_offline_metrics(
             "ResponseMetadata": {},
         },
     )
-    personalize._record_offline_metrics(
-        solution_version=describe_solution_version_response
-    )
+    personalize._record_offline_metrics(solution_version=describe_solution_version_response)
 
     log = capsys.readouterr().out.strip()
     metrics = json.loads(log)

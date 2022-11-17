@@ -37,17 +37,9 @@ class DatasetImportsFragment(StateMachineFragment):
 
         self.chain = Chain.start(
             Parallel(self, "Create and Import Datasets", result_path=JsonPath.DISCARD)
-            .branch(
-                DatasetImportFragment(
-                    self, "Interactions", **dataset_management_functions
-                )
-            )
-            .branch(
-                DatasetImportFragment(self, "Users", **dataset_management_functions)
-            )
-            .branch(
-                DatasetImportFragment(self, "Items", **dataset_management_functions)
-            )
+            .branch(DatasetImportFragment(self, "Interactions", **dataset_management_functions))
+            .branch(DatasetImportFragment(self, "Users", **dataset_management_functions))
+            .branch(DatasetImportFragment(self, "Items", **dataset_management_functions))
         )
 
     @property

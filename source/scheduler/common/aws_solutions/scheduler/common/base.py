@@ -54,13 +54,9 @@ class Scheduler:
         self.stepfunction = os.environ.get("DDB_SCHEDULER_STEPFUNCTION", stepfunction)
 
         if not self.table_name:
-            raise ValueError(
-                "requires table_name at initialization or DDB_SCHEDULES_TABLE env var"
-            )
+            raise ValueError("requires table_name at initialization or DDB_SCHEDULES_TABLE env var")
         if not self.stepfunction:
-            raise ValueError(
-                "requires stepfunction at initialization or DDB_SCHEDULER_STEPFUNCTION env var"
-            )
+            raise ValueError("requires stepfunction at initialization or DDB_SCHEDULER_STEPFUNCTION env var")
 
         self.sfn_cli = get_service_client("stepfunctions")
         self.table = self.ddb.Table(self.table_name)
@@ -174,9 +170,7 @@ class Scheduler:
 
     def _get_running_execution_arn(self, task: Task) -> Optional[str]:
         paginator = self.sfn_cli.get_paginator("list_executions")
-        iterator = paginator.paginate(
-            stateMachineArn=self.stepfunction, statusFilter="RUNNING"
-        )
+        iterator = paginator.paginate(stateMachineArn=self.stepfunction, statusFilter="RUNNING")
         for page in iterator:
             executions = page.get("executions", [])
             for execution in executions:
@@ -236,15 +230,10 @@ class Scheduler:
 
     def _transact_put(self, task: Task) -> bool:
         if not task.schedule or not isinstance(task.schedule.expression, str):
-            raise ValueError(
-                "to create a task, it must have a schedule (e.g. cron(* * * * ? *)"
-            )
+            raise ValueError("to create a task, it must have a schedule (e.g. cron(* * * * ? *)")
         if not isinstance(task.state_machine, dict):
             raise ValueError("task state_machine must be a dictionary")
-        if (
-            "arn" not in task.state_machine.keys()
-            or "input" not in task.state_machine.keys()
-        ):
+        if "arn" not in task.state_machine.keys() or "input" not in task.state_machine.keys():
             raise ValueError("task state_machine must have an arn and input")
         if not isinstance(task.state_machine["arn"], str):
             raise ValueError("task state_machine.arn must be a string")

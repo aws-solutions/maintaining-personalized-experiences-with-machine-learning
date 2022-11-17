@@ -64,9 +64,7 @@ class SolutionFragment(StateMachineFragment):
                 errors=["ResourceFailed", "ResourceInvalid"],
                 result_path="$.statesError",
             )
-            self.task.add_catch(
-                failure_state, errors=["States.ALL"], result_path="$.statesError"
-            )
+            self.task.add_catch(failure_state, errors=["States.ALL"], result_path="$.statesError")
 
     @property
     def start_state(self) -> State:

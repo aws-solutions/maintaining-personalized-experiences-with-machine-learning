@@ -38,6 +38,7 @@ def template():
         "SOLUTION_VERSION": "v1.0.0",
         "SOLUTION_NAME": "test-solution-name",
         "BUCKET_NAME": "test-solution-bucket",
+        "APP_REGISTRY_NAME": "test-solution-name",
     }
     for ctx_var in ["SOLUTIONS_ASSETS_GLOBAL", "SOLUTIONS_ASSETS_REGIONAL"]:
         ctx_var_val = os.environ.get(ctx_var)
@@ -65,12 +66,17 @@ def test_cloudformation_template_init_metadata(solution_build_environment, templ
     assert not template.get("Rules")
 
     assert template["Metadata"]["aws:solutions:templatename"] == "stack_1.template"
+
     assert template["Mappings"]["Solution"] == {
-        "Data": {"ID": "SO001", "Version": "v1.0.0", "SendAnonymousUsageData": "Yes"}
+        "Data": {
+            "ID": "SO001",
+            "Version": "v1.0.0",
+            "SendAnonymousUsageData": "Yes",
+            "SolutionName": "test-solution-name",
+            "AppRegistryName": "test-solution-name",
+            "ApplicationType": "AWS-Solutions",
+        }
     }
     assert template["Mappings"]["SourceCode"] == {
-        "General": {
-            "S3Bucket": "test-solution-bucket",
-            "KeyPrefix": "test-solution-name/v1.0.0",
-        }
+        "General": {"S3Bucket": "test-solution-bucket", "KeyPrefix": "test-solution-name/v1.0.0"}
     }

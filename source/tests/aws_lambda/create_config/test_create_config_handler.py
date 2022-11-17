@@ -42,13 +42,9 @@ def test_create_config(personalize_stubber):
 
     personalize_stubber.add_response(
         method="list_datasets",
-        service_response={
-            "datasets": [{"name": "dsg_interactions", "datasetArn": dataset_arn}]
-        },
+        service_response={"datasets": [{"name": "dsg_interactions", "datasetArn": dataset_arn}]},
     )
-    personalize_stubber.add_response(
-        method="list_dataset_import_jobs", service_response={"datasetImportJobs": []}
-    )
+    personalize_stubber.add_response(method="list_dataset_import_jobs", service_response={"datasetImportJobs": []})
     personalize_stubber.add_response(
         method="list_filters",
         service_response={"Filters": []},
@@ -67,31 +63,17 @@ def test_create_config(personalize_stubber):
     personalize_stubber.add_response(
         method="list_solution_versions",
         service_response={
-            "solutionVersions": [
-                {
-                    "solutionVersionArn": SolutionVersion().arn(
-                        "dsgsolution", sv_id="aaaaaaaa"
-                    )
-                }
-            ]
+            "solutionVersions": [{"solutionVersionArn": SolutionVersion().arn("dsgsolution", sv_id="aaaaaaaa")}]
         },
         expected_params={"solutionArn": solution_arn},
     )
     personalize_stubber.add_response(
         method="list_batch_inference_jobs",
-        service_response={
-            "batchInferenceJobs": [
-                {"batchInferenceJobArn": BatchInferenceJob().arn("dsgbatch")}
-            ]
-        },
+        service_response={"batchInferenceJobs": [{"batchInferenceJobArn": BatchInferenceJob().arn("dsgbatch")}]},
     )
     personalize_stubber.add_response(
         method="list_batch_segment_jobs",
-        service_response={
-            "batchSegmentJobs": [
-                {"batchSegmentJobArn": BatchSegmentJob().arn("dsgbatch")}
-            ]
-        },
+        service_response={"batchSegmentJobs": [{"batchSegmentJobArn": BatchSegmentJob().arn("dsgbatch")}]},
     )
     personalize_stubber.add_response(
         method="list_recommenders",
@@ -105,9 +87,7 @@ def test_create_config(personalize_stubber):
     )
     personalize_stubber.add_response(
         method="describe_dataset_group",
-        service_response={
-            "datasetGroup": {"name": dsg_name, "datasetGroupArn": dsg_arn}
-        },
+        service_response={"datasetGroup": {"name": dsg_name, "datasetGroupArn": dsg_arn}},
         expected_params={"datasetGroupArn": dsg_arn},
     )
     personalize_stubber.add_response(
@@ -133,16 +113,12 @@ def test_create_config(personalize_stubber):
     )
     personalize_stubber.add_response(
         method="describe_schema",
-        service_response={
-            "schema": {"name": schema_name, "schemaArn": schema_arn, "schema": "{}"}
-        },
+        service_response={"schema": {"name": schema_name, "schemaArn": schema_arn, "schema": "{}"}},
         expected_params={"schemaArn": schema_arn},
     )
     personalize_stubber.add_response(
         method="describe_solution",
-        service_response={
-            "solution": {"name": solution_name, "solutionArn": solution_arn}
-        },
+        service_response={"solution": {"name": solution_name, "solutionArn": solution_arn}},
         expected_params={"solutionArn": solution_arn},
     )
     personalize_stubber.add_response(
@@ -172,23 +148,12 @@ def test_create_config(personalize_stubber):
         None,
     )
     assert result["datasetGroup"]["serviceConfig"]["name"] == dsg_name
-    assert (
-        result["datasetGroup"]["workflowConfig"]["schedules"]["import"]
-        == "cron(0 */6 * * ? *)"
-    )
+    assert result["datasetGroup"]["workflowConfig"]["schedules"]["import"] == "cron(0 */6 * * ? *)"
     assert result["eventTracker"]["serviceConfig"]["name"] == event_tracker_name
     assert not result.get("filters")
     assert len(result["solutions"]) == 1
     assert result["solutions"][0]["serviceConfig"]["name"] == solution_name
-    assert (
-        result["solutions"][0]["workflowConfig"]["schedules"]["full"]
-        == "cron(0 0 ? * 1 *)"
-    )
-    assert (
-        result["solutions"][0]["workflowConfig"]["schedules"]["update"]
-        == "cron(0 * * * ? *)"
-    )
+    assert result["solutions"][0]["workflowConfig"]["schedules"]["full"] == "cron(0 0 ? * 1 *)"
+    assert result["solutions"][0]["workflowConfig"]["schedules"]["update"] == "cron(0 * * * ? *)"
     assert len(result["solutions"][0]["campaigns"]) == 1
-    assert (
-        result["solutions"][0]["campaigns"][0]["serviceConfig"]["name"] == campaign_name
-    )
+    assert result["solutions"][0]["campaigns"][0]["serviceConfig"]["name"] == campaign_name

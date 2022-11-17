@@ -36,9 +36,7 @@ class Cleanable:
         source_path = Path(source_dir)
 
         for path in source_path.rglob(self.pattern):
-            if "aws_solutions" not in str(
-                path.name
-            ):  # prevent the module from being unlinked in a dev environment
+            if "aws_solutions" not in str(path.name):  # prevent the module from being unlinked in a dev environment
                 if self.file_type == "d" and path.is_dir():
                     logger.info(f"deleting {self.name} directory {path}")
                     shutil.rmtree(path, ignore_errors=True)

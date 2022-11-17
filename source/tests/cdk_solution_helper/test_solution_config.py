@@ -105,10 +105,7 @@ def test_invalid_solution_id(solution_version_invalid):
 
 def test_valid_botocore_config(solution_id_valid, solution_version_valid):
     boto_config = aws_solutions.core.config.botocore_config
-    assert (
-        boto_config.user_agent_extra
-        == f"AwsSolution/{solution_id_valid}/{solution_version_valid}"
-    )
+    assert boto_config.user_agent_extra == f"AwsSolution/{solution_id_valid}/{solution_version_valid}"
 
 
 def test_solution_config_env_reuse():
@@ -136,7 +133,4 @@ def test_botocore_config_change_defaults():
     aws_solutions.core.config.botocore_config = cfg_2
 
     assert aws_solutions.core.config.botocore_config.read_timeout == 123
-    assert (
-        aws_solutions.core.config.botocore_config.user_agent_extra
-        == f"AwsSolution/SO0100/v1.0.0"
-    )
+    assert aws_solutions.core.config.botocore_config.user_agent_extra == f"AwsSolution/SO0100/v1.0.0"

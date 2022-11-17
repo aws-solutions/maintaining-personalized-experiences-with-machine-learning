@@ -37,19 +37,13 @@ def lambda_event():
 
 def test_generate_hashed_name(lambda_event):
     generate_hash(lambda_event, None)
-    assert (
-        helper.Data["Name"]
-        == f"{lambda_event['ResourceProperties']['Purpose']}-{EXPECTED_DIGEST[:8]}"
-    )
+    assert helper.Data["Name"] == f"{lambda_event['ResourceProperties']['Purpose']}-{EXPECTED_DIGEST[:8]}"
 
 
 def test_generate_hashed_name_long(lambda_event):
     lambda_event["ResourceProperties"]["Purpose"] = "a" * (64 - 9)
     generate_hash(lambda_event, None)
-    assert (
-        helper.Data["Name"]
-        == f"{lambda_event['ResourceProperties']['Purpose']}-{EXPECTED_DIGEST[:8]}"
-    )
+    assert helper.Data["Name"] == f"{lambda_event['ResourceProperties']['Purpose']}-{EXPECTED_DIGEST[:8]}"
 
 
 def test_generate_hashed_name_long(lambda_event):
