@@ -57,7 +57,7 @@ class AppRegistry(Construct):
             self,
             "RegistrySetup",
             application_name=cdk.Fn.join(
-                "-", [cdk.Aws.STACK_NAME, self.app_registry_name, cdk.Aws.REGION, cdk.Aws.ACCOUNT_ID]
+                "-", ["App", cdk.Aws.STACK_NAME, self.app_registry_name, cdk.Aws.REGION, cdk.Aws.ACCOUNT_ID]
             ),
             description=f"Service Catalog application to track and manage all your resources for the solution {self.solution_name}",
         )
@@ -81,7 +81,7 @@ class AppRegistry(Construct):
             appreg.AttributeGroup(
                 self,
                 "AppAttributes",
-                attribute_group_name=cdk.Aws.STACK_NAME,
+                attribute_group_name=f"AttrGrp-{cdk.Aws.STACK_NAME}",
                 description="Attributes for Solutions Metadata",
                 attributes={
                     "applicationType": self.application_type,

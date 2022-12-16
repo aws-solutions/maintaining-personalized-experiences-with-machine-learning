@@ -42,12 +42,12 @@ setuptools.setup(
     license="Apache License 2.0",
     packages=setuptools.find_namespace_packages(exclude=["build*"]),
     install_requires=[
-        "pip>=22.2.2",
+        "pip>=22.3.1",
         "aws_cdk_lib==2.44.0",
-        "Click>=7.1.2",
-        "boto3>=1.24.90",
+        "Click==8.1.3",
+        "boto3==1.25.5",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

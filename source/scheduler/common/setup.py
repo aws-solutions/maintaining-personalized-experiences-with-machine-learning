@@ -42,22 +42,22 @@ setuptools.setup(
     license="Apache License 2.0",
     packages=setuptools.find_namespace_packages(exclude=["build*"]),
     install_requires=[
-        "pip>=22.2.2",
+        "pip>=22.3.1",
         "aws-lambda-powertools==1.29.2",
         "aws-xray-sdk==2.11.0",
-        "aws-solutions-python>=2.0.0",
-        "click>=8.1.3",
+        "aws-solutions-python==2.0.0",
+        "click==8.1.3",
         "cronex==0.1.3.1",
-        "boto3>=1.24.90",
-        "requests>=2.28.1",
-        "crhelper>=2.0.11",
-        "rich>=12.6.0",
+        "boto3==1.25.5",
+        "requests==2.28.1",
+        "crhelper==2.0.11",
+        "rich==12.6.0",
     ],
     entry_points="""
     [console_scripts]
     aws-solutions-scheduler=aws_solutions.scheduler.common.scripts.scheduler_cli:cli
     """,
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
