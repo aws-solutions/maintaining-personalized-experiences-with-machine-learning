@@ -42,10 +42,10 @@ setuptools.setup(
     license="Apache License 2.0",
     packages=setuptools.find_namespace_packages(exclude=["build*"]),
     install_requires=[
-        "boto3>=1.24.90",
-        "pip>=22.2.2",
+        "boto3==1.25.5",
+        "pip>=22.3.1",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

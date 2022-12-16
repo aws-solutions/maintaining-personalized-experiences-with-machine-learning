@@ -54,6 +54,7 @@ def test_service_catalog_registry_application(synth_template):
                 "Fn::Join": [
                     "-",
                     [
+                        "App",
                         {"Ref": "AWS::StackName"},
                         app.node.try_get_context("APP_REGISTRY_NAME"),
                         {"Ref": "AWS::Region"},
@@ -65,11 +66,11 @@ def test_service_catalog_registry_application(synth_template):
             "Tags": {
                 "SOLUTION_ID": "SO0170",
                 "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
-                "SOLUTION_VERSION": "v1.3.0",
+                "SOLUTION_VERSION": "v1.3.1",
                 "Solutions:ApplicationType": "AWS-Solutions",
                 "Solutions:SolutionID": "SO0170",
                 "Solutions:SolutionName": "Maintaining Personalized Experiences with Machine Learning",
-                "Solutions:SolutionVersion": "v1.3.0",
+                "Solutions:SolutionVersion": "v1.3.1",
             },
         },
     )

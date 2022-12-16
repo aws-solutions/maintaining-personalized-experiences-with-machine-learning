@@ -49,18 +49,18 @@ setuptools.setup(
         ]
     },
     install_requires=[
-        "pip>=22.2.2",
+        "pip>=22.3.1",
         "aws_cdk_lib==2.44.0",
-        "Click>=7.1.2",
-        "boto3>=1.24.90",
-        "requests>=2.28.1",
-        "crhelper>=2.0.11",
+        "Click==8.1.3",
+        "boto3==1.25.5",
+        "requests==2.28.1",
+        "crhelper==2.0.11",
     ],
     entry_points="""
         [console_scripts]
         build-s3-cdk-dist=aws_solutions.cdk.scripts.build_s3_cdk_dist:cli
     """,
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
