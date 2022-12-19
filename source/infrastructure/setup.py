@@ -36,9 +36,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "aws-cdk-lib==2.44.0",
-        "pip>=22.2.2",
+        "pip>=22.3.1",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

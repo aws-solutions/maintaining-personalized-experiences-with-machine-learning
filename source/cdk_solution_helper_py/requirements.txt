@@ -1,1 +1,0 @@
-aws-cdk.aws-servicecatalogappregistry-alpha==2.44.0a0
