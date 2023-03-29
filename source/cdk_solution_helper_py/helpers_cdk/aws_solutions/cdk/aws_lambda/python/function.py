@@ -27,7 +27,7 @@ from constructs import Construct
 from aws_solutions.cdk.aws_lambda.python.bundling import SolutionsPythonBundling
 from aws_solutions.cdk.aws_lambda.python.hash_utils import DirectoryHash
 
-DEFAULT_RUNTIME = Runtime.PYTHON_3_7
+DEFAULT_RUNTIME = Runtime.PYTHON_3_9
 DEPENDENCY_EXCLUDES = ["*.pyc"]
 
 
@@ -62,7 +62,7 @@ class SolutionsPythonFunction(Function):
         if not kwargs.get("role"):
             kwargs["role"] = self._create_role()
 
-        # python 3.7 is selected to support custom resources and inline code
+        # python 3.9 is selected to support custom resources and inline code
         if not kwargs.get("runtime"):
             kwargs["runtime"] = DEFAULT_RUNTIME
 

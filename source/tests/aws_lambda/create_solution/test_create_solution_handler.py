@@ -11,17 +11,101 @@
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
 
-import pytest
+import os
 
-from aws_lambda.create_solution.handler import (
-    lambda_handler,
-    RESOURCE,
-    STATUS,
-    CONFIG,
-)
+import pytest
+from aws_lambda.create_solution.handler import CONFIG, RESOURCE, STATUS, lambda_handler
+from botocore.exceptions import ParamValidationError
+from moto import mock_sts
+from shared.exceptions import ResourcePending
+from shared.resource import DatasetGroup, Solution
+
+solution_name = "mockSolution"
 
 
 def test_create_solution(validate_handler_config):
     validate_handler_config(RESOURCE, CONFIG, STATUS)
     with pytest.raises(ValueError):
         lambda_handler({}, None)
+
+
+@mock_sts
+def test_solution_tags(personalize_stubber, notifier_stubber):
+    solution_arn = Solution().arn(solution_name)
+    dataset_group_arn = DatasetGroup().arn("mockDatasetGroup")
+
+    personalize_stubber.add_client_error(
+        method="describe_solution",
+        service_error_code="ResourceNotFoundException",
+        expected_params={"solutionArn": solution_arn},
+    )
+
+    personalize_stubber.add_response(
+        method="create_solution",
+        expected_params={
+            "name": solution_name,
+            "recipeArn": "recipeArn",
+            "datasetGroupArn": dataset_group_arn,
+            "tags": [
+                {"tagKey": "solution-1", "tagValue": "solution-key-1"},
+            ],
+        },
+        service_response={"solutionArn": solution_arn},
+    )
+
+    with pytest.raises(ResourcePending):
+        lambda_handler(
+            {
+                "serviceConfig": {
+                    "name": solution_name,
+                    "recipeArn": "recipeArn",
+                    "datasetGroupArn": dataset_group_arn,
+                    "tags": [{"tagKey": "solution-1", "tagValue": "solution-key-1"}],
+                }
+            },
+            None,
+        )
+
+    assert notifier_stubber.has_notified_for_creation
+    assert notifier_stubber.latest_notification_status == "CREATING"
+
+
+@mock_sts
+def test_bad_solution_tags(personalize_stubber):
+    solution_arn = Solution().arn(solution_name)
+    dataset_group_arn = DatasetGroup().arn("mockDatasetGroup")
+
+    personalize_stubber.add_client_error(
+        method="describe_solution",
+        service_error_code="ResourceNotFoundException",
+        expected_params={"solutionArn": solution_arn},
+    )
+
+    personalize_stubber.add_response(
+        method="create_solution",
+        expected_params={
+            "name": solution_name,
+            "recipeArn": "recipeArn",
+            "datasetGroupArn": dataset_group_arn,
+            "tags": "bad data",
+        },
+        service_response={"solutionArn": solution_arn},
+    )
+
+    try:
+        lambda_handler(
+            {
+                "serviceConfig": {
+                    "name": solution_name,
+                    "recipeArn": "recipeArn",
+                    "datasetGroupArn": dataset_group_arn,
+                    "tags": "bad data",
+                }
+            },
+            None,
+        )
+    except ParamValidationError as exp:
+        assert (
+            exp.kwargs["report"]
+            == "Invalid type for parameter tags, value: bad data, type: <class 'str'>, valid types: <class 'list'>, <class 'tuple'>"
+        )

@@ -10,31 +10,32 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
+import time
+from datetime import datetime
 from typing import List, Optional
 
 from aws_cdk import Duration
 from aws_cdk.aws_stepfunctions import (
-    StateMachineFragment,
-    State,
-    INextable,
     Choice,
-    Pass,
-    Map,
     Condition,
+    INextable,
     JsonPath,
+    Map,
     Parallel,
+    Pass,
+    State,
     StateMachine,
+    StateMachineFragment,
 )
-from constructs import Construct
-
 from aws_solutions.scheduler.cdk.construct import Scheduler
+from constructs import Construct
 from personalize.aws_lambda.functions import (
-    CreateSolution,
-    CreateSolutionVersion,
-    CreateCampaign,
     CreateBatchInferenceJob,
     CreateBatchSegmentJob,
+    CreateCampaign,
     CreateRecommender,
+    CreateSolution,
+    CreateSolutionVersion,
 )
 from personalize.step_functions.batch_inference_jobs_fragment import (
     BatchInferenceJobsFragment,
@@ -88,6 +89,7 @@ class SolutionFragment(StateMachineFragment):
             input_path="$.datasetGroupArn",  # NOSONAR (python:S1192) - string for clarity
             result_path="$.solution.serviceConfig.datasetGroupArn",
         )
+
         _prepare_recommender_input = Pass(
             self,
             "Prepare Recommender Input Data",
@@ -108,7 +110,8 @@ class SolutionFragment(StateMachineFragment):
             parameters={
                 "serviceConfig": {
                     "solutionArn.$": "$.solution.serviceConfig.solutionArn",  # NOSONAR (python:S1192) - string for clarity
-                    "trainingMode": "FULL"
+                    "trainingMode":  "FULL",
+                    "tags.$": "$.solution.serviceConfig.solutionVersion.tags" # NOSONAR (python:S1192) - string for clarity
                 },
                 "workflowConfig": {
                     "maxAge": "365 days",  # do not create a new solution version on new file upload
@@ -176,8 +179,9 @@ class SolutionFragment(StateMachineFragment):
                     "Set Solution Version ID",
                     parameters={
                         "serviceConfig": {
-                            "trainingMode.$": "$.solution.solutionVersion.serviceConfig.trainingMode",
+                            "trainingMode.$": "$.solution.serviceConfig.solutionVersion.trainingMode",
                             "solutionArn.$": "$.solution.solutionVersion.serviceConfig.solutionArn",  # NOSONAR (python:S1192) - string for clarity
+                            "tags.$": "$.solution.solutionVersion.serviceConfig.tags" # NOSONAR (python:S1192) - string for clarity
                         },
                         "workflowConfig": {
                             "maxAge.$": "$.solution.solutionVersion.workflowConfig.maxAge",
@@ -224,7 +228,7 @@ class SolutionFragment(StateMachineFragment):
                 items_path="$.solution.campaigns",  # NOSONAR (python:S1192) - string for clarity
                 parameters={
                     "solutionVersionArn.$": "$.solution.solutionVersion.serviceConfig.solutionVersionArn",
-                    "campaign.$": "$$.Map.Item.Value",
+                    "campaign.$": "$$.Map.Item.Value", # NOSONAR (python:S1192) - string for clarity
                 }
             ).iterator(_prepare_campaign_input
                        .next(_create_campaign))
@@ -260,8 +264,9 @@ class SolutionFragment(StateMachineFragment):
                                 "serviceConfig.$": "$.solution.serviceConfig",
                                 "solutionVersion": {
                                     "serviceConfig": {
-                                        "trainingMode": "FULL",
+                                        "trainingMode.$": "$.solution.serviceConfig.solutionVersion.trainingMode",
                                         "solutionArn.$": "$.solution.solutionVersion.serviceConfig.solutionArn",  # NOSONAR (python:S1192) - string for clarity
+                                        "tags.$": "$.solution.solutionVersion.serviceConfig.tags" # NOSONAR (python:S1192) - string for clarity
                                     },
                                     "workflowConfig": {
                                         "maxAge": MINIMUM_TIME
@@ -295,6 +300,7 @@ class SolutionFragment(StateMachineFragment):
                                     "serviceConfig": {
                                         "trainingMode": "UPDATE",
                                         "solutionArn.$": "$.solution.solutionVersion.serviceConfig.solutionArn",  # NOSONAR (python:S1192) - string for clarity
+                                        "tags.$": "$.solution.solutionVersion.serviceConfig.tags" # NOSONAR (python:S1192) - string for clarity
                                     },
                                     "workflowConfig": {
                                         "maxAge": MINIMUM_TIME,
@@ -327,7 +333,7 @@ class SolutionFragment(StateMachineFragment):
             parameters={
                 "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
                 "datasetGroupName.$": "$.datasetGroup.serviceConfig.name",
-                "recommender.$": "$$.Map.Item.Value",
+                "recommender.$": "$$.Map.Item.Value", # NOSONAR (python:S1192) - string for clarity
                 "bucket.$": BUCKET_PATH,
                 "currentDate.$": CURRENT_DATE_PATH,  # NOSONAR (python:S1192) - string for clarity
             }
@@ -342,7 +348,7 @@ class SolutionFragment(StateMachineFragment):
             parameters={
                 "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
                 "datasetGroupName.$": "$.datasetGroup.serviceConfig.name",
-                "solution.$": "$$.Map.Item.Value",
+                "solution.$": "$$.Map.Item.Value", # NOSONAR (python:S1192) - string for clarity
                 "bucket.$": BUCKET_PATH,
                 "currentDate.$": CURRENT_DATE_PATH,  # NOSONAR (python:S1192) - string for clarity
             }

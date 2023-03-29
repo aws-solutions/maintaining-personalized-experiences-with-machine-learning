@@ -90,7 +90,6 @@ class SolutionsJavaBundling:
         cwd: Union[str, Path, None] = None,
         return_stdout: bool = False,
     ):
-
         cwd = Path(cwd)
         rv = ""
 

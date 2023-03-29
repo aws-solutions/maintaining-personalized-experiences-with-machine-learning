@@ -45,6 +45,8 @@ class CreateFilter(SolutionStep):
                     "personalize:DescribeDatasetGroup",
                     "personalize:CreateFilter",
                     "personalize:DescribeFilter",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

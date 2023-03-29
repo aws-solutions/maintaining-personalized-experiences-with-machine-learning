@@ -1,0 +1,149 @@
+{
+  "tags": [
+    {
+      "tagKey": "hello",
+      "tagValue": "world"
+    }
+  ],
+  "datasetGroup": {
+    "serviceConfig": {
+      "name": "testing-tags"
+    }
+  },
+  "datasets": {
+    "interactions": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "interactions-dataset"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "interactions-schema",
+          "schema": {
+            "type": "record",
+            "name": "Interactions",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "ITEM_ID",
+                "type": "string"
+              },
+              {
+                "name": "EVENT_TYPE",
+                "type": "string"
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      }
+    },
+    "items": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "items-dataset"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "items-schema",
+          "schema": {
+            "type": "record",
+            "name": "Items",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "ITEM_ID",
+                "type": "string"
+              },
+              {
+                "name": "GENRES",
+                "type": "string",
+                "categorical": true
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      }
+    },
+    "users": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "users-dataset"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "users-schema",
+          "schema": {
+            "type": "record",
+            "name": "Users",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "GENDER",
+                "type": "string",
+                "categorical": true
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      }
+    }
+  },
+  "solutions": [
+    {
+      "serviceConfig": {
+        "name": "affinity_item"
+      },
+      "batchSegmentJobs": [
+        {
+          "serviceConfig": {}
+        }
+      ]
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_personalized_ranking_new_2",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization"
+      },
+      "campaigns": [
+        {
+          "serviceConfig": {
+            "name": "personalized_ranking_campaign",
+            "minProvisionedTPS": 1
+          }
+        }
+      ],
+      "batchInferenceJobs": [
+        {
+          "serviceConfig": {}
+        }
+      ]
+    }
+  ],
+  "eventTracker": {
+    "serviceConfig": {
+      "name": "unit_test_new_event_tracker"
+    }
+  },
+  "filters": [
+    {
+      "serviceConfig": {
+        "name": "clicked-or-streamed-2",
+        "filterExpression": "INCLUDE ItemID WHERE Interactions.EVENT_TYPE in ('click', 'stream')"
+      }
+    }
+  ]
+}

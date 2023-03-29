@@ -44,6 +44,8 @@ class CreateCampaign(SolutionStep):
                     "personalize:ListCampaigns",
                     "personalize:DescribeCampaign",
                     "personalize:UpdateCampaign",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

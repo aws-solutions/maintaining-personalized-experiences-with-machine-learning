@@ -19,22 +19,21 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, Any, Callable, Optional, List, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 from uuid import uuid4
 
 import jmespath
 from aws_lambda_powertools import Logger
-from dateutil.parser import isoparse
-
 from aws_solutions.core import get_service_client
+from dateutil.parser import isoparse
 from shared.date_helpers import parse_datetime
 from shared.exceptions import (
-    ResourcePending,
-    ResourceInvalid,
     ResourceFailed,
+    ResourceInvalid,
     ResourceNeedsUpdate,
+    ResourcePending,
 )
-from shared.personalize_service import Personalize
+from shared.personalize_service import Configuration, Personalize
 from shared.resource import get_resource
 
 logger = Logger()
@@ -48,10 +47,7 @@ STATUS_IN_PROGRESS = (
 STATUS_FAILED = "CREATE FAILED"
 STATUS_ACTIVE = "ACTIVE"
 
-WORKFLOW_PARAMETERS = {
-    "maxAge",
-    "timeStarted",
-}
+WORKFLOW_PARAMETERS = {"maxAge", "timeStarted"}
 WORKFLOW_CONFIG_DEFAULT = {"timeStarted": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}
 
 
@@ -86,13 +82,15 @@ def set_workflow_config(config: Dict) -> Dict:
         "batchSegmentJobs": Arity.MANY,
         "filters": Arity.MANY,
         "solutionVersion": Arity.ONE,
+        "tags": Arity.MANY,
     }
     # Note: schema creation notification is not supported at this time
     # Note: dataset, dataset import job, event tracker notifications are added in the workflow
 
-    for k, v in config.items():
-        if k in {"serviceConfig", "workflowConfig", "bucket", "currentDate"}:
-            pass  # do not modify any serviceConfig keys
+    for k in config:
+        v = config[k]
+        if k in {"serviceConfig", "workflowConfig", "bucket", "currentDate", "tags"}:
+            pass  # do not modify any serviceConfig keys/tags
         elif k in resources.keys() and resources[k] == Arity.ONE:
             config[k].setdefault("workflowConfig", {})
             config[k]["workflowConfig"] |= WORKFLOW_CONFIG_DEFAULT
@@ -103,6 +101,10 @@ def set_workflow_config(config: Dict) -> Dict:
                 config[k][idx] = set_workflow_config(config[k][idx])
         else:
             config[k] = set_workflow_config(config[k]) if config[k] else config[k]
+
+    cfg = Configuration()
+    cfg.load(config)
+    config = cfg.config_dict_wdefaults()
 
     return config
 
@@ -264,11 +266,16 @@ class PersonalizeResource:
                 actual_value = actual_value.lower()
                 expected_value = expected_value.lower()
 
+            if expected_key == "tags":
+                continue
+
             # some parameters don't require checking:
             if self.resource == "datasetImportJob" and expected_key in {
                 "jobName",
                 "dataSource",
                 "roleArn",
+                "importMode",
+                "publishAttributionMetricsToS3",
             }:
                 continue
             if self.resource.startswith("batch") and expected_key in {
@@ -278,8 +285,16 @@ class PersonalizeResource:
                 "roleArn",
             }:
                 continue
-            if self.resource == "solutionVersion" and expected_key == "trainingMode":
-                continue
+
+            if self.resource == "solutionVersion":
+                if expected_key == "trainingMode":
+                    continue
+                if expected_key == "name":
+                    if "/" in actual_value:  # user provided name.
+                        actual_value = actual_value.split("/")[-1]
+                    if "solution_" in actual_value:  # name was auto-generated as default value.
+                        continue
+
             if expected_key in WORKFLOW_PARAMETERS:
                 continue
 

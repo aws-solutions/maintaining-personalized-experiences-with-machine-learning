@@ -77,7 +77,7 @@ def test_function_has_default_role(function_synth):
     func = function_stack["Resources"]["TestFunction"]
     assert func["Type"] == "AWS::Lambda::Function"
     assert func["Properties"]["Handler"] == PYTHON_FUNCTION_NAME.split(".")[0] + "." + PYTHON_FUNCTION_HANDLER_NAME
-    assert func["Properties"]["Runtime"] == "python3.7"
+    assert func["Properties"]["Runtime"] == "python3.9"
 
     role = function_stack["Resources"][func["Properties"]["Role"]["Fn::GetAtt"][0]]
     assert role["Type"] == "AWS::IAM::Role"

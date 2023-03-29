@@ -5,7 +5,7 @@ description = ""
 authors = ["AWS Solutions Builders"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 minimal = {path = "package"}
 
 [tool.poetry.dev-dependencies]

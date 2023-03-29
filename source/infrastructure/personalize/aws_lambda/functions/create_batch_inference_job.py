@@ -84,6 +84,8 @@ class CreateBatchInferenceJob(SolutionStep):
                     "personalize:DescribeBatchInferenceJob",
                     "personalize:DescribeSolution",
                     "personalize:DescribeSolutionVersion",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[
