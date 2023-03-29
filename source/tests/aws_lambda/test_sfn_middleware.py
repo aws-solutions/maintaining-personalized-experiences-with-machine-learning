@@ -15,22 +15,21 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytest
-from moto import mock_sts
-
 from aws_lambda.shared.sfn_middleware import (
-    PersonalizeResource,
-    STATUS_IN_PROGRESS,
     STATUS_FAILED,
-    ResourcePending,
+    STATUS_IN_PROGRESS,
+    Parameter,
+    PersonalizeResource,
     ResourceFailed,
     ResourceInvalid,
+    ResourcePending,
     json_handler,
-    set_defaults,
-    set_bucket,
     parse_datetime,
-    Parameter,
+    set_bucket,
+    set_defaults,
     set_workflow_config,
 )
+from moto import mock_sts
 from shared.resource import DatasetGroup
 
 
@@ -70,7 +69,7 @@ def test_personalize_resource_decorator(personalize_resource, personalize_stubbe
     """
     The typical workflow is to describe, then create, then raise ResourcePending
     """
-    dsg_name = "dsgName"
+    dsg_name = "mockDatasetGroup"
     personalize_stubber.add_client_error("describe_dataset_group", "ResourceNotFoundException")
     personalize_stubber.add_response(
         "create_dataset_group",
@@ -204,6 +203,7 @@ def test_parameter_resolution(key, source, path, format_as, default, result):
 def test_set_workflow_config():
     result = set_workflow_config(
         {
+            "tags": [{"tagKey": "tag1", "tagValue": "key1"}],
             "datasetGroup": {
                 "serviceConfig": {"datasetGroup": "should-not-change"},
                 "workflowConfig": {"maxAge": "one day"},
@@ -212,6 +212,7 @@ def test_set_workflow_config():
                 "serviceConfig": {},
             },
             "datasets": {
+                "serviceConfig": {},
                 "users": {
                     "dataset": {"serviceConfig": {}},
                     "schema": {"serviceConfig": {}},
@@ -228,7 +229,14 @@ def test_set_workflow_config():
             "filters": [{"serviceConfig": {}}],
             "solutions": [
                 {
-                    "serviceConfig": {"datasetGroup": "should-not-change"},
+                    "serviceConfig": {
+                        "datasetGroup": "should-not-change",
+                        "tags": [{"tagKey": "mockSolution", "tagValue": "solutionKey"}],
+                        "solutionVersion": {
+                            "name": "mockSolutionVersion",
+                            "tags": [{"tagKey": "mockSolutionVersion", "tagValue": "solutionVersionKey"}],
+                        },
+                    },
                     "campaigns": [
                         {
                             "serviceConfig": {},
@@ -257,6 +265,13 @@ def test_set_workflow_config():
     # keys under serviceConfig should not change
     assert result.get("datasetGroup").get("serviceConfig").get("datasetGroup") == "should-not-change"
     assert result.get("solutions")[0].get("serviceConfig").get("datasetGroup") == "should-not-change"
+    assert result.get("solutions")[0].get("serviceConfig").get("tags") == [
+        {"tagKey": "mockSolution", "tagValue": "solutionKey"}
+    ]
+    assert result.get("solutions")[0].get("serviceConfig").get("solutionVersion").get("tags") == [
+        {"tagKey": "mockSolutionVersion", "tagValue": "solutionVersionKey"}
+    ]
 
     # overrides to the default must remain unchanged
+    assert result.get("solutions")[0]["campaigns"][0]["workflowConfig"]["maxAge"] == "should-not-change"
     assert result.get("solutions")[0]["campaigns"][0]["workflowConfig"]["maxAge"] == "should-not-change"

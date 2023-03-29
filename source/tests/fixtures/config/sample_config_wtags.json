@@ -1,0 +1,324 @@
+{
+  "datasetGroup": {
+    "serviceConfig": {
+      "name": "unit_test_new_datasetgroup",
+      "tags": [
+        {
+          "tagKey": "tag0",
+          "tagValue": "key0"
+        }
+      ]
+    },
+    "workflowConfig": {
+      "schedules": {
+        "import": "cron(0 */6 * * ? *)"
+      }
+    }
+  },
+  "datasets": {
+    "serviceConfig": {
+      "importMode": "FULL",
+      "tags": [
+        {
+          "tagKey": "tag1",
+          "tagValue": "key1"
+        }
+      ]
+    },
+    "users": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "unit_test_only_users",
+          "tags": [
+            {
+              "tagKey": "tag2",
+              "tagValue": "key2"
+            }
+          ]
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "unit_test_only_users_schema",
+          "schema": {
+            "type": "record",
+            "name": "users",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "AGE",
+                "type": "int"
+              },
+              {
+                "name": "GENDER",
+                "type": "string",
+                "categorical": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "items": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "items-dataset"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "items-schema",
+          "schema": {
+            "type": "record",
+            "name": "Items",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "ITEM_ID",
+                "type": "string"
+              },
+              {
+                "name": "GENRES",
+                "type": "string",
+                "categorical": true
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      }
+    },
+    "interactions": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "unit_test_only_interactions",
+          "tags": [
+            {
+              "tagKey": "tag3",
+              "tagValue": "key3"
+            }
+          ]
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "unit_test_only_interactions_schema",
+          "schema": {
+            "type": "record",
+            "name": "interactions",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "ITEM_ID",
+                "type": "string"
+              },
+              {
+                "name": "USER_ID",
+                "type": "string"
+              },
+              {
+                "name": "TIMESTAMP",
+                "type": "long"
+              },
+              {
+                "name": "EVENT_TYPE",
+                "type": "string"
+              },
+              {
+                "name": "EVENT_VALUE",
+                "type": "float"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "solutions": [
+    {
+      "serviceConfig": {
+        "name": "affinity_item",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity",
+        "tags": [
+          {
+            "tagKey": "tag4",
+            "tagValue": "key4"
+          }
+        ],
+        "solutionVersion": {
+          "tags": [
+            {
+              "tagKey": "tag5",
+              "tagValue": "key5"
+            }
+          ]
+        }
+      },
+      "batchSegmentJobs": [
+        {
+          "serviceConfig": {
+            "tags": [
+              {
+                "tagKey": "tag6",
+                "tagValue": "key6"
+              }
+            ]
+          },
+          "workflowConfig": {
+            "schedule": "cron(0 3 * * ? *)"
+          }
+        }
+      ]
+    },
+    {
+      "serviceConfig": {
+        "name": "affinity_item_attribute",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-item-attribute-affinity",
+        "tags": [
+          {
+            "tagKey": "tag7",
+            "tagValue": "key7"
+          }
+        ]
+      },
+      "batchSegmentJobs": [
+        {
+          "serviceConfig": {},
+          "workflowConfig": {
+            "schedule": "cron(0 3 * * ? *)"
+          }
+        }
+      ]
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_sims_new",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-sims"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 0 ? * 1 *)"
+        }
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_popularity_count_new",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-popularity-count"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 1 ? * 1 *)"
+        }
+      }
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_personalized_ranking_new",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 2 ? * 1 *)"
+        }
+      },
+      "campaigns": [
+        {
+          "serviceConfig": {
+            "name": "unit_test_personalized_ranking_new_campaign",
+            "minProvisionedTPS": 1,
+            "tags": [
+              {
+                "tagKey": "tag8",
+                "tagValue": "key8"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "serviceConfig": {
+        "name": "unit_test_personalized_ranking_new_2",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization"
+      },
+      "workflowConfig": {
+        "schedules": {
+          "full": "cron(0 2 ? * 1 *)"
+        }
+      },
+      "campaigns": [
+        {
+          "serviceConfig": {
+            "name": "unit_test_personalized_ranking_2_campaign",
+            "minProvisionedTPS": 1
+          }
+        }
+      ],
+      "batchInferenceJobs": [
+        {
+          "serviceConfig": {
+            "tags": [
+              {
+                "tagKey": "tag9",
+                "tagValue": "key9"
+              }
+            ]
+          },
+          "workflowConfig": {
+            "schedule": "cron(0 3 * * ? *)"
+          }
+        }
+      ]
+    }
+  ],
+  "eventTracker": {
+    "serviceConfig": {
+      "name": "unit_test_new_event_tracker",
+      "tags": [
+        {
+          "tagKey": "tag10",
+          "tagValue": "key10"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "serviceConfig": {
+        "name": "clicked-or-streamed-2",
+        "filterExpression": "INCLUDE ItemID WHERE Interactions.EVENT_TYPE in (\"click\", \"stream\")",
+        "tags": [
+          {
+            "tagKey": "tag11",
+            "tagValue": "key11"
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "tagKey": "tag12",
+      "tagValue": "key12"
+    }
+  ],
+  "recommenders": [
+    {
+      "serviceConfig": {
+        "name": "ddsg-most-viewed",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-ecomm-popular-items-by-views",
+        "tags": [
+          {
+            "tagKey": "hello13",
+            "tagValue": "world13"
+          }
+        ]
+      }
+    }
+  ]
+}

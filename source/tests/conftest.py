@@ -10,9 +10,9 @@
 #  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
 #  the specific language governing permissions and limitations under the License.                                      #
 # ######################################################################################################################
+import json
 import os
 import sys
-import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Dict, Optional
@@ -21,17 +21,16 @@ import boto3
 import jsii
 import pytest
 from aws_cdk.aws_lambda import (
-    FunctionProps,
     Code,
-    Runtime,
     Function,
-    LayerVersionProps,
+    FunctionProps,
     LayerVersion,
+    LayerVersionProps,
+    Runtime,
 )
+from aws_solutions.core import get_service_client
 from botocore.stub import Stubber
 from constructs import Construct
-
-from aws_solutions.core import get_service_client
 
 shared_path = str(Path(__file__).parent.parent / "aws_lambda")
 if shared_path not in sys.path:
@@ -99,7 +98,7 @@ def mock_lambda_init(
     props = FunctionProps(
         code=Code.from_inline("return"),
         handler=handler,
-        runtime=Runtime.PYTHON_3_7,
+        runtime=Runtime.PYTHON_3_9,
         **kwargs,
     )
     jsii.create(Function, self, [scope, id, props])
@@ -110,7 +109,7 @@ def mock_layer_init(self, scope: Construct, id: str, *, code: Code, **kwargs) ->
     # override the runtime list for now, as well, to match above
     with TemporaryDirectory() as tmpdirname:
         kwargs["code"] = Code.from_asset(path=tmpdirname)
-        kwargs["compatible_runtimes"] = [Runtime.PYTHON_3_7]
+        kwargs["compatible_runtimes"] = [Runtime.PYTHON_3_9]
         props = LayerVersionProps(**kwargs)
         jsii.create(LayerVersion, self, [scope, id, props])
 
@@ -129,6 +128,25 @@ def cdk_lambda_mocks(mocker, request):
 @pytest.fixture
 def configuration_path():
     return Path(__file__).parent / "fixtures" / "config" / "sample_config.json"
+
+
+@pytest.fixture
+def tags_configuration_path():
+    return Path(__file__).parent / "fixtures" / "config" / "sample_config_wtags.json"
+
+
+@pytest.fixture
+def root_tags_configuration_path():
+    return Path(__file__).parent / "fixtures" / "config" / "sample_config_root_tags.json"
+
+
+@pytest.fixture
+def argtest():
+    class TestArgs(object):
+        def __call__(self, *args):
+            self.args = list(args)
+
+    return TestArgs()
 
 
 class NotifierStub(Notifier):
@@ -197,9 +215,12 @@ def validate_handler_config():
 
         shape = resource[0].upper() + resource[1:]
         request_shape = cli.meta.service_model.shape_for(f"Create{shape}Request")
-        del request_shape.members["tags"]
-        if "importMode" in request_shape.members:
-            del request_shape.members["importMode"]
+
+        if "performAutoML" in request_shape.members:
+            del request_shape.members["performAutoML"]
+
+        if shape == "SolutionVersion":
+            del request_shape.members["name"]
 
         response_shape = cli.meta.service_model.shape_for(f"Describe{shape}Response")
 

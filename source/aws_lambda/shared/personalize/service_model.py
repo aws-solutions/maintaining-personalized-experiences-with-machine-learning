@@ -133,7 +133,7 @@ class ServiceModel:
         result.pop("accountId", None)
         result.pop("trackingId", None)
 
-        # datset
+        # dataset
         result.pop("datasetType", None)
 
         # schema

@@ -128,6 +128,8 @@ class CreateDatasetGroup(SolutionStep):
                 actions=[
                     "personalize:DescribeDatasetGroup",
                     "personalize:CreateDatasetGroup",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[f"arn:{Aws.PARTITION}:personalize:{Aws.REGION}:{Aws.ACCOUNT_ID}:dataset-group/*"],

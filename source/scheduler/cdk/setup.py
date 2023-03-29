@@ -45,7 +45,7 @@ setuptools.setup(
         "pip>=22.3.1",
         "aws_cdk_lib==2.44.0",
         "Click==8.1.3",
-        "boto3==1.25.5",
+        "boto3==1.26.47",
     ],
     python_requires=">=3.9",
     classifiers=[

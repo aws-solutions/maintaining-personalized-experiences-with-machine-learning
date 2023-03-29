@@ -15,10 +15,9 @@ from os import environ
 
 import boto3
 import pytest
-from moto import mock_s3, mock_stepfunctions, mock_sns, mock_sts
-
 from aws_lambda.s3_event.handler import lambda_handler
 from aws_solutions.core.helpers import _helpers_service_clients
+from moto import mock_s3, mock_sns, mock_stepfunctions, mock_sts
 
 
 @pytest.fixture
@@ -161,6 +160,38 @@ def test_s3_event_handler_bad_config(s3_event, sns_mocked, s3_mocked, stepfuncti
         Bucket="bucket-name",
         Key="train/object-key.json",
         Body='{"this": "is not configuration data"}',
+    )
+    lambda_handler(s3_event, None)
+
+    # ensure no executions started
+    executions = stepfunctions_mocked.list_executions(
+        stateMachineArn=environ.get("STATE_MACHINE_ARN"),
+    )
+    assert len(executions["executions"]) == 0
+
+
+@mock_sts
+def test_s3_event_handler_bad_tags(s3_event, sns_mocked, s3_mocked, stepfunctions_mocked):
+    s3_mocked.put_object(
+        Bucket="bucket-name",
+        Key="train/object-key.json",
+        Body=json.dumps({"tags": [{"tagKeys": "tagKey", "tagValue": "tagValue"}]}),
+    )
+    lambda_handler(s3_event, None)
+
+    # ensure no executions started
+    executions = stepfunctions_mocked.list_executions(
+        stateMachineArn=environ.get("STATE_MACHINE_ARN"),
+    )
+    assert len(executions["executions"]) == 0
+
+
+@mock_sts
+def test_s3_event_handler_more_bad_tags(s3_event, sns_mocked, s3_mocked, stepfunctions_mocked):
+    s3_mocked.put_object(
+        Bucket="bucket-name",
+        Key="train/object-key.json",
+        Body=json.dumps({"tags": "bad data"}),
     )
     lambda_handler(s3_event, None)
 

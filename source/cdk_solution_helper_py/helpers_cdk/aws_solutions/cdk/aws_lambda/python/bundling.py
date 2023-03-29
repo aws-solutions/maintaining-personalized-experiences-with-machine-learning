@@ -25,7 +25,7 @@ from aws_cdk.aws_lambda import Runtime
 
 from aws_solutions.cdk.helpers import copytree
 
-DEFAULT_RUNTIME = Runtime.PYTHON_3_7
+DEFAULT_RUNTIME = Runtime.PYTHON_3_9
 BUNDLER_DEPENDENCIES_CACHE = "/var/dependencies"
 REQUIREMENTS_TXT_FILE = "requirements.txt"
 REQUIREMENTS_PIPENV_FILE = "Pipfile"

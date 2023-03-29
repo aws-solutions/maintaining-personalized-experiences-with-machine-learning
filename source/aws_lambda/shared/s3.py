@@ -60,6 +60,7 @@ class S3:
         return True
 
     def _exists_any(self):
+        latest = None
         try:
             bucket = self.cli.Bucket(self.bucket)
             objects = [

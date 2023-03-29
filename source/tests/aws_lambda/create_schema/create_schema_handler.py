@@ -12,12 +12,7 @@
 # ######################################################################################################################
 
 import pytest
-
-from aws_lambda.create_schema.handler import (
-    lambda_handler,
-    RESOURCE,
-    CONFIG,
-)
+from aws_lambda.create_schema.handler import CONFIG, RESOURCE, lambda_handler
 
 
 def test_create_schema_handler(validate_handler_config):

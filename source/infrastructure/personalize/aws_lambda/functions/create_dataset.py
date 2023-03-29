@@ -47,6 +47,8 @@ class CreateDataset(SolutionStep):
                     "personalize:CreateDataset",
                     "personalize:DescribeDataset",
                     "personalize:ListDatasets",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

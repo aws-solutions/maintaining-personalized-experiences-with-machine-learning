@@ -42,6 +42,8 @@ class CreateSolution(SolutionStep):
                     "personalize:CreateSolution",
                     "personalize:ListSolutions",
                     "personalize:DescribeDatasetGroup",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

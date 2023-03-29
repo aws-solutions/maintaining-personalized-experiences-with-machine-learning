@@ -13,15 +13,15 @@
 
 from aws_lambda.create_config.handler import lambda_handler
 from shared.resource import (
-    DatasetGroup,
-    Dataset,
-    Solution,
-    Campaign,
-    SolutionVersion,
     BatchInferenceJob,
+    BatchSegmentJob,
+    Campaign,
+    Dataset,
+    DatasetGroup,
     EventTracker,
     Schema,
-    BatchSegmentJob,
+    Solution,
+    SolutionVersion,
 )
 
 

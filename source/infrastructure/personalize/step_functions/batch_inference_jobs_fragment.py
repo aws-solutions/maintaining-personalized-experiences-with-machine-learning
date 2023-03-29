@@ -150,7 +150,7 @@ class BatchInferenceJobsFragment(StateMachineFragment):
                 items_path="$.solution.batchInferenceJobs",
                 parameters={
                     "solutionVersionArn.$": "$.solution.solutionVersion.serviceConfig.solutionVersionArn",
-                    "batchInferenceJob.$": "$$.Map.Item.Value",
+                    "batchInferenceJob.$": "$$.Map.Item.Value", # NOSONAR (python:S1192) - string for clarity
                     "batchInferenceJobName.$": f"States.Format('batch_{{}}_{{}}', $.solution.serviceConfig.name, {CURRENT_DATE_PATH})",
                     "bucket.$": BUCKET_PATH,  # NOSONAR (python:S1192) - string for clarity
                     "currentDate.$": CURRENT_DATE_PATH,  # NOSONAR (python:S1192) - string for clarity

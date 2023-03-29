@@ -148,7 +148,7 @@ class BatchSegmentJobsFragment(StateMachineFragment):
                 items_path="$.solution.batchSegmentJobs",
                 parameters={
                     "solutionVersionArn.$": "$.solution.solutionVersion.serviceConfig.solutionVersionArn",
-                    "batchSegmentJob.$": "$$.Map.Item.Value",
+                    "batchSegmentJob.$": "$$.Map.Item.Value", # NOSONAR (python:S1192) - string for clarity
                     "batchSegmentJobName.$": f"States.Format('batch_{{}}_{{}}', $.solution.serviceConfig.name, {CURRENT_DATE_PATH})",
                     "bucket.$": BUCKET_PATH,  # NOSONAR (python:S1192) - string for clarity
                     "currentDate.$": CURRENT_DATE_PATH,  # NOSONAR (python:S1192) - string for clarity

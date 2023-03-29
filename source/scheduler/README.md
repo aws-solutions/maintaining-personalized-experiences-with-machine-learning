@@ -1,24 +1,25 @@
 # AWS Solutions Step Functions Scheduler
+
 ## Scheduling for AWS Step Functions
 
-This tooling adds scheduling support for AWS Step Functions via a set of libraries and CDK packages. 
+This tooling adds scheduling support for AWS Step Functions via a set of libraries and CDK packages.
 
-This README summarizes using the scheduler. 
+This README summarizes using the scheduler.
 
 ## Prerequisites
 
 Install this package. It requires at least:
 
-- Python 3.7
-- AWS CDK version 2.7.0 or higher
+- Python 3.9
+- AWS CDK version 2.44.0 or higher
 
-To install the packages: 
+To install the packages:
 
 ```
 pip install <path>/scheduler/cdk    # where <path> is the path to the scheduler namespace package
-pip install <path>/scheduler/common # where <path> is the path to the scheduler namespace package 
+pip install <path>/scheduler/common # where <path> is the path to the scheduler namespace package
 ```
- 
+
 ## 1. Add the scheduler to your CDK application
 
 ```python
@@ -66,18 +67,18 @@ SchedulerFragment(
 # 3. Check the status of schedules using the included CLI
 
 This package also provides a CLI `aws-solutions-scheduler`. This CLI can be used to control the scheduler and establish
-schedules for the [Maintaining Personalized Experiences with Machine Learning](https://aws.amazon.com/solutions/implementations/maintaining-personalized-experiences-with-ml/) 
-solution. 
+schedules for the [Maintaining Personalized Experiences with Machine Learning](https://aws.amazon.com/solutions/implementations/maintaining-personalized-experiences-with-ml/)
+solution.
 
 ### Installation
 
 It is recommended that you perform the following steps in a dedicated virtual environment:
 
 ```shell
-cd source 
-pip install --upgrade pip 
+cd source
+pip install --upgrade pip
 pip install cdk_solution_helper_py/helpers_common
-pip install scheduler/common 
+pip install scheduler/common
 ```
 
 ### Usage
@@ -104,7 +105,7 @@ Commands:
 
 #### Create new schedule(s) for an Amazon Personalize dataset group
 
-Schedules for dataset import, solution version FULL and UPDATE retraining can be established using the CLI for dataset 
+Schedules for dataset import, solution version FULL and UPDATE retraining can be established using the CLI for dataset
 groups in Amazon Personalize. This example creates a weekly schedule for full dataset import (`-i`) and for full
 solution version retraining (-f)
 
@@ -117,15 +118,16 @@ solution version retraining (-f)
 ```shell
 > aws-solutions-scheduler -s PersonalizeStack -r us-east-1 list
 ```
+
 <details>
 <summary>See sample result</summary>
 
 ```json
 {
-  "tasks": [
-    "personalize-dataset-import-item-recommender",
-    "solution-maintenance-full-item-recommender-user-personalization"
-  ]
+	"tasks": [
+		"personalize-dataset-import-item-recommender",
+		"solution-maintenance-full-item-recommender-user-personalization"
+	]
 }
 ```
 
@@ -136,18 +138,19 @@ solution version retraining (-f)
 ```shell
 > aws-solutions-scheduler -s PersonalizeStack -r us-east-1 describe --task personalize-dataset-import-item-recommender
 ```
+
 <details>
 <summary>See sample result</summary>
 
 ```json
 {
-  "task": {
-    "active": true,
-    "name": "personalize-dataset-import-item-recommender",
-    "schedule": "cron(*/15 * * * ? *)",
-    "step_function": "arn:aws:states:us-east-1:111122223333:stateMachine:personalizestack-periodic-dataset-import-aaaaaaaaaaaa",
-    "version": "v1"
-  }
+	"task": {
+		"active": true,
+		"name": "personalize-dataset-import-item-recommender",
+		"schedule": "cron(*/15 * * * ? *)",
+		"step_function": "arn:aws:states:us-east-1:111122223333:stateMachine:personalizestack-periodic-dataset-import-aaaaaaaaaaaa",
+		"version": "v1"
+	}
 }
 ```
 
@@ -160,18 +163,19 @@ Deactivate schedules can be activated
 ```shell
 > aws-solutions-scheduler -s PersonalizeStack -r us-east-1 activate --task personalize-dataset-import-item-recommender
 ```
+
 <details>
 <summary>See sample result</summary>
 
 ```json
 {
-  "task": {
-    "active": true,
-    "name": "personalize-dataset-import-item-recommender",
-    "schedule": "cron(0 0 ? * 1 *)",
-    "step_function": "arn:aws:states:us-east-1:111122223333:stateMachine:personalizestack-periodic-dataset-import-aaaaaaaaaaaa",
-    "version": "v1"
-  }
+	"task": {
+		"active": true,
+		"name": "personalize-dataset-import-item-recommender",
+		"schedule": "cron(0 0 ? * 1 *)",
+		"step_function": "arn:aws:states:us-east-1:111122223333:stateMachine:personalizestack-periodic-dataset-import-aaaaaaaaaaaa",
+		"version": "v1"
+	}
 }
 ```
 
@@ -184,24 +188,25 @@ Deactivate schedules can be activated
 ```shell
 > aws-solutions-scheduler -s PersonalizeStack -r us-east-1 deactivate --task personalize-dataset-import-item-recommender
 ```
+
 <details>
 <summary>See sample result</summary>
 
 ```json
 {
-  "task": {
-    "active": false,
-    "name": "personalize-dataset-import-item-recommender",
-    "schedule": "cron(0 0 ? * 1 *)",
-    "step_function": "arn:aws:states:us-east-1:111122223333:stateMachine:personalizestack-periodic-dataset-import-aaaaaaaaaaaa",
-    "version": "v1"
-  }
+	"task": {
+		"active": false,
+		"name": "personalize-dataset-import-item-recommender",
+		"schedule": "cron(0 0 ? * 1 *)",
+		"step_function": "arn:aws:states:us-east-1:111122223333:stateMachine:personalizestack-periodic-dataset-import-aaaaaaaaaaaa",
+		"version": "v1"
+	}
 }
 ```
 
 </details>
 
-***
+---
 
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 

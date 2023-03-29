@@ -65,7 +65,7 @@ class FilterFragment(StateMachineFragment):
             items_path="$.filters",
             parameters={
                 "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
-                "filter.$": "$$.Map.Item.Value",
+                "filter.$": "$$.Map.Item.Value", # NOSONAR (python:S1192) - string for clarity
             },
             result_path=JsonPath.DISCARD,
         )

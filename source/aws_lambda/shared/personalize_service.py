@@ -12,45 +12,45 @@
 # ######################################################################################################################
 import json
 import re
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Optional, List, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import avro.schema
 import botocore.exceptions
 import jmespath
 from aws_lambda_powertools import Logger, Metrics
 from aws_lambda_powertools.metrics import MetricUnit, SchemaValidationError
-from botocore.stub import Stubber
-from dateutil.tz import tzlocal
-
 from aws_solutions.core import (
-    get_service_client,
+    get_aws_account,
     get_aws_partition,
     get_aws_region,
-    get_aws_account,
+    get_service_client,
 )
-from aws_solutions.scheduler.common import ScheduleError, Schedule
+from aws_solutions.scheduler.common import Schedule, ScheduleError
+from botocore.stub import Stubber
+from dateutil.tz import tzlocal
 from shared.events import Notifies
 from shared.exceptions import (
-    ResourcePending,
-    ResourceNeedsUpdate,
     ResourceFailed,
+    ResourceNeedsUpdate,
+    ResourcePending,
     SolutionVersionPending,
 )
 from shared.resource import (
-    Resource,
-    Dataset,
-    EventTracker,
-    DatasetGroup,
-    DatasetImportJob,
-    Solution,
-    SolutionVersion,
     BatchInferenceJob,
     BatchSegmentJob,
-    Schema,
-    Filter,
     Campaign,
+    Dataset,
+    DatasetGroup,
+    DatasetImportJob,
+    EventTracker,
+    Filter,
+    Resource,
+    Schema,
+    Solution,
+    SolutionVersion,
 )
 from shared.s3 import S3
 
@@ -122,6 +122,12 @@ class Personalize:
         else:
             return self.describe_default(resource, **kwargs)
 
+    def list_tags_for_resource(self, **kwargs):
+        logger.debug(f"listing tags for {kwargs}")
+        describe_fn_name = f"list_tags_for_resource"
+        describe_fn = getattr(self.cli, describe_fn_name)
+        return describe_fn(**kwargs)
+
     def describe_default(self, resource: Resource, **kwargs):
         """
         Describe a resource in Amazon Personalize by deriving its ARN from its name
@@ -164,6 +170,10 @@ class Personalize:
         kwargs = self._remove_workflow_parameters(resource, kwargs.copy())
         result = self.describe_default(resource, **kwargs)
         for k, v in kwargs.items():
+            # tags are not returned in any describe call
+            if k == "tags":
+                continue
+
             received = result[resource.name.camel][k]
             expected = v
 
@@ -487,11 +497,12 @@ class InputValidator:
     @classmethod
     def validate(cls, method: str, expected_params: Dict) -> None:
         """
-        Validate an Amazon Personalize resource using the botocore stubber
+        Validate an Amazon Personalize resource config parameters using the botocore stubber
         :return: None. Raises ParamValidationError if the InputValidator fails to validate
         """
         cli = get_service_client("personalize")
         func = getattr(cli, method)
+
         with Stubber(cli) as stubber:
             stubber.add_response(method, {}, expected_params)
             func(**expected_params)
@@ -499,6 +510,7 @@ class InputValidator:
 
 class Configuration:
     _schema = [
+        {"tags": []},
         {
             "datasetGroup": [
                 "serviceConfig",
@@ -512,6 +524,7 @@ class Configuration:
         },
         {
             "datasets": [
+                "serviceConfig",
                 {
                     "users": [
                         {"dataset": ["serviceConfig"]},
@@ -580,34 +593,65 @@ class Configuration:
         self._configuration_errors = []
         self.config_dict = {}
         self.dataset_group = "UNKNOWN"
+        self.pass_root_tags = False
 
-    def load(self, content: Union[Path, str]):
-        if isinstance(content, Path):
-            config_str = content.read_text(encoding="utf-8")
+    def load(self, content: Union[Path, str, dict]):
+        if isinstance(content, dict):
+            self.config_dict = content
         else:
-            config_str = content
+            if isinstance(content, Path):
+                config_str = content.read_text(encoding="utf-8")
+            else:
+                config_str = content
+            self.config_dict = self._decode(config_str)
 
-        self.config_dict = self._decode(config_str)
+        self.pass_root_tags = jmespath.search("tags", self.config_dict)
 
     def validate(self):
         self._validate_not_empty()
         self._validate_keys()
+        self._validate_root_tags()
+        self._validate_tags(
+            "datasetGroup.serviceConfig.tags",
+            "datasets.serviceConfig.tags",
+            "datasets.interactions.dataset.serviceConfig.tags",
+            "datasets.users.dataset.serviceConfig.tags",
+            "datasets.items.dataset.serviceConfig.tags",
+            "filters[].serviceConfig.tags",
+            "eventTracker.serviceConfig.tags",
+            "solutions[].serviceConfig.tags",
+            "solutions[].serviceConfig.solutionVersion.tags",
+            "solutions[].campaigns[].serviceConfig.tags",
+            "recommenders[].serviceConfig.tags",
+            "solutions[].batchInferenceJobs[].serviceConfig.tags",
+            "solutions[].batchSegmentJobs[].serviceConfig.tags",
+        )
         self._validate_dataset_group()
         self._validate_schemas()
         self._validate_datasets()
+        self._validate_dataset_import_job()
         self._validate_event_tracker()
         self._validate_filters()
         self._validate_solutions()
         self._validate_solution_update()
+        self._validate_recommender()
         self._validate_cron_expressions(
             "datasetGroup.workflowConfig.schedules.import",
             "solutions[].workflowConfig.schedules.full",
             "solutions[].workflowConfig.schedules.update",
             "solutions[].batchInferenceJobs[].workflowConfig.schedule",
         )
+
         self._validate_naming()
 
         return len(self._configuration_errors) == 0
+
+    def config_dict_wdefaults(self):
+        self._validate_not_empty()
+        self._validate_dataset_import_job()
+        self._validate_solutions()
+        self._validate_solution_update()
+        return self.config_dict
 
     @property
     def errors(self) -> List[str]:
@@ -630,6 +674,7 @@ class Configuration:
 
         try:
             InputValidator.validate(f"create_{resource.name.snake}", expected_params)
+
         except botocore.exceptions.ParamValidationError as exc:
             self._configuration_errors.append(str(exc).replace("\n", " "))
 
@@ -641,6 +686,7 @@ class Configuration:
             self._validate_resource(DatasetGroup(), dataset_group)
             if isinstance(dataset_group, dict):
                 self.dataset_group = dataset_group.get("name", self.dataset_group)
+                self._fill_default_vals("datasetGroup", dataset_group)
 
     def _validate_event_tracker(self, path="eventTracker.serviceConfig"):
         event_tracker = jmespath.search(path, self.config_dict)
@@ -653,7 +699,9 @@ class Configuration:
             return
 
         event_tracker["datasetGroupArn"] = DatasetGroup().arn("validation")
+
         self._validate_resource(EventTracker(), event_tracker)
+        self._fill_default_vals("eventTracker", event_tracker)
 
     def _validate_filters(self, path="filters[].serviceConfig"):
         filters = jmespath.search(path, self.config_dict) or {}
@@ -663,6 +711,7 @@ class Configuration:
 
             _filter["datasetGroupArn"] = DatasetGroup().arn("validation")
             self._validate_resource(Filter(), _filter)
+            self._fill_default_vals("filter", _filter)
 
     def _validate_type(self, var, typ, err: str):
         validates = isinstance(var, typ)
@@ -702,11 +751,59 @@ class Configuration:
                 )
 
             _solution = _solution.get("serviceConfig")
+
             if not self._validate_type(_solution, dict, f"solutions[{idx}].serviceConfig must be an object"):
                 continue
 
+            # `performAutoML` is currently returned from InputValidator.validate() as a valid field
+            # Once the botocore Stubber is updated to not have this param anymore in `create_solution` call,
+            # this check can be deleted.
+            if "performAutoML" in _solution:
+                del _solution["performAutoML"]
+                logger.error(
+                    "performAutoML is not a valid configuration parameter - proceeding to create the "
+                    "solution without this feature. For more details, refer to the Maintaining Personalized Experiences "
+                    "Github project's README.md file."
+                )
+
             _solution["datasetGroupArn"] = DatasetGroup().arn("validation")
-            self._validate_resource(Solution(), _solution)
+            if "solutionVersion" in _solution:
+                # To pass solution through InputValidator
+                solution_version_config = _solution["solutionVersion"]
+                del _solution["solutionVersion"]
+                self._validate_resource(Solution(), _solution)
+                _solution["solutionVersion"] = solution_version_config
+
+            else:
+                self._validate_resource(Solution(), _solution)
+
+            self._fill_default_vals("solution", _solution)
+            self._validate_solution_version(_solution)
+
+    def _validate_solution_version(self, solution_config):
+        allowed_sol_version_keys = ["trainingMode", "tags"]
+
+        if "solutionVersion" not in solution_config:
+            solution_config["solutionVersion"] = {}
+        else:
+            keys_not_allowed = set(solution_config["solutionVersion"].keys()) - set(allowed_sol_version_keys)
+            if keys_not_allowed != set():
+                self._configuration_errors.append(
+                    f"Allowed keys for solutionVersion are: {allowed_sol_version_keys}. Unsupported key(s): {list(keys_not_allowed)}"
+                )
+
+        self._fill_default_vals("solutionVersion", solution_config["solutionVersion"])
+
+    def _validate_recommender(self, path="recommenders[]"):
+        recommenders = jmespath.search(path, self.config_dict) or {}
+        for idx, recommender_config in enumerate(recommenders):
+            if not self._validate_type(
+                recommender_config, dict, f"recommenders[{idx}].serviceConfig must be an object"
+            ):
+                continue
+
+            _recommender = recommender_config.get("serviceConfig")
+            self._fill_default_vals("recommender", _recommender)
 
     def _validate_solution_update(self):
         invalid = (
@@ -721,21 +818,6 @@ class Configuration:
                 f"solution {solution_name} does not support solution version incremental updates - please use `full` instead of `update`."
             )
 
-    def _validate_solution_versions(self, path: str, solution_versions: List[Dict]):
-        for idx, solution_version_config in enumerate(solution_versions):
-            current_path = f"{path}.solutionVersions[{idx}]"
-
-            solution_version = solution_version_config.get("solutionVersion")
-            if not self._validate_type(
-                solution_version,
-                dict,
-                f"{current_path}.solutionVersion must be an object",
-            ):
-                continue
-            else:
-                solution_version["solutionArn"] = Solution().arn("validation")
-                self._validate_resource(SolutionVersion(), solution_version)
-
     def _validate_campaigns(self, path, campaigns: List[Dict]):
         for idx, campaign_config in enumerate(campaigns):
             current_path = f"{path}.campaigns[{idx}]"
@@ -746,6 +828,8 @@ class Configuration:
             else:
                 campaign["solutionVersionArn"] = SolutionVersion().arn("validation")
                 self._validate_resource(Campaign(), campaign)
+
+            self._fill_default_vals("campaign", campaign)
 
     def _validate_batch_inference_jobs(self, path, solution_name, batch_inference_jobs: List[Dict]):
         for idx, batch_job_config in enumerate(batch_inference_jobs):
@@ -773,6 +857,7 @@ class Configuration:
                     }
                 )
                 self._validate_resource(BatchInferenceJob(), batch_job)
+                self._fill_default_vals("batchJob", batch_job)
 
     def _validate_batch_segment_jobs(self, path, solution_name, batch_segment_jobs: List[Dict]):
         for idx, batch_job_config in enumerate(batch_segment_jobs):
@@ -800,6 +885,7 @@ class Configuration:
                     }
                 )
                 self._validate_resource(BatchSegmentJob(), batch_job)
+                self._fill_default_vals("segmentJob", batch_job)
 
     def _validate_rate(self, expression):
         rate_re = re.compile(r"rate\((?P<value>\d+) (?P<unit>(minutes?|hours?|day?s)\))")
@@ -867,7 +953,6 @@ class Configuration:
                     return
 
                 # some values are provided by the solution - we introduce placeholders
-                SolutionVersion().arn("validation")
                 dataset.update(
                     {
                         "datasetGroupArn": DatasetGroup().arn("validation"),
@@ -876,6 +961,20 @@ class Configuration:
                     }
                 )
                 self._validate_resource(Dataset(), dataset)
+                self._fill_default_vals("dataset", dataset)
+
+    def _validate_dataset_import_job(self, path="datasets.serviceConfig") -> None:
+        """
+        Perform a validation of the dataset import fields to ensure default values are present
+        :return: None
+        """
+        dataset_import = jmespath.search(path, self.config_dict)
+        if "datasets" in self.config_dict:
+            if not dataset_import:
+                self.config_dict["datasets"]["serviceConfig"] = {}
+                dataset_import = jmespath.search(path, self.config_dict)
+
+            self._fill_default_vals("datasetImport", dataset_import)
 
     def _validate_schemas(self) -> None:
         """
@@ -938,6 +1037,43 @@ class Configuration:
         else:
             self._configuration_errors.append(f"an unknown validation error occurred at {path}")
 
+    def _validate_tag_types(self, result, path):
+        err_msg = f"Invalid type at path {path} for tags, expected list[dict]."
+        is_lst = self._validate_type(result, list, err_msg)
+        if isinstance(result, list) and isinstance(result[0], list):  # sometimes jmespath returns list of list instead
+            result = result[0]
+
+        if is_lst:
+            for tag_instance in result:
+                is_dict = self._validate_type(tag_instance, dict, err_msg)
+                if path == "root":
+                    if is_dict and set(tag_instance.keys()) == {"tagKey", "tagValue"}:
+                        continue
+                    else:
+                        self._configuration_errors.append(
+                            "Parameter validation failed: Tag keys must be one of: 'tagKey', 'tagValue'"
+                        )
+                        return False
+                else:
+                    return is_dict
+        return False
+
+    def _validate_root_tags(self):
+        if "tags" in self.config_dict:
+            self._validate_tag_types(self.config_dict["tags"], "root")
+
+    def _validate_tags(self, *paths: List[str]):
+        """
+        Validate the configuration in config_dict for all tags provided.
+        Ensures that the tags supplied are a list of dict, and only contain the allowed key values.
+        :param paths: The paths in config_dict (used in recursion to identify a jmespath path) that may contain tags
+        :return: None
+        """
+        for path in paths:
+            result = jmespath.search(path, self.config_dict)
+            if result:
+                self._validate_tag_types(result, path)
+
     def _validate_list(self, config: List, schema: List, path=""):
         for idx, item in enumerate(config):
             current_path = f"{path}[{idx}]"
@@ -971,3 +1107,43 @@ class Configuration:
         """Validate that names of resources don't overlap in ways that might cause issues"""
         self._validate_no_duplicates(name="campaign names", path="solutions[].campaigns[].serviceConfig.name")
         self._validate_no_duplicates(name="solution names", path="solutions[].serviceConfig.name")
+
+    def _fill_default_vals(self, resource_type, resource_dict):
+        """Insert default values for tags and other fields whenever not supplied"""
+
+        if (
+            resource_type
+            in [
+                "datasetGroup",
+                "datasetImport",
+                "dataset",
+                "eventTracker",
+                "solution",
+                "solutionVersion",
+                "filter",
+                "recommender",
+                "campaign",
+                "batchJob",
+                "segmentJob",
+            ]
+            and "tags" not in resource_dict
+        ):
+            if self.pass_root_tags:
+                resource_dict["tags"] = self.config_dict["tags"]
+            else:
+                resource_dict["tags"] = []
+
+        if resource_type == "datasetImport":
+            if "importMode" not in resource_dict:
+                resource_dict["importMode"] = "FULL"
+            if "publishAttributionMetricsToS3" not in resource_dict:
+                resource_dict["publishAttributionMetricsToS3"] = False
+
+        if resource_type == "solutionVersion":
+            if "tags" not in resource_dict:
+                if self.pass_root_tags:
+                    resource_dict["tags"] = self.config_dict["tags"]
+                else:
+                    resource_dict["tags"] = []
+            if "trainingMode" not in resource_dict:
+                resource_dict["trainingMode"] = "FULL"

@@ -17,17 +17,17 @@ from datetime import datetime
 
 import boto3
 import pytest
+from aws_lambda.shared.personalize_service import (
+    S3,
+    Configuration,
+    Personalize,
+    get_duplicates,
+)
 from dateutil import tz
 from dateutil.tz import tzlocal
 from moto import mock_s3, mock_sts
-
-from aws_lambda.shared.personalize_service import (
-    S3,
-    Personalize,
-    Configuration,
-    get_duplicates,
-)
-from shared.exceptions import ResourceNeedsUpdate, ResourceFailed
+from moto.core import ACCOUNT_ID
+from shared.exceptions import ResourceFailed, ResourceNeedsUpdate
 from shared.personalize.service_model import ServiceModel
 from shared.resource import Campaign
 
@@ -58,7 +58,6 @@ def describe_solution_version_response():
             "solutionVersionArn": f'arn:aws:personalize:us-east-1:{"1" * 12}:solution/personalize-integration-test-ranking/dfcd6f6e',
             "solutionArn": f'arn:aws:personalize:us-east-1:{"1" * 12}:solution/personalize-integration-test-ranking',
             "performHPO": False,
-            "performAutoML": False,
             "recipeArn": "arn:aws:personalize:::recipe/aws-user-personalization",
             "datasetGroupArn": f'arn:aws:personalize:us-east-1:{"1" * 12}:dataset-group/personalize-integration-test',
             "solutionConfig": {},
@@ -239,11 +238,11 @@ def test_service_model(personalize_stubber):
     )
 
     sm = ServiceModel(cli)
-
     assert sm.owned_by(filter_arn_1, dataset_group_arn_1)
     assert sm.owned_by(campaign_arn_1, dataset_group_name_1)
     assert sm.owned_by(filter_arn_2, dataset_group_arn_2)
     assert sm.owned_by(campaign_arn_2, dataset_group_name_2)
+
     for arn in [
         dataset_group_arn_1,
         dataset_group_arn_2,
@@ -261,6 +260,14 @@ def test_service_model(personalize_stubber):
 def test_configuration_valid(configuration_path):
     cfg = Configuration()
     cfg.load(configuration_path)
+    validates = cfg.validate()
+    assert validates
+
+
+@mock_sts
+def test_configuration_valid(tags_configuration_path):
+    cfg = Configuration()
+    cfg.load(tags_configuration_path)
     validates = cfg.validate()
     assert validates
 
@@ -492,6 +499,9 @@ def test_solution_version_update_validation():
                 "serviceConfig": {
                     "name": "valid",
                     "recipeArn": "arn:aws:personalize:::recipe/aws-sims",
+                    "solutionVersion": {
+                        "tags": [{"tagKey": "solv-2", "tagValue": "solv-key-2"}],
+                    },
                 },
                 "workflowConfig": {
                     "schedules": {
@@ -503,6 +513,7 @@ def test_solution_version_update_validation():
                 "serviceConfig": {
                     "name": "valid",
                     "recipeArn": "arn:aws:personalize:::recipe/aws-hrnn-coldstart",
+                    "tags": [{"tagKey": "sol-3", "tagValue": "sol-key-3"}],
                 },
                 "workflowConfig": {
                     "schedules": {
@@ -528,3 +539,566 @@ def test_solution_version_update_validation():
     cfg._validate_solution_update()
     assert len(cfg._configuration_errors) == 1
     assert cfg._configuration_errors[0].startswith("solution invalid does not support")
+
+
+@mock_sts
+def test_dataset_defaults(configuration_path):
+    """
+    Ensures that defaults are set for the fields for step-functions to pass.
+    """
+    cfg = Configuration()
+    cfg.load(configuration_path)
+
+    validates = cfg.validate()
+    assert validates
+    assert len(cfg._configuration_errors) == 0
+
+    # datasetGroup defaults
+    assert cfg.config_dict["datasetGroup"]["serviceConfig"]["tags"] == []
+
+    # dataset-import defaults
+    assert cfg.config_dict["datasets"]["serviceConfig"]["importMode"] == "FULL"
+    assert cfg.config_dict["datasets"]["serviceConfig"]["tags"] == []
+
+    assert cfg.config_dict["datasets"]["serviceConfig"]["publishAttributionMetricsToS3"] == False
+
+    # dataset defaults
+    assert cfg.config_dict["datasets"]["users"]["dataset"]["serviceConfig"]["tags"] == []
+    assert cfg.config_dict["datasets"]["interactions"]["dataset"]["serviceConfig"]["tags"] == []
+    assert cfg.config_dict["datasets"]["items"]["dataset"]["serviceConfig"]["tags"] == []
+
+    # solutions default
+    assert cfg.config_dict["solutions"][0]["serviceConfig"]["tags"] == []
+    assert cfg.config_dict["solutions"][0]["serviceConfig"]["solutionVersion"]["tags"] == []
+    assert cfg.config_dict["solutions"][0]["serviceConfig"]["solutionVersion"]["trainingMode"] == "FULL"
+
+    assert cfg.config_dict["solutions"][1]["serviceConfig"]["tags"] == []
+    assert cfg.config_dict["solutions"][1]["serviceConfig"]["solutionVersion"]["tags"] == []
+    assert cfg.config_dict["solutions"][1]["serviceConfig"]["solutionVersion"]["trainingMode"] == "FULL"
+
+    # batchSegment defaults
+    assert cfg.config_dict["solutions"][0]["batchSegmentJobs"][0]["serviceConfig"]["tags"] == []
+
+    # campaign defaults
+    assert cfg.config_dict["solutions"][5]["campaigns"][0]["serviceConfig"]["tags"] == []
+
+    # batchInference defaults
+    assert cfg.config_dict["solutions"][5]["batchInferenceJobs"][0]["serviceConfig"]["tags"] == []
+
+    # eventTracker defaults
+    assert cfg.config_dict["eventTracker"]["serviceConfig"]["tags"] == []
+
+    # filter defaults
+    assert cfg.config_dict["filters"][0]["serviceConfig"]["tags"] == []
+
+
+@mock_sts
+def test_dataset_root_tags(root_tags_configuration_path):
+    """
+    Ensures that the root tags are set across all components.
+    """
+    cfg = Configuration()
+    cfg.load(root_tags_configuration_path)
+
+    validates = cfg.validate()
+    assert validates
+    assert len(cfg._configuration_errors) == 0
+
+    # datasetGroup defaults
+    assert cfg.config_dict["datasetGroup"]["serviceConfig"]["tags"] == [{"tagKey": "hello", "tagValue": "world"}]
+
+    # dataset-import defaults
+    assert cfg.config_dict["datasets"]["serviceConfig"]["importMode"] == "FULL"
+    assert cfg.config_dict["datasets"]["serviceConfig"]["tags"] == [{"tagKey": "hello", "tagValue": "world"}]
+
+    assert cfg.config_dict["datasets"]["serviceConfig"]["publishAttributionMetricsToS3"] == False
+
+    # dataset defaults
+    assert cfg.config_dict["datasets"]["users"]["dataset"]["serviceConfig"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+    assert cfg.config_dict["datasets"]["interactions"]["dataset"]["serviceConfig"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+    assert cfg.config_dict["datasets"]["items"]["dataset"]["serviceConfig"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+
+    # solutions default
+    assert cfg.config_dict["solutions"][0]["serviceConfig"]["tags"] == [{"tagKey": "hello", "tagValue": "world"}]
+    assert cfg.config_dict["solutions"][0]["serviceConfig"]["solutionVersion"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+    assert cfg.config_dict["solutions"][0]["serviceConfig"]["solutionVersion"]["trainingMode"] == "FULL"
+
+    assert cfg.config_dict["solutions"][1]["serviceConfig"]["tags"] == [{"tagKey": "hello", "tagValue": "world"}]
+    assert cfg.config_dict["solutions"][1]["serviceConfig"]["solutionVersion"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+    assert cfg.config_dict["solutions"][1]["serviceConfig"]["solutionVersion"]["trainingMode"] == "FULL"
+
+    # batchSegment defaults
+    assert cfg.config_dict["solutions"][0]["batchSegmentJobs"][0]["serviceConfig"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+
+    # campaign defaults
+    assert cfg.config_dict["solutions"][1]["campaigns"][0]["serviceConfig"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+
+    # batchInference defaults
+    assert cfg.config_dict["solutions"][1]["batchInferenceJobs"][0]["serviceConfig"]["tags"] == [
+        {"tagKey": "hello", "tagValue": "world"}
+    ]
+
+    # eventTracker defaults
+    assert cfg.config_dict["eventTracker"]["serviceConfig"]["tags"] == [{"tagKey": "hello", "tagValue": "world"}]
+
+    # filter defaults
+    assert cfg.config_dict["filters"][0]["serviceConfig"]["tags"] == [{"tagKey": "hello", "tagValue": "world"}]
+
+
+@mock_sts
+def test_bad_root_tag_keys():
+    cfg = Configuration()
+    config = """
+    {
+        "tags": [{"tagKeys": "tagKey", "tagValue": "tagValue"}],
+        "datasetGroup": {"serviceConfig": {"name": "testing-tags"}}
+    }
+    """
+    cfg.load(str(config))
+
+    validates = cfg.validate()
+    assert cfg._configuration_errors == ["Parameter validation failed: Tag keys must be one of: 'tagKey', 'tagValue'"]
+    assert validates == False
+
+
+@mock_sts
+def test_bad_tag_keys():
+    cfg = Configuration()
+    config = """{
+        "datasetGroup": {
+            "serviceConfig": {"name": "testing-tags", "tags": [{"tagKeys": "tagKey", "tagValue": "tagValue"}]}
+            }
+        }
+    """
+
+    cfg.load(str(config))
+    validates = cfg.validate()
+
+    assert cfg._configuration_errors == [
+        'Parameter validation failed: Missing required parameter in tags[0]: "tagKey" Unknown parameter in tags[0]: "tagKeys", must be one of: tagKey, tagValue'
+    ]
+    assert validates == False
+
+
+@mock_sts
+def test_more_bad_root_tag_keys():
+    cfg = Configuration()
+    config = """
+    {
+        "tags": {},
+        "datasetGroup": {"serviceConfig": {"name": "testing-tags"}}
+    }
+    """
+    cfg.load(str(config))
+    validates = cfg.validate()
+
+    assert cfg._configuration_errors == ["Invalid type at path root for tags, expected list[dict]."]
+    assert validates == False
+
+
+@mock_sts
+def test_more_bad_tag_keys():
+    cfg = Configuration()
+    config = """
+    {
+
+        "datasetGroup": {"serviceConfig": {"name": "testing-tags", "tags": {}}}
+    }
+    """
+    cfg.load(str(config))
+
+    validates = cfg.validate()
+    print(cfg._configuration_errors)
+
+    assert cfg._configuration_errors == [
+        "Parameter validation failed: Invalid type for parameter tags, value: {}, type: <class 'dict'>, valid types: <class 'list'>, <class 'tuple'>"
+    ]
+    assert validates == False
+
+
+@mock_sts
+def test_root_tag_keys():
+    cfg = Configuration()
+    config = """
+    {
+        "tags": [{"tagKey": "tagKey", "tagValue": "tagValue"}],
+        "datasetGroup": {"serviceConfig": {"name": "testing-tags"}}
+    }
+    """
+    cfg.load(str(config))
+
+    validates = cfg.validate()
+
+    assert cfg._configuration_errors == []
+    assert validates
+
+
+@mock_sts
+def test_tag_keys():
+    cfg = Configuration()
+    config = """{
+        "datasetGroup": {
+            "serviceConfig": {"name": "testing-tags", "tags": [{"tagKey": "tagKey", "tagValue": "tagValue"}]}
+            }
+        }
+    """
+    cfg.load(str(config))
+
+    validates = cfg.validate()
+
+    assert cfg._configuration_errors == []
+    assert validates
+
+
+@mock_sts
+def test_dataset_group_args(tags_configuration_path, monkeypatch, argtest):
+    """
+    Ensuring params to validation calls are as expected per the config supplied.
+    """
+    cfg = Configuration()
+    cfg.load(tags_configuration_path)
+
+    # returns arguments passed to mocked calls
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+
+    validates = cfg._validate_dataset_group()
+    assert validates is None
+    assert len(cfg._configuration_errors) == 0
+    assert argtest.args[1] == {"name": "unit_test_new_datasetgroup", "tags": [{"tagKey": "tag0", "tagValue": "key0"}]}
+
+
+@mock_sts
+def test_dataset_args(tags_configuration_path, monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(tags_configuration_path)
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+
+    cfg._validate_datasets()
+    assert len(cfg._configuration_errors) == 0
+    assert argtest.args[1] == {
+        "name": "unit_test_only_interactions",
+        "tags": [{"tagKey": "tag3", "tagValue": "key3"}],
+        "datasetGroupArn": f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:dataset-group/validation",
+        "schemaArn": f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:schema/validation",
+        "datasetType": "interactions",
+    }
+
+
+@mock_sts
+def test_dataset_import_args(monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(
+        """
+        {
+            "datasetGroup": {"serviceConfig": {"name": "unit_test_new_datasetgroup"}},
+            "datasets": {
+                    "serviceConfig": {
+                        "name": "dataset_import_config",
+                        "importMode": "FULL",
+                        "tags": [{"tagKey": "1", "tagValue": "1"}]
+                    }
+                }
+        }
+        """
+    )
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+
+    cfg._validate_dataset_import_job()
+    assert len(cfg._configuration_errors) == 0
+    assert argtest.args[1] == {
+        "name": "dataset_import_config",
+        "importMode": "FULL",
+        "tags": [{"tagKey": "1", "tagValue": "1"}],
+    }
+
+
+@mock_sts
+def test_solution_version_args(monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(
+        """
+        {
+            "datasetGroup": {"serviceConfig": {"name": "unit_test_new_datasetgroup"}},
+            "solutions": [
+                {
+                    "serviceConfig": {
+                        "name": "unit_test_new_solution",
+                        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity",
+                        "solutionVersion": {
+                            "trainingMode": "FULL",
+                            "tags": [{"tagKey": "1", "tagValue": "2"}]
+                        }
+                    }
+                }
+            ]
+        }
+        """
+    )
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+    cfg._validate_solution_version(cfg.config_dict["solutions"][0]["serviceConfig"])
+    assert len(cfg._configuration_errors) == 0
+    assert argtest.args[1] == {"trainingMode": "FULL", "tags": [{"tagKey": "1", "tagValue": "2"}]}
+
+
+@mock_sts
+def test_solution_version_unsupported_args(monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(
+        """
+        {
+            "datasetGroup": {"serviceConfig": {"name": "unit_test_new_datasetgroup"}},
+            "solutions": [
+                {
+                    "serviceConfig": {
+                        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity",
+                        "solutionVersion": {
+                            "name": "SolutionV1",
+                            "tags": [{"tagKey": "1", "tagValue": "2"}]
+                        }
+                    }
+                }
+            ]
+        }
+        """
+    )
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+    cfg._validate_solution_version(cfg.config_dict["solutions"][0]["serviceConfig"])
+    assert argtest.args[1] == {"name": "SolutionV1", "tags": [{"tagKey": "1", "tagValue": "2"}]}
+    assert cfg._configuration_errors == [
+        "Allowed keys for solutionVersion are: ['trainingMode', 'tags']. Unsupported key(s): ['name']"
+    ]
+
+
+@mock_sts
+def test_batch_inference_args(monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(
+        """
+        {
+            "datasetGroup": {"serviceConfig": {"name": "unit_test_new_datasetgroup"}},
+            "solutions": [
+                {
+                    "serviceConfig": {
+                        "name": "unit_test_new_solution",
+                        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity"
+                    },
+                    "batchInferenceJobs": [{"serviceConfig": {
+                        "tags": [{"tagKey": "tag1", "tagValue": "key1"}]
+                    }}]
+                }
+            ]
+        }
+        """
+    )
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+    solution = cfg.config_dict["solutions"][0]
+
+    cfg._validate_batch_inference_jobs(
+        "solutions[0].batchInferenceJobs",
+        solution["serviceConfig"]["name"],
+        solution["batchInferenceJobs"],
+    )
+    assert cfg._configuration_errors == []
+
+    args = argtest.args[1]
+    assert args["solutionVersionArn"] == f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:solution/validation/unknown"
+    assert args["jobName"].startswith("batch_" + solution["serviceConfig"]["name"])
+    assert args["roleArn"] == "roleArn"
+    assert args["jobInput"] == {"s3DataSource": {"path": "s3://data-source"}}
+    assert args["jobOutput"] == {"s3DataDestination": {"path": "s3://data-destination"}}
+    assert args["tags"] == [{"tagKey": "tag1", "tagValue": "key1"}]
+
+
+@mock_sts
+def test_campaign_args(monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(
+        """
+        {
+            "datasetGroup": {"serviceConfig": {"name": "unit_test_new_datasetgroup"}},
+            "solutions": [
+                {
+                    "serviceConfig": {
+                        "name": "unit_test_new_solution",
+                        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity"
+                    },
+                    "campaigns": [{"serviceConfig": {"name": "campaign1", "tags": [{"tagKey": "tag1", "tagValue": "key1"}]}}]
+                }
+            ]
+        }
+        """
+    )
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+    solution = cfg.config_dict["solutions"][0]
+
+    cfg._validate_campaigns(f"solutions[0].campaigns", solution["campaigns"])
+    assert cfg._configuration_errors == []
+    assert argtest.args[1] == {
+        "name": "campaign1",
+        "tags": [{"tagKey": "tag1", "tagValue": "key1"}],
+        "solutionVersionArn": f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:solution/validation/unknown",
+    }
+
+
+@mock_sts
+def test_batch_segment_args(monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(
+        """
+        {
+            "datasetGroup": {"serviceConfig": {"name": "unit_test_new_datasetgroup"}},
+            "solutions": [
+                {
+                    "serviceConfig": {
+                        "name": "unit_test_new_solution",
+                        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity"
+                    },
+                    "batchSegmentJobs": [{"serviceConfig": {
+                        "tags": [{"tagKey": "tag1", "tagValue": "key1"}]
+                    }}]
+                }
+            ]
+        }
+        """
+    )
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+    solution = cfg.config_dict["solutions"][0]
+
+    cfg._validate_batch_inference_jobs(
+        "solutions[0].batchSegmentJobs",
+        solution["serviceConfig"]["name"],
+        solution["batchSegmentJobs"],
+    )
+    assert cfg._configuration_errors == []
+
+    args = argtest.args[1]
+    assert args["solutionVersionArn"] == f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:solution/validation/unknown"
+    assert args["jobName"].startswith("batch_" + solution["serviceConfig"]["name"])
+    assert args["roleArn"] == "roleArn"
+    assert args["jobInput"] == {"s3DataSource": {"path": "s3://data-source"}}
+    assert args["jobOutput"] == {"s3DataDestination": {"path": "s3://data-destination"}}
+    assert args["tags"] == [{"tagKey": "tag1", "tagValue": "key1"}]
+
+
+@mock_sts
+def test_batch_inference_args(monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(
+        """
+        {
+            "datasetGroup": {"serviceConfig": {"name": "unit_test_new_datasetgroup"}},
+            "solutions": [
+                {
+                    "serviceConfig": {
+                        "name": "unit_test_new_solution",
+                        "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity"
+                    },
+                    "batchInferenceJobs": [{"serviceConfig": {"tags": [{"tagKey": "tag1", "tagValue": "key1"}]}}]
+                }
+            ]
+        }
+        """
+    )
+
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+    solution = cfg.config_dict["solutions"][0]
+
+    cfg._validate_batch_inference_jobs(
+        "solutions[0].batchInferenceJobs",
+        solution["serviceConfig"]["name"],
+        solution["batchInferenceJobs"],
+    )
+    assert cfg._configuration_errors == []
+
+    args = argtest.args[1]
+    assert args["solutionVersionArn"] == f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:solution/validation/unknown"
+    assert args["jobName"].startswith("batch_" + solution["serviceConfig"]["name"])
+    assert args["roleArn"] == "roleArn"
+    assert args["jobInput"] == {"s3DataSource": {"path": "s3://data-source"}}
+    assert args["jobOutput"] == {"s3DataDestination": {"path": "s3://data-destination"}}
+    assert args["tags"] == [{"tagKey": "tag1", "tagValue": "key1"}]
+
+
+def test_recommender_args(tags_configuration_path, monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(tags_configuration_path)
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+
+    cfg._validate_recommender()
+    assert len(cfg._configuration_errors) == 0
+
+    assert argtest.args[1] == {
+        "name": "ddsg-most-viewed",
+        "recipeArn": "arn:aws:personalize:::recipe/aws-ecomm-popular-items-by-views",
+        "tags": [{"tagKey": "hello13", "tagValue": "world13"}],
+    }
+
+
+@mock_sts
+def test_filter_args(tags_configuration_path, monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(tags_configuration_path)
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+
+    cfg._validate_filters()
+    assert len(cfg._configuration_errors) == 0
+
+    assert argtest.args[1] == {
+        "name": "clicked-or-streamed-2",
+        "filterExpression": 'INCLUDE ItemID WHERE Interactions.EVENT_TYPE in ("click", "stream")',
+        "tags": [{"tagKey": "tag11", "tagValue": "key11"}],
+        "datasetGroupArn": f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:dataset-group/validation",
+    }
+
+
+@mock_sts
+def test_event_tracker_args(tags_configuration_path, monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(tags_configuration_path)
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+
+    cfg._validate_event_tracker()
+    assert len(cfg._configuration_errors) == 0
+
+    assert argtest.args[1] == {
+        "name": "unit_test_new_event_tracker",
+        "tags": [{"tagKey": "tag10", "tagValue": "key10"}],
+        "datasetGroupArn": f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:dataset-group/validation",
+    }
+
+
+@mock_sts
+def test_event_tracker_args(tags_configuration_path, monkeypatch, argtest):
+    cfg = Configuration()
+    cfg.load(tags_configuration_path)
+    monkeypatch.setattr("aws_lambda.shared.personalize_service.Configuration._fill_default_vals", argtest)
+
+    cfg._validate_event_tracker()
+    assert len(cfg._configuration_errors) == 0
+
+    assert argtest.args[1] == {
+        "name": "unit_test_new_event_tracker",
+        "tags": [{"tagKey": "tag10", "tagValue": "key10"}],
+        "datasetGroupArn": f"arn:aws:personalize:us-east-1:{ACCOUNT_ID}:dataset-group/validation",
+    }

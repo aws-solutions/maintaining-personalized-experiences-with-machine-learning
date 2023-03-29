@@ -41,6 +41,11 @@ CONFIG = {
         "default": "omit",
         "as": "iso8601",
     },
+    "tags": {
+        "source": "event",
+        "path": "serviceConfig.tags",
+        "default": "omit",
+    },
 }
 
 logger = Logger()
