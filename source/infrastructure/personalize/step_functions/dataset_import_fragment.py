@@ -14,21 +14,20 @@ from typing import List
 
 from aws_cdk import Duration
 from aws_cdk.aws_stepfunctions import (
-    StateMachineFragment,
-    State,
-    TaskInput,
-    INextable,
     Choice,
     Condition,
+    INextable,
     JsonPath,
     Pass,
+    State,
+    StateMachineFragment,
+    TaskInput,
 )
 from constructs import Construct
-
 from personalize.aws_lambda.functions import (
     CreateDataset,
-    CreateSchema,
     CreateDatasetImportJob,
+    CreateSchema,
 )
 
 
@@ -61,6 +60,13 @@ class DatasetImportFragment(StateMachineFragment):
             "jobName.$": f"States.Format('dataset_import_{id.lower()}_{{}}', $.currentDate)",
             "datasetArn.$": f"$.datasets.{id.lower()}.dataset.serviceConfig.datasetArn",
         }
+        
+        service_input = {
+            "importMode": "FULL",
+            "publishAttributionMetricsToS3.$": "$.datasets.serviceConfig.publishAttributionMetricsToS3",
+            "tags.$": "$.datasets.serviceConfig.tags"
+        }
+        
         import_datasets_from_csv = create_dataset_import_job.state(self, f"Try {id} Dataset Import from CSV",
                                         payload=TaskInput.from_object({
                                             "serviceConfig": {
@@ -68,6 +74,7 @@ class DatasetImportFragment(StateMachineFragment):
                                                 "dataSource": {
                                                     "dataLocation.$": f"States.Format('s3://{{}}/{{}}/{id.lower()}.csv', $.bucket.name, $.bucket.key)"  # NOSONAR (python:S1192) - string for clarity
                                                 },
+                                                **service_input,
                                             },
                                             "workflowConfig": {
                                                 "maxAge.$": "$.datasetGroup.workflowConfig.maxAge",  # NOSONAR (python:S1192) - string for clarity
@@ -86,6 +93,7 @@ class DatasetImportFragment(StateMachineFragment):
                                                 "dataSource": {
                                                     "dataLocation.$": f"States.Format('s3://{{}}/{{}}/{id.lower()}', $.bucket.name, $.bucket.key)"  # NOSONAR (python:S1192) - string for clarity
                                                 },
+                                                **service_input
                                             },
                                             "workflowConfig": {
                                                 "maxAge.$": "$.datasetGroup.workflowConfig.maxAge",  # NOSONAR (python:S1192) - string for clarity
@@ -109,6 +117,7 @@ class DatasetImportFragment(StateMachineFragment):
                                                             "schemaArn.$": f"$.datasets.{id.lower()}.schema.serviceConfig.schemaArn",
                                                             "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
                                                             "datasetType": f"{id.lower()}",
+                                                            "tags.$": f"$.datasets.{id.lower()}.dataset.serviceConfig.tags",
                                                          },
                                                          "workflowConfig": {
                                                              "maxAge.$": "$.datasetGroup.workflowConfig.maxAge",
@@ -117,6 +126,7 @@ class DatasetImportFragment(StateMachineFragment):
                                                      }),
                                                      result_path=f"$.datasets.{id.lower()}.dataset.serviceConfig",
                                                      **retry_config))
+                          
                           .next(import_datasets_from_prefix))
         self._choice.otherwise(
             na_state

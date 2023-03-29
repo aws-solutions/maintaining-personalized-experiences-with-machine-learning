@@ -17,10 +17,9 @@ import logging
 from pathlib import Path
 
 import aws_cdk as cdk
-
+from aspects.app_registry import AppRegistry
 from aws_solutions.cdk import CDKSolution
 from personalize.stack import PersonalizeStack
-from aspects.app_registry import AppRegistry
 
 logger = logging.getLogger("cdk-helper")
 solution = CDKSolution(cdk_json_path=Path(__file__).parent.absolute() / "cdk.json")

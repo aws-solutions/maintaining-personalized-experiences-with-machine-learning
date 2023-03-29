@@ -16,9 +16,8 @@ from collections import namedtuple
 
 import boto3
 import pytest
-from moto import mock_sns, mock_sqs
-
 from aws_lambda.sns_notification.handler import lambda_handler
+from moto import mock_sns, mock_sqs
 
 TRACE_ID = "1-57f5498f-d91047849216d0f2ea3b6442"
 
@@ -30,7 +29,6 @@ def sqs_mock():
 
     with mock_sqs():
         with mock_sns():
-
             cli = boto3.client("sns")
             cli.create_topic(Name=topic_name)
 
@@ -77,7 +75,10 @@ def test_sns_notification(context, sqs_mock):
     url = sqs_mock.get_queue_url(QueueName="TestQueue")["QueueUrl"]
     msg = json.loads(
         json.loads(
-            sqs_mock.receive_message(QueueUrl=url, MaxNumberOfMessages=1,)["Messages"][
+            sqs_mock.receive_message(
+                QueueUrl=url,
+                MaxNumberOfMessages=1,
+            )["Messages"][
                 0
             ]["Body"]
         )["Message"]
@@ -111,7 +112,10 @@ def test_sns_notification_trace(sqs_mock, trace_enabled, context):
     url = sqs_mock.get_queue_url(QueueName="TestQueue")["QueueUrl"]
     msg = json.loads(
         json.loads(
-            sqs_mock.receive_message(QueueUrl=url, MaxNumberOfMessages=1,)["Messages"][
+            sqs_mock.receive_message(
+                QueueUrl=url,
+                MaxNumberOfMessages=1,
+            )["Messages"][
                 0
             ]["Body"]
         )["Message"]

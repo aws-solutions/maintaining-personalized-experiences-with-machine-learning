@@ -43,6 +43,8 @@ class CreateSolutionVersion(SolutionStep):
                     "personalize:ListSolutionVersions",
                     "personalize:DescribeSolution",
                     "personalize:GetSolutionMetrics",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

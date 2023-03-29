@@ -68,7 +68,7 @@ class CloudFormationTemplate:
     def delete_cdk_helpers(self):
         """Remove the CDK bucket deployment helpers, since solutions don't have a bootstrap bucket."""
         to_delete = []
-        for (resource_name, resource) in self.contents.get("Resources", {}).items():
+        for resource_name, resource in self.contents.get("Resources", {}).items():
             if "Custom::CDKBucketDeployment" in resource["Type"]:
                 to_delete.append(resource_name)
             if "CDKBucketDeployment" in resource_name:
@@ -89,7 +89,7 @@ class CloudFormationTemplate:
                 ]
             },
         )
-        for (resource_name, resource) in self.contents.get("Resources", {}).items():
+        for resource_name, resource in self.contents.get("Resources", {}).items():
             resource_type = resource.get("Type")
             if resource_type == "AWS::CloudFormation::Stack":
                 try:
@@ -120,7 +120,7 @@ class CloudFormationTemplate:
 
     def patch_lambda(self):
         """Patch the lambda functions for S3 deployment compatibility"""
-        for (resource_name, resource) in self.contents.get("Resources", {}).items():
+        for resource_name, resource in self.contents.get("Resources", {}).items():
             resource_type = resource.get("Type")
             if resource_type == "AWS::Lambda::Function" or resource_type == "AWS::Lambda::LayerVersion":
                 logger.info(f"{resource_name} ({resource_type}) patching")
@@ -190,7 +190,7 @@ class CloudFormationTemplate:
 
     def patch_app_reg(self):
         """Patch the App Registry Info"""
-        for (resource_name, resource) in self.contents.get("Resources", {}).items():
+        for resource_name, resource in self.contents.get("Resources", {}).items():
             resource_type = resource.get("Type")
             if resource_type == "AWS::ApplicationInsights::Application":
                 logger.info(f"{resource_name} ({resource_type}) patching")
@@ -248,7 +248,7 @@ class CloudFormationTemplate:
                     str(asset_path.joinpath(self.global_asset_name)),
                 )
 
-        # regional solutions assets - default folder location is "regional-s3-assets"
+        # the regional solutions assets - default folder location is "regional-s3-assets"
         if asset_path_regional:
             asset_path = self._build_asset_path(asset_path_regional)
             for asset in self.assets_regional:

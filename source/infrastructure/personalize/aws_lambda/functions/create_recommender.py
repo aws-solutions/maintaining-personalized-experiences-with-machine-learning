@@ -42,6 +42,8 @@ class CreateRecommender(SolutionStep):
                     "personalize:CreateRecommender",
                     "personalize:ListRecommenders",
                     "personalize:DescribeDatasetGroup",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

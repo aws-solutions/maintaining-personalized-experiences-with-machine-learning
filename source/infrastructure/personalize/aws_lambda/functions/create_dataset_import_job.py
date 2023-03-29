@@ -92,6 +92,8 @@ class CreateDatasetImportJob(SolutionStep):
                     "personalize:CreateDatasetImportJob",
                     "personalize:DescribeDatasetImportJob",
                     "personalize:ListDatasetImportJobs",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

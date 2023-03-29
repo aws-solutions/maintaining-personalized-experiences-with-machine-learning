@@ -36,6 +36,7 @@ class CreateEventTracker(SolutionStep):
                 {
                     "serviceConfig": {
                         "name.$": "$.eventTracker.serviceConfig.name",
+                        "tags.$": "$.eventTracker.serviceConfig.tags",
                         "datasetGroupArn.$": "$.datasetGroup.serviceConfig.datasetGroupArn",
                     },
                     "workflowConfig": {
@@ -57,6 +58,8 @@ class CreateEventTracker(SolutionStep):
                     "personalize:DescribeEventTracker",
                     "personalize:ListEventTrackers",
                     "personalize:CreateEventTracker",
+                    "personalize:TagResource",
+                    "personalize:ListTagsForResource",
                 ],
                 effect=iam.Effect.ALLOW,
                 resources=[

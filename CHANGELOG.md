@@ -5,16 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2023-03-29
+
+### Changed
+
+- Python library updates
+- Upgraded Python runtime to 3.9
+- Using `performAutoML` field in creating solutions now logs error, but proceeds to build the solution. This field is deprecated by the service.
+
+### Added
+
+- Github [issue #16](https://github.com/aws-solutions/maintaining-personalized-experiences-with-machine-learning/issues/16) `tags` are supported for all component types, for example, dataset group, import jobs, solutions, etc. Root-level tags are also supported in the config.
+- "UPDATE" model training is supported for input solutions trained with the User-Personalization recipe or the HRNN-Coldstart recipe.
+
 ## [1.3.1] - 2022-12-19
 
-### Fixed 
+### Fixed
 
 - GitHub [issue #19](https://github.com/aws-solutions/maintaining-personalized-experiences-with-machine-learning/issues/19). This fix prevents AWS Service Catalog AppRegistry Application Name and Attribute Group Name from using a string that begins with `AWS`, since strings begining with `AWS` are considered as reserved words by the AWS Service.
 
 ### Changed
 
 - Locked `boto3` to version `1.25.5`, and upgraded python library packages.
-
 
 ## [1.3.0] - 2022-11-17
 

@@ -46,6 +46,17 @@ CONFIG = {
         "default": "omit",
         "as": "iso8601",
     },
+    "importMode": {"source": "event", "path": "serviceConfig.importMode", "default": "omit"},
+    "tags": {
+        "source": "event",
+        "path": "serviceConfig.tags",
+        "default": "omit",
+    },
+    "publishAttributionMetricsToS3": {
+        "source": "event",
+        "path": "serviceConfig.publishAttributionMetricsToS3",
+        "default": "omit",
+    },
 }
 
 logger = Logger()

@@ -30,11 +30,6 @@ CONFIG = {
         "path": "serviceConfig.performHPO",
         "default": "omit",
     },
-    "performAutoML": {
-        "source": "event",
-        "path": "serviceConfig.performAutoML",
-        "default": "omit",
-    },
     "recipeArn": {
         "source": "event",
         "path": "serviceConfig.recipeArn",
@@ -59,6 +54,11 @@ CONFIG = {
         "path": "workflowConfig.timeStarted",
         "default": "omit",
         "as": "iso8601",
+    },
+    "tags": {
+        "source": "event",
+        "path": "serviceConfig.tags",
+        "default": "omit",
     },
 }
 logger = Logger()

@@ -80,6 +80,35 @@
           }
         }
       }
+    },
+    "items": {
+      "dataset": {
+        "serviceConfig": {
+          "name": "items-dataset"
+        }
+      },
+      "schema": {
+        "serviceConfig": {
+          "name": "items-schema",
+          "schema": {
+            "type": "record",
+            "name": "Items",
+            "namespace": "com.amazonaws.personalize.schema",
+            "fields": [
+              {
+                "name": "ITEM_ID",
+                "type": "string"
+              },
+              {
+                "name": "GENRES",
+                "type": "string",
+                "categorical": true
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      }
     }
   },
   "solutions": [
@@ -89,12 +118,12 @@
         "recipeArn": "arn:aws:personalize:::recipe/aws-item-affinity"
       },
       "batchSegmentJobs": [
-          {
-            "serviceConfig": {},
-            "workflowConfig": {
-              "schedule": "cron(0 3 * * ? *)"
-            }
+        {
+          "serviceConfig": {},
+          "workflowConfig": {
+            "schedule": "cron(0 3 * * ? *)"
           }
+        }
       ]
     },
     {
@@ -106,7 +135,7 @@
         {
           "serviceConfig": {},
           "workflowConfig": {
-              "schedule": "cron(0 3 * * ? *)"
+            "schedule": "cron(0 3 * * ? *)"
           }
         }
       ]
