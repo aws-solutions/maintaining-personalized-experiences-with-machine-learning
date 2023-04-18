@@ -12,51 +12,45 @@
 # ######################################################################################################################
 
 from aws_cdk import (
-    CfnCondition,
-    Fn,
+    Aspects,
     Aws,
-    Duration,
+    CfnCondition,
     CfnOutput,
     CfnParameter,
+    Duration,
+    Fn,
     Tags,
-    Aspects,
 )
 from aws_cdk.aws_events import EventBus
 from aws_cdk.aws_s3 import EventType, NotificationKeyFilter
 from aws_cdk.aws_s3_notifications import LambdaDestination
-from aws_cdk.aws_stepfunctions import (
-    StateMachine,
-    Chain,
-    Parallel,
-    TaskInput,
-)
-from constructs import Construct
-
+from aws_cdk.aws_stepfunctions import Chain, Parallel, StateMachine, TaskInput
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.aws_lambda.layers.aws_lambda_powertools import PowertoolsLayer
 from aws_solutions.cdk.cfn_nag import (
+    CfnNagSuppressAll,
     CfnNagSuppression,
     add_cfn_nag_suppressions,
-    CfnNagSuppressAll,
 )
 from aws_solutions.cdk.stack import SolutionStack
 from aws_solutions.scheduler.cdk.construct import Scheduler
+from constructs import Construct
 from personalize.aws_lambda.functions import (
-    S3EventHandler,
-    CreateDatasetGroup,
-    CreateSchema,
+    CreateBatchInferenceJob,
+    CreateBatchSegmentJob,
+    CreateCampaign,
+    CreateConfig,
     CreateDataset,
+    CreateDatasetGroup,
     CreateDatasetImportJob,
     CreateEventTracker,
+    CreateFilter,
+    CreateRecommender,
+    CreateSchema,
     CreateSolution,
     CreateSolutionVersion,
-    CreateCampaign,
-    CreateFilter,
-    CreateBatchInferenceJob,
     CreateTimestamp,
-    CreateConfig,
-    CreateBatchSegmentJob,
-    CreateRecommender,
+    S3EventHandler,
 )
 from personalize.aws_lambda.functions.prepare_input import PrepareInput
 from personalize.aws_lambda.layers import SolutionsLayer
@@ -79,6 +73,7 @@ from personalize.step_functions.solution_fragment import SolutionFragment
 class PersonalizeStack(SolutionStack):
     def __init__(self, scope: Construct, construct_id: str, *args, **kwargs) -> None:
         super().__init__(scope, construct_id, *args, **kwargs)
+        self.synthesizer.bind(self)
 
         # CloudFormation Parameters
         self.email = CfnParameter(

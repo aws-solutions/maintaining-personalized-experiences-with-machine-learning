@@ -15,7 +15,7 @@ from pathlib import Path
 
 from aws_solutions.cdk.context import SolutionContext
 from aws_solutions.cdk.stack import SolutionStack
-from aws_solutions.cdk.synthesizers import SolutionStackSubstitions
+from aws_solutions.cdk.synthesizers import SolutionStackSubstitutions
 
 
 class CDKSolution:
@@ -31,11 +31,11 @@ class CDKSolution:
     def __init__(self, cdk_json_path: Path, qualifier="hnb659fds"):
         self.qualifier = qualifier
         self.context = SolutionContext(cdk_json_path=cdk_json_path)
-        self.synthesizer = SolutionStackSubstitions(qualifier=self.qualifier)
+        self.synthesizer = SolutionStackSubstitutions(qualifier=self.qualifier)
 
     def reset(self) -> None:
         """
         Get a new synthesizer for this CDKSolution - useful for testing
         :return: None
         """
-        self.synthesizer = SolutionStackSubstitions(qualifier=self.qualifier, generate_bootstrap_version_rule=False)
+        self.synthesizer = SolutionStackSubstitutions(qualifier=self.qualifier, generate_bootstrap_version_rule=False)

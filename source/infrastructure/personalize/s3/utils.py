@@ -15,11 +15,10 @@ import logging
 from typing import List
 
 import aws_cdk.aws_iam as iam
-from aws_cdk import RemovalPolicy, CfnResource
-from aws_cdk.aws_s3 import Bucket, BucketEncryption, BlockPublicAccess
+from aws_cdk import CfnResource, RemovalPolicy
+from aws_cdk.aws_s3 import BlockPublicAccess, Bucket, BucketEncryption
+from aws_solutions.cdk.cfn_nag import CfnNagSuppression, add_cfn_nag_suppressions
 from constructs import Construct
-
-from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
 
 logger = logging.getLogger("cdk-helper")
 

@@ -12,7 +12,7 @@ This README summarizes using the tool.
 Install this package. It requires at least
 
 - Python 3.9
-- AWS CDK version 2.44.0 or higher
+- AWS CDK version 2.75.0 or higher
 
 To install the packages:
 

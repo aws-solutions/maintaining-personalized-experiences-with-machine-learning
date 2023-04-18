@@ -35,7 +35,7 @@ setuptools.setup(
     author="AWS Solutions Builders",
     packages=setuptools.find_packages(),
     install_requires=[
-        "aws-cdk-lib==2.44.0",
+        "aws-cdk-lib==2.75.0",
         "pip>=22.3.1",
     ],
     python_requires=">=3.9",
