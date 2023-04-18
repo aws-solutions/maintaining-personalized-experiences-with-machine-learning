@@ -43,8 +43,8 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(exclude=["build*"]),
     install_requires=[
         "pip>=22.3.1",
-        "aws-lambda-powertools==2.10.0",
-        "aws-xray-sdk==2.11.0",
+        "aws-lambda-powertools==2.14.0",
+        "aws-xray-sdk==2.12.0",
         "aws-solutions-python==2.0.0",
         "click==8.1.3",
         "cronex==0.1.3.1",

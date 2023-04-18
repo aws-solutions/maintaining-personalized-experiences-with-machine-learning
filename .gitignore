@@ -27,6 +27,7 @@ pyvenv.cfg
 **/.pytest_cache
 **/.coverage
 **/coverage-reports/
+.coverage.*
 
 # linting, scanning configurations, sonarqube
 .scannerwork/
