@@ -16,13 +16,13 @@ import os
 import re
 import shutil
 from contextlib import suppress
-from dataclasses import field, dataclass
+from dataclasses import dataclass, field
 from fileinput import FileInput
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 import jsii
-from aws_cdk import IStackSynthesizer, DefaultStackSynthesizer, ISynthesisSession
+from aws_cdk import DefaultStackSynthesizer, IStackSynthesizer, ISynthesisSession
 
 logger = logging.getLogger("cdk-helper")
 
@@ -256,7 +256,7 @@ class CloudFormationTemplate:
 
 
 @jsii.implements(IStackSynthesizer)
-class SolutionStackSubstitions(DefaultStackSynthesizer):
+class SolutionStackSubstitutions(DefaultStackSynthesizer):
     """Used to handle AWS Solutions template substitutions and sanitization"""
 
     substitutions = None
@@ -295,11 +295,11 @@ class SolutionStackSubstitions(DefaultStackSynthesizer):
 
         logger.info(f"solutions parameter substitution in {session.assembly.outdir} started")
         for template in self._template_names(session):
-            logger.info(f"substutiting parameters in {str(template)}")
+            logger.info(f"substituting parameters in {str(template)}")
             with FileInput(template, inplace=True) as template_lines:
                 for line in template_lines:
-                    # handle all template subsitutions in the line
-                    for match in SolutionStackSubstitions.substitution_re.findall(line):
+                    # handle all template substitutions in the line
+                    for match in SolutionStackSubstitutions.substitution_re.findall(line):
                         placeholder = match.replace("%", "")
                         replacement = self._stack.node.try_get_context(placeholder)
                         if not replacement:

@@ -13,16 +13,17 @@
 #  the specific language governing permissions and limitations under the License.                                     #
 # #####################################################################################################################
 
-import pytest
 from pathlib import Path
+
 import aws_cdk as cdk
-from aws_cdk.assertions import Template, Capture
+import pytest
+from aws_cdk.assertions import Capture, Template
 from aws_solutions.cdk import CDKSolution
 
 solution = CDKSolution(cdk_json_path=Path(__file__).parent.parent.absolute() / "infrastructure" / "cdk.json")
 
-from infrastructure.personalize.stack import PersonalizeStack
 from infrastructure.aspects.app_registry import AppRegistry
+from infrastructure.personalize.stack import PersonalizeStack
 
 
 @pytest.fixture(scope="module")
@@ -66,11 +67,11 @@ def test_service_catalog_registry_application(synth_template):
             "Tags": {
                 "SOLUTION_ID": "SO0170",
                 "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
-                "SOLUTION_VERSION": "v1.4.0",
+                "SOLUTION_VERSION": "v1.4.1",
                 "Solutions:ApplicationType": "AWS-Solutions",
                 "Solutions:SolutionID": "SO0170",
                 "Solutions:SolutionName": "Maintaining Personalized Experiences with Machine Learning",
-                "Solutions:SolutionVersion": "v1.4.0",
+                "Solutions:SolutionVersion": "v1.4.1",
             },
         },
     )

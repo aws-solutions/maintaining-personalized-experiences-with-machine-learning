@@ -15,12 +15,9 @@ import os
 
 import pytest
 from aws_cdk import App, Stack
-
 from aws_solutions.cdk.interfaces import TemplateOptions
 from aws_solutions.cdk.mappings import Mappings
-from aws_solutions.cdk.synthesizers import (
-    SolutionStackSubstitions,
-)
+from aws_solutions.cdk.synthesizers import SolutionStackSubstitutions
 
 
 @pytest.fixture
@@ -45,15 +42,17 @@ def template():
         if ctx_var_val:
             context[ctx_var] = ctx_var_val
 
-    synth = SolutionStackSubstitions()
+    synth = SolutionStackSubstitutions()
     app = App(context=context)
     stack = Stack(app, "stack-id-1", synthesizer=synth)
+    stack.synthesizer.bind(stack)
     TemplateOptions(stack, "id_1", "description_1", "stack_1.template")
     Mappings(stack, "SO001")
 
     # SOLUTIONS_ASSETS_GLOBAL / SOLUTIONS_ASSETS_REGIONAL not set:
     # this will not remove the CDK generated parameters (this was called by CDK)
     yield app.synth().stacks[0].template
+
 
 
 def test_cloudformation_template_init(template):

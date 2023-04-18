@@ -28,6 +28,7 @@ from aws_cdk.aws_lambda import (
     LayerVersionProps,
     Runtime,
 )
+from aws_solutions.cdk.synthesizers import SolutionStackSubstitutions
 from aws_solutions.core import get_service_client
 from botocore.stub import Stubber
 from constructs import Construct
@@ -44,6 +45,7 @@ from shared.resource import Resource
 class Solution:
     id = "SO0170test"
     version = "99.99.99"
+    synthesizer = SolutionStackSubstitutions()
 
     @property
     def context(self):
@@ -53,6 +55,7 @@ class Solution:
             "SOLUTION_VERSION": self.version,
             "APP_REGISTRY_NAME": "personalized-experiences-ML",
             "APPLICATION_TYPE": "AWS-Solutions",
+            "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": True,
         }
 
 

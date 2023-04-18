@@ -609,7 +609,7 @@ The following procedures assumes that all the OS-level configuration has been co
 - [AWS Command Line Interface](https://aws.amazon.com/cli/)
 - [Python](https://www.python.org/) 3.9 or newer
 - [Node.js](https://nodejs.org/en/) 16.x or newer
-- [AWS CDK](https://aws.amazon.com/cdk/) 2.44.0 or newer
+- [AWS CDK](https://aws.amazon.com/cdk/) 2.75.0 or newer
 - [Amazon Corretto OpenJDK](https://docs.aws.amazon.com/corretto/) 17.0.4.1
 
 > **Please ensure you test the templates before updating any production deployments.**
