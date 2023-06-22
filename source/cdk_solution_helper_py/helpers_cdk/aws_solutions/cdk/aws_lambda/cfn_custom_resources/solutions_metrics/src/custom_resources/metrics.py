@@ -23,6 +23,7 @@ from crhelper import CfnResource
 logger = logging.getLogger(__name__)
 helper = CfnResource(log_level=getenv("LOG_LEVEL", "WARNING"))
 METRICS_ENDPOINT = "https://metrics.awssolutionsbuilder.com/generic"
+REQUESTS_TIMEOUT = 10
 
 
 def _sanitize_data(event):
@@ -59,7 +60,7 @@ def send_metrics(event, _):
         }
 
         logger.info(f"Sending payload: {payload}")
-        response = requests.post(METRICS_ENDPOINT, json=payload, headers=headers)
+        response = requests.post(METRICS_ENDPOINT, json=payload, headers=headers, timeout=REQUESTS_TIMEOUT)
         logger.info(f"Response from metrics endpoint: {response.status_code} {response.reason}")
         if "stackTrace" in response.text:
             logger.exception("Error submitting usage data: %s" % response.text)
