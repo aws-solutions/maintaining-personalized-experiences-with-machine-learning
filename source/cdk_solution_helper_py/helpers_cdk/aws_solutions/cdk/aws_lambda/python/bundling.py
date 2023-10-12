@@ -55,7 +55,7 @@ class SolutionsPythonBundling:
         logger.info("local bundling %s supported for %s" % ("is" if os_platform_can_bundle else "is not", os_platform))
         return os_platform_can_bundle
 
-    def try_bundle(self, output_dir: str, options: BundlingOptions) -> bool:
+    def try_bundle(self, output_dir: str, options: BundlingOptions) -> bool: #NOSONAR - Options are required for method header
         if not self.platform_supports_bundling:
             raise SolutionsPythonBundlingException("this platform does not support bundling")
 

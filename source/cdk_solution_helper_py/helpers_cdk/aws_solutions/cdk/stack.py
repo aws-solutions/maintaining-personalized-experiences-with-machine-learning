@@ -23,6 +23,9 @@ from aws_solutions.cdk.aws_lambda.cfn_custom_resources.solutions_metrics import 
 from aws_solutions.cdk.interfaces import TemplateOptions
 from aws_solutions.cdk.mappings import Mappings
 
+from cdk_nag import NagSuppressions
+from cdk_nag import NagPackSuppression
+
 RE_SOLUTION_ID = re.compile(r"^SO\d+$")
 RE_TEMPLATE_FILENAME = re.compile(r"^[a-z]+(?:-[a-z]+)*\.template$")  # NOSONAR
 
@@ -50,6 +53,15 @@ class MetricsAspect:
         """Called before synthesis, this allows us to set metrics at the end of synthesis"""
         if node == self.stack:
             self.stack.metrics = Metrics(self.stack, "Metrics", self.stack.metrics)
+
+            NagSuppressions.add_resource_suppressions(self.stack.metrics, [
+                NagPackSuppression(
+                    id='AwsSolutions-IAM5',
+                    reason='All IAM policies defined in this solution'
+                           'grant only least-privilege permissions. Wild '
+                           'card for resources is used only for services '
+                           'which do not have a resource arn')],
+                apply_to_children=True)
 
 
 class SolutionStack(Stack):

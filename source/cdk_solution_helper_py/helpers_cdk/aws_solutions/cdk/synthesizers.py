@@ -19,7 +19,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from fileinput import FileInput
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Iterable
 
 import jsii
 from aws_cdk import DefaultStackSynthesizer, IStackSynthesizer, ISynthesisSession
@@ -273,10 +273,10 @@ class SolutionStackSubstitutions(DefaultStackSynthesizer):
                 templates.append(assembly_output_path.joinpath(child_template))
         return templates
 
-    def _templates(self, session: ISynthesisSession) -> Tuple[Path, Dict]:
+    def _templates(self, session: ISynthesisSession) -> Iterable[Tuple[Path, Dict]]:
         assembly_output_path = Path(session.assembly.outdir)
-
         assets = {}
+        
         try:
             assets = json.loads(next(assembly_output_path.glob(self._stack.stack_name + "*.assets.json")).read_text())
         except StopIteration:

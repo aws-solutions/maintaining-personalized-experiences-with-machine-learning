@@ -20,6 +20,9 @@ import aws_cdk as cdk
 from aspects.app_registry import AppRegistry
 from aws_solutions.cdk import CDKSolution
 from personalize.stack import PersonalizeStack
+from cdk_nag import AwsSolutionsChecks
+from cdk_nag import NagSuppressions
+from cdk_nag import NagPackSuppression
 
 logger = logging.getLogger("cdk-helper")
 solution = CDKSolution(cdk_json_path=Path(__file__).parent.absolute() / "cdk.json")
@@ -40,6 +43,15 @@ def build_app(context):
     )
 
     cdk.Aspects.of(app).add(AppRegistry(stack, "AppRegistryAspect"))
+    cdk.Aspects.of(app).add(AwsSolutionsChecks(verbose=True))
+
+    NagSuppressions.add_stack_suppressions(stack,
+                                           [
+                                            NagPackSuppression(id='AwsSolutions-L1',
+                                                               reason='Python lambda runtime is planned to be '
+                                                                      'upgraded in future release.')
+                                            ])
+
     return app.synth()
 
 

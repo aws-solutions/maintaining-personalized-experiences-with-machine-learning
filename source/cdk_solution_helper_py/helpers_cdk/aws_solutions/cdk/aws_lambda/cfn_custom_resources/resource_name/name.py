@@ -23,6 +23,9 @@ from constructs import Construct
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
 
+from cdk_nag import NagSuppressions
+from cdk_nag import NagPackSuppression
+
 
 class ResourceName(Construct):
     """Used to create unique resource names of the format {stack_name}-{purpose}-{id}"""
@@ -58,6 +61,15 @@ class ResourceName(Construct):
                     ),
                 ],
             )
+
+            NagSuppressions.add_resource_suppressions(self._resource_name_function.role, [
+                NagPackSuppression(
+                    id='AwsSolutions-IAM5',
+                    reason='All IAM policies defined in this solution'
+                           'grant only least-privilege permissions. Wild '
+                           'card for resources is used only for services '
+                           'which do not have a resource arn')],
+                apply_to_children=True)
 
         properties = {
             "ServiceToken": self._resource_name_function.function_arn,

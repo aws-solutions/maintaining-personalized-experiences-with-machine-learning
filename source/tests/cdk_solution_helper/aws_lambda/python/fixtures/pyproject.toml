@@ -9,6 +9,7 @@ python = "^3.9"
 minimal = {path = "package"}
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.4.2"
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]

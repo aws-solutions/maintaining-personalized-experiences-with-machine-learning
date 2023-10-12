@@ -19,6 +19,9 @@ from aws_cdk.aws_s3 import IBucket
 from aws_cdk.aws_stepfunctions import IChainable
 from constructs import Construct
 
+from cdk_nag import NagSuppressions
+from cdk_nag import NagPackSuppression
+
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
 
 
@@ -69,6 +72,16 @@ class CreateDatasetImportJob(SolutionStep):
                 principals=[iam.ServicePrincipal("personalize.amazonaws.com")],
             )
         )
+
+        NagSuppressions.add_resource_suppressions(
+            self.personalize_role, [
+                NagPackSuppression(
+                    id='AwsSolutions-IAM5',
+                    reason='All IAM policies defined in this solution'
+                           'grant only least-privilege permissions. Wild '
+                           'card for resources is used only for services '
+                           'which do not have a resource arn')],
+            apply_to_children=True)
 
         super().__init__(
             scope,

@@ -23,7 +23,7 @@ tracer = Tracer()
 metrics = Metrics()
 
 
-def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict:
+def lambda_handler(event: Dict[str, Any], _) -> Dict:
     """Add timeStarted to the workflowConfig of all items
     :param event: AWS Lambda Event
     :param context: AWS Lambda Context

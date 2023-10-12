@@ -47,6 +47,7 @@ def solution_id_invalid(request):
     del os.environ["SOLUTION_ID"]
 
 
+# Added before invalid version to valid version test as we removed the version check as we also test mainline in NW.
 @pytest.fixture(
     params=[
         "v1.0.0-alpha",
@@ -66,6 +67,10 @@ def solution_id_invalid(request):
         "v1.0.0+20130313144700",
         "v1.0.0-beta+exp.sha.5114f85",
         "v1.0.0+21AF26D3--117B344092BD",
+        "a.b.c",
+        "a1.2.3",
+        "v.1.2.3",
+        "mainline"
     ]
 )
 def solution_version_valid(request):
@@ -75,18 +80,9 @@ def solution_version_valid(request):
     del os.environ["SOLUTION_VERSION"]
 
 
-@pytest.fixture(params=["a.b.c", "a1.2.3", "v.1.2.3"])
-def solution_version_invalid(request):
-    solution_version = request.param
-    os.environ["SOLUTION_VERSION"] = solution_version
-    yield solution_version
-    del os.environ["SOLUTION_VERSION"]
-
-
 def test_valid_solution_id(solution_id_valid):
     config_id = aws_solutions.core.config.id
     assert config_id == solution_id_valid
-
 
 def test_invalid_solution_id(solution_id_invalid):
     with pytest.raises(ValueError):
@@ -98,10 +94,7 @@ def test_valid_solution_version(solution_version_valid):
     assert version == solution_version_valid
 
 
-def test_invalid_solution_id(solution_version_invalid):
-    with pytest.raises(ValueError):
-        aws_solutions.core.config.version
-
+# Removing test_invalid_solution_id test as we removed the version check as we also test mainline in NW.
 
 def test_valid_botocore_config(solution_id_valid, solution_version_valid):
     boto_config = aws_solutions.core.config.botocore_config

@@ -17,9 +17,6 @@ public class ScheduleEvent {
     private String schedule;
     private String next;
 
-    public ScheduleEvent() {
-    }
-
     public String getNext() {
         return next;
     }
