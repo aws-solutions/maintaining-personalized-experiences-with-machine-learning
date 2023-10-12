@@ -38,6 +38,7 @@ class ScheduledDatasetImport(Construct):
         self.state_machine = StateMachine(
             self,
             "PeriodicDatasetImport",
+            tracing_enabled=True,
             state_machine_name=state_machine_namer.resource_name.to_string(),
             definition=Chain.start(
                 Parallel(self, "Manage The Execution")

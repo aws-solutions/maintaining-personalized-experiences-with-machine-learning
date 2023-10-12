@@ -30,13 +30,13 @@ class S3EventHandler(SolutionsPythonFunction):
         self, scope: Construct, construct_id: str, state_machine: StateMachine, bucket: Bucket, topic: Topic, **kwargs
     ):
         entrypoint = Path(__file__).absolute().parents[4] / "aws_lambda" / "s3_event" / "handler.py"
-        function = "lambda_handler"
+        function_name = "lambda_handler"
         kwargs["libraries"] = [Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"]
         kwargs["tracing"] = Tracing.ACTIVE
         kwargs["timeout"] = Duration.seconds(15)
         kwargs["runtime"] = Runtime("python3.9", RuntimeFamily.PYTHON)
 
-        super().__init__(scope, construct_id, entrypoint, function, **kwargs)
+        super().__init__(scope, construct_id, entrypoint, function_name, **kwargs)
 
         self.environment = Environment(self)
         self.add_environment("STATE_MACHINE_ARN", state_machine.state_machine_arn)

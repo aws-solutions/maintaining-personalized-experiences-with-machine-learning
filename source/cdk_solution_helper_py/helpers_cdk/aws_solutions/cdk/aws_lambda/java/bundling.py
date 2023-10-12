@@ -44,7 +44,7 @@ class SolutionsJavaBundling:
         self.gradle_test = gradle_test
         self.distribution_path = distribution_path
 
-    def try_bundle(self, output_dir: str, options: BundlingOptions) -> bool:
+    def try_bundle(self, output_dir: str, options: BundlingOptions) -> bool: #NOSONAR - Options are required for method header
         source = Path(self.to_bundle).absolute()
 
         is_gradle_build = (source / "gradlew").exists()

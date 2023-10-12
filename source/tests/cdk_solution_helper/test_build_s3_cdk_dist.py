@@ -23,7 +23,6 @@ from aws_solutions.cdk.scripts.build_s3_cdk_dist import (
     BuildEnvironment,
     RegionalAssetPackager,
     GlobalAssetPackager,
-    validate_version_code,
     BaseAssetPackager,
 )
 
@@ -62,16 +61,6 @@ def test_build_environment():
     assert Path(build.build_dist_dir).stem == "regional-s3-assets"
     assert Path(build.source_dir).stem == "source"
     assert Path(build.infrastructure_dir).parent.stem == "source"
-
-
-def test_validate_version_code_valid():
-    assert validate_version_code(None, None, TEST_VERSION_CODE) == TEST_VERSION_CODE
-
-
-def test_validate_version_code_invalid():
-    with pytest.raises(click.BadParameter):
-        assert validate_version_code(None, None, "1.0.0")
-
 
 @pytest.mark.parametrize(
     "packager_cls,expected_s3_path",

@@ -123,7 +123,7 @@ class SolutionStep(Construct):
             if libraries and any(not l.exists() for l in libraries):
                 raise ValueError(f"libraries provided, but do not exist at {libraries}")
 
-            function = kwargs.pop("function")
+            function_name = kwargs.pop("function")
             kwargs["layers"] = kwargs.get("layers", [])
             kwargs["tracing"] = Tracing.ACTIVE
             kwargs["timeout"] = Duration.seconds(15)
@@ -133,7 +133,7 @@ class SolutionStep(Construct):
                 scope,
                 construct_id,
                 entrypoint,
-                function,
+                function_name,
                 libraries=libraries,
                 **kwargs,
             )

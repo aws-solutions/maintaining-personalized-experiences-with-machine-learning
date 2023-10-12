@@ -71,7 +71,7 @@ class SchedulerPermissionsAspect:
                 self.scheduler.state_machine.add_to_role_policy(
                     iam.PolicyStatement(
                         effect=iam.Effect.ALLOW,
-                        resources=["*"],
+                        resources=[self.scheduler.state_machine_executions_arn],
                         actions=["states:DescribeExecution", "states:StopExecution"],
                     )
                 )
@@ -376,7 +376,7 @@ class Scheduler(Construct):
         project_path = Path(__file__).absolute().parents[1] / "cdk" / "aws_lambda" / "get_next_scheduled_event"
         distribution_path = project_path / "build" / "distributions"
 
-        function = SolutionsJavaFunction(
+        solutions_java_function = SolutionsJavaFunction(
             scope=scope,
             construct_id=construct_id,
             handler="com.amazonaws.solutions.schedule_sfn_task.HandleScheduleEvent",
@@ -386,8 +386,10 @@ class Scheduler(Construct):
             distribution_path=distribution_path,
             tracing=Tracing.ACTIVE,
         )
+
         add_cfn_nag_suppressions(
-            function.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
+            solutions_java_function.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
             [CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *")],
         )
-        return function
+        
+        return solutions_java_function
