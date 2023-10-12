@@ -56,6 +56,7 @@ class ScheduledSolutionMaintenance(Construct):
         self.state_machine = StateMachine(
             self,
             "PeriodicSolutionMaintenance",
+            tracing_enabled=True,
             state_machine_name=state_machine_namer.resource_name.to_string(),
             definition=Chain.start(
                 Parallel(self, "Manage Solution Maintenance")

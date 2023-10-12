@@ -41,7 +41,7 @@ class AppRegistry(Construct):
                 # parent stack
                 stack: cdk.Stack = node
                 self.__create_app_for_app_registry()
-                self.application.associate_stack(stack)
+                self.application.associate_application_with_stack(stack)
                 self.__create_atttribute_group()
                 self.__add_tags_for_application()
             else:
@@ -49,7 +49,7 @@ class AppRegistry(Construct):
                 if not self.application:
                     self.__create_app_for_app_registry()
 
-                self.application.associate_stack(node)
+                self.application.associate_application_with_stack(node)
 
     def __create_app_for_app_registry(self) -> None:
         """Method to create an AppRegistry Application"""
@@ -77,7 +77,9 @@ class AppRegistry(Construct):
         if not self.application:
             self.__create_app_for_app_registry()
 
-        self.application.associate_attribute_group(
+        # The AttributeGroup.associate_with takes 2 params. First is Attribute Group, second is application.
+        # The method signature unclear in official documentation.
+        appreg.AttributeGroup.associate_with(
             appreg.AttributeGroup(
                 self,
                 "AppAttributes",
@@ -90,4 +92,5 @@ class AppRegistry(Construct):
                     "solutionName": self.solution_name,
                 },
             )
+            , self.application
         )

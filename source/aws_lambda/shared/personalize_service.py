@@ -65,7 +65,19 @@ WORKFLOW_PARAMETERS = (
     ("timeStarted", Resource),
     ("solutionVersionArn", SolutionVersion),
 )
-
+RESOURCE_TYPES = [
+    "datasetGroup",
+    "datasetImport",
+    "dataset",
+    "eventTracker",
+    "solution",
+    "solutionVersion",
+    "filter",
+    "recommender",
+    "campaign",
+    "batchJob",
+    "segmentJob" 
+]
 
 def get_duplicates(items):
     if isinstance(items, str):
@@ -714,71 +726,60 @@ class Configuration:
             self._fill_default_vals("filter", _filter)
 
     def _validate_type(self, var, typ, err: str):
-        validates = isinstance(var, typ)
+        validates = isinstance(var, typ) and var is not None
+        
         if not validates:
             self._configuration_errors.append(err)
+
         return validates
 
-    def _validate_solutions(self, path="solutions[]"):
+    def _validate_solutions(self, path="solutions[]"): 
         solutions = jmespath.search(path, self.config_dict) or {}
+
         for idx, _solution in enumerate(solutions):
-            campaigns = _solution.get("campaigns", [])
-            if self._validate_type(campaigns, list, f"solutions[{idx}].campaigns must be a list"):
-                self._validate_campaigns(f"solutions[{idx}].campaigns", campaigns)
+            # Validate campaigns and batch jobs
+            self._validate_campaigns(f"solutions[{idx}].campaigns", _solution.get("campaigns", []))
+            self._validate_batch_inference_jobs(
+                path=f"solutions[{idx}].batchInferenceJobs",
+                solution_name=_solution.get("serviceConfig", {}).get("name", ""),
+                batch_inference_jobs=_solution.get("batchInferenceJobs", []),
+            )
+            self._validate_batch_segment_jobs(
+                path=f"solutions[{idx}].batchSegmentJobs",
+                solution_name=_solution.get("serviceConfig", {}).get("name", ""),
+                batch_segment_jobs=_solution.get("batchSegmentJobs", []),
+            )
 
-            batch_inference_jobs = _solution.get("batchInferenceJobs", [])
-            if batch_inference_jobs and self._validate_type(
-                batch_inference_jobs,
-                list,
-                f"solutions[{idx}].batchInferenceJobs must be a list",
-            ):
-                self._validate_batch_inference_jobs(
-                    path=f"solutions[{idx}].batchInferenceJobs",
-                    solution_name=_solution.get("serviceConfig", {}).get("name", ""),
-                    batch_inference_jobs=batch_inference_jobs,
-                )
+            # Validate service configuration
+            _service_config = _solution.get("serviceConfig")
 
-            batch_segment_jobs = _solution.get("batchSegmentJobs", [])
-            if batch_segment_jobs and self._validate_type(
-                batch_segment_jobs,
-                list,
-                f"solutions[{idx}].batchSegmentJobs must be a list",
-            ):
-                self._validate_batch_segment_jobs(
-                    path=f"solutions[{idx}].batchSegmentJobs",
-                    solution_name=_solution.get("serviceConfig", {}).get("name", ""),
-                    batch_segment_jobs=batch_segment_jobs,
-                )
-
-            _solution = _solution.get("serviceConfig")
-
-            if not self._validate_type(_solution, dict, f"solutions[{idx}].serviceConfig must be an object"):
+            if not self._validate_type(_service_config, dict, f"solutions[{idx}].serviceConfig must be an object"):
                 continue
 
             # `performAutoML` is currently returned from InputValidator.validate() as a valid field
             # Once the botocore Stubber is updated to not have this param anymore in `create_solution` call,
             # this check can be deleted.
-            if "performAutoML" in _solution:
-                del _solution["performAutoML"]
+            if "performAutoML" in _service_config:
+                del _service_config["performAutoML"]
                 logger.error(
                     "performAutoML is not a valid configuration parameter - proceeding to create the "
                     "solution without this feature. For more details, refer to the Maintaining Personalized Experiences "
                     "Github project's README.md file."
                 )
 
-            _solution["datasetGroupArn"] = DatasetGroup().arn("validation")
-            if "solutionVersion" in _solution:
+            _service_config["datasetGroupArn"] = DatasetGroup().arn("validation")
+
+            if "solutionVersion" in _service_config:
                 # To pass solution through InputValidator
-                solution_version_config = _solution["solutionVersion"]
-                del _solution["solutionVersion"]
-                self._validate_resource(Solution(), _solution)
-                _solution["solutionVersion"] = solution_version_config
-
+                solution_version_config = _service_config["solutionVersion"]
+                del _service_config["solutionVersion"]
+                self._validate_resource(Solution(), _service_config)
+                _service_config["solutionVersion"] = solution_version_config
             else:
-                self._validate_resource(Solution(), _solution)
+                self._validate_resource(Solution(), _service_config)
 
-            self._fill_default_vals("solution", _solution)
-            self._validate_solution_version(_solution)
+            self._fill_default_vals("solution", _service_config)
+            self._validate_solution_version(_service_config)
 
     def _validate_solution_version(self, solution_config):
         allowed_sol_version_keys = ["trainingMode", "tags"]
@@ -819,6 +820,8 @@ class Configuration:
             )
 
     def _validate_campaigns(self, path, campaigns: List[Dict]):
+        self._validate_type(campaigns, list, f"{path} must be a list")
+
         for idx, campaign_config in enumerate(campaigns):
             current_path = f"{path}.campaigns[{idx}]"
 
@@ -832,6 +835,12 @@ class Configuration:
             self._fill_default_vals("campaign", campaign)
 
     def _validate_batch_inference_jobs(self, path, solution_name, batch_inference_jobs: List[Dict]):
+        self._validate_type(
+            batch_inference_jobs,
+            list,
+            f"solutions[{path}  must be a list",
+        )
+            
         for idx, batch_job_config in enumerate(batch_inference_jobs):
             current_path = f"{path}.batchInferenceJobs[{idx}]"
 
@@ -860,6 +869,12 @@ class Configuration:
                 self._fill_default_vals("batchJob", batch_job)
 
     def _validate_batch_segment_jobs(self, path, solution_name, batch_segment_jobs: List[Dict]):
+        self._validate_type(
+            batch_segment_jobs,
+            list,
+            f"solutions[{path} must be a list",
+        )
+            
         for idx, batch_job_config in enumerate(batch_segment_jobs):
             current_path = f"{path}.batchSegmentJobs[{idx}]"
 
@@ -1108,42 +1123,23 @@ class Configuration:
         self._validate_no_duplicates(name="campaign names", path="solutions[].campaigns[].serviceConfig.name")
         self._validate_no_duplicates(name="solution names", path="solutions[].serviceConfig.name")
 
-    def _fill_default_vals(self, resource_type, resource_dict):
-        """Insert default values for tags and other fields whenever not supplied"""
-
-        if (
-            resource_type
-            in [
-                "datasetGroup",
-                "datasetImport",
-                "dataset",
-                "eventTracker",
-                "solution",
-                "solutionVersion",
-                "filter",
-                "recommender",
-                "campaign",
-                "batchJob",
-                "segmentJob",
-            ]
-            and "tags" not in resource_dict
-        ):
+    def _fill_resource_dict_tags(self, resource_type, resource_dict):
+        if resource_type in RESOURCE_TYPES and "tags" not in resource_dict:
             if self.pass_root_tags:
                 resource_dict["tags"] = self.config_dict["tags"]
             else:
                 resource_dict["tags"] = []
 
+    def _fill_default_vals(self, resource_type, resource_dict):
+        """Insert default values for tags and other fields whenever not supplied"""
+        self._fill_resource_dict_tags(resource_type, resource_dict)
+
         if resource_type == "datasetImport":
             if "importMode" not in resource_dict:
                 resource_dict["importMode"] = "FULL"
+
             if "publishAttributionMetricsToS3" not in resource_dict:
                 resource_dict["publishAttributionMetricsToS3"] = False
 
-        if resource_type == "solutionVersion":
-            if "tags" not in resource_dict:
-                if self.pass_root_tags:
-                    resource_dict["tags"] = self.config_dict["tags"]
-                else:
-                    resource_dict["tags"] = []
-            if "trainingMode" not in resource_dict:
-                resource_dict["trainingMode"] = "FULL"
+        if resource_type == "solutionVersion" and "trainingMode" not in resource_dict:
+            resource_dict["trainingMode"] = "FULL"

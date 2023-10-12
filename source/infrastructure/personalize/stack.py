@@ -69,6 +69,9 @@ from personalize.step_functions.scheduler_fragment import SchedulerFragment
 from personalize.step_functions.schedules import Schedules
 from personalize.step_functions.solution_fragment import SolutionFragment
 
+from cdk_nag import NagSuppressions
+from cdk_nag import NagPackSuppression
+
 
 class PersonalizeStack(SolutionStack):
     def __init__(self, scope: Construct, construct_id: str, *args, **kwargs) -> None:
@@ -120,6 +123,7 @@ class PersonalizeStack(SolutionStack):
         access_logs_bucket = AccessLogsBucket(
             self,
             "AccessLogsBucket",
+            enforce_ssl=True,
             suppress=[
                 CfnNagSuppression(
                     "W35",
@@ -133,6 +137,7 @@ class PersonalizeStack(SolutionStack):
             "PersonalizeBucket",
             server_access_logs_bucket=access_logs_bucket,
             server_access_logs_prefix="personalize-bucket-access-logs/",
+            enforce_ssl=True
         )
 
         # the AWS lambda functions required by the shared step functions
@@ -371,6 +376,13 @@ class PersonalizeStack(SolutionStack):
             ],
         )
 
+        NagSuppressions.add_resource_suppressions(
+            [dataset_import_schedule_sfn, solution_maintenance_schedule_sfn,
+             scheduler.state_machine, state_machine],
+            [NagPackSuppression(id='AwsSolutions-SF1',
+                                reason='Information required for troubleshooting is '
+                                       'logged by state function and lambda functions')])
+
         s3_event_handler = S3EventHandler(
             self,
             "S3EventHandler",
@@ -428,6 +440,35 @@ class PersonalizeStack(SolutionStack):
                 resource_type="AWS::Lambda::Function",
             )
         )
+
+        NagSuppressions.add_resource_suppressions([create_config.role, prepare_input, create_dataset_group,
+                                                   create_schema, create_dataset, create_dataset_import_job,
+                                                   notifications, create_event_tracker, create_solution,
+                                                   create_recommender, create_solution_version, create_campaign,
+                                                   create_batch_inference_job, create_batch_segment_job,
+                                                   create_filter, create_timestamp, dataset_import_schedule_sfn,
+                                                   solution_maintenance_schedule_sfn, scheduler.read_scheduled_task,
+                                                   scheduler.update_scheduled_task, scheduler.create_scheduled_task,
+                                                   scheduler.delete_scheduled_task, scheduler.state_machine,
+                                                   scheduler.scheduler_function.role,
+                                                   state_machine, create_dataset_group,
+                                                   s3_event_handler.role, bucket_notification_handler],
+                                                  [
+                                                      NagPackSuppression(id='AwsSolutions-IAM5',
+                                                                         reason='All IAM policies defined in this '
+                                                                                'solution'
+                                                                                'grant only least-privilege '
+                                                                                'permissions. Wild'
+                                                                                'card for resources is used only for '
+                                                                                'services'
+                                                                                'which do not have a resource arn'),
+                                                      NagPackSuppression(id='AwsSolutions-IAM4',
+                                                                         reason='We use AWS managed policies and do '
+                                                                                'not need to'
+                                                                                'change as the "*" in resource is due '
+                                                                                'to circular dependency.')
+                                                  ],
+                                                  apply_to_children=True)
 
         # dashboard
         self.dashboard = Dashboard(

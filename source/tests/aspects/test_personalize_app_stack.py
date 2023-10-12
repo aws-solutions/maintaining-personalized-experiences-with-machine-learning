@@ -67,11 +67,11 @@ def test_service_catalog_registry_application(synth_template):
             "Tags": {
                 "SOLUTION_ID": "SO0170",
                 "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
-                "SOLUTION_VERSION": "v1.4.2",
+                "SOLUTION_VERSION": "v1.4.3",
                 "Solutions:ApplicationType": "AWS-Solutions",
                 "Solutions:SolutionID": "SO0170",
                 "Solutions:SolutionName": "Maintaining Personalized Experiences with Machine Learning",
-                "Solutions:SolutionVersion": "v1.4.2",
+                "Solutions:SolutionVersion": "v1.4.3",
             },
         },
     )

@@ -26,13 +26,13 @@ from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppressio
 class CreateConfig(SolutionsPythonFunction):
     def __init__(self, scope: Construct, construct_id: str, **kwargs):
         entrypoint = Path(__file__).absolute().parents[4] / "aws_lambda" / "create_config" / "handler.py"
-        function = "lambda_handler"
+        function_name = "lambda_handler"
         kwargs["libraries"] = [Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"]
         kwargs["tracing"] = Tracing.ACTIVE
         kwargs["timeout"] = Duration.seconds(90)
         kwargs["runtime"] = Runtime("python3.9", RuntimeFamily.PYTHON)
 
-        super().__init__(scope, construct_id, entrypoint, function, **kwargs)
+        super().__init__(scope, construct_id, entrypoint, function_name, **kwargs)
 
         self.environment = Environment(self)
 

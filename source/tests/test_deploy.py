@@ -98,7 +98,8 @@ def test_access_logs_bucket(build_stacks_for_buckets):
     assert bucket_policy["Type"] == "AWS::S3::BucketPolicy"
 
     access_logs_policy_statements = bucket_policy["Properties"]["PolicyDocument"]["Statement"]
-    assert len(access_logs_policy_statements) == 2
+    assert len(access_logs_policy_statements) == 3
+    # Len increases by 1 after enabling enforce_ssl to True
 
     for policy in access_logs_policy_statements:
         if "Sid" in policy and policy["Sid"] == "HttpsOnly":
@@ -107,6 +108,12 @@ def test_access_logs_bucket(build_stacks_for_buckets):
             assert policy["Condition"]["Bool"]["aws:SecureTransport"] == False
             assert policy["Effect"] == "Deny"
             assert policy["Resource"] == {"Fn::Join": ["", [{"Fn::GetAtt": ["AccessLogsBucket", "Arn"]}, "/*"]]}
+
+        elif "Action" in policy and policy["Action"] == "s3:*":  # Policy for enforce_sll = True
+            assert policy["Principal"] == {"AWS": "*"}
+            assert policy["Condition"]["Bool"]["aws:SecureTransport"] == "false"
+            assert policy["Effect"] == "Deny"
+            assert policy["Resource"] == [{"Fn::GetAtt": ["AccessLogsBucket", "Arn"]}, {"Fn::Join": ["", [{"Fn::GetAtt": ["AccessLogsBucket", "Arn"]}, "/*"]]}]
 
         else:
             assert policy["Principal"] == {"Service": "logging.s3.amazonaws.com"}
