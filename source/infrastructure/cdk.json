@@ -3,7 +3,7 @@
   "context": {
     "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
     "SOLUTION_ID": "SO0170",
-    "SOLUTION_VERSION": "v1.4.3",
+    "SOLUTION_VERSION": "v1.4.4",
     "APP_REGISTRY_NAME": "personalized-experiences-ML",
     "APPLICATION_TYPE": "AWS-Solutions",
     "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true
