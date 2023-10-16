@@ -1,4 +1,4 @@
-avro==1.11.1
+avro~=1.11.3
 black
 boto3==1.26.47
 aws_cdk_lib==2.88.0
