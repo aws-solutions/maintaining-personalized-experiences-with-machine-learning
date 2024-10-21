@@ -17,7 +17,7 @@ from aws_cdk import Aws
 from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
-
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 class CreateSolution(SolutionStep):
     def __init__(
@@ -32,6 +32,11 @@ class CreateSolution(SolutionStep):
             layers=layers,
             entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_solution" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
+        )
+
+        add_cfn_guard_suppressions(
+         self.function.role.node.try_find_child("Resource"),
+          ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     def _set_permissions(self):
@@ -49,6 +54,7 @@ class CreateSolution(SolutionStep):
                 resources=[
                     f"arn:{Aws.PARTITION}:personalize:{Aws.REGION}:{Aws.ACCOUNT_ID}:solution/*",
                     f"arn:{Aws.PARTITION}:personalize:{Aws.REGION}:{Aws.ACCOUNT_ID}:dataset-group/*",
+                    f"arn:{Aws.PARTITION}:personalize:::recipe/*"
                 ],
             )
         )

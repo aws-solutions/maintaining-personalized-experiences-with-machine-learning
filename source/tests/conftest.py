@@ -101,7 +101,7 @@ def mock_lambda_init(
     props = FunctionProps(
         code=Code.from_inline("return"),
         handler=handler,
-        runtime=Runtime.PYTHON_3_9,
+        runtime=Runtime.PYTHON_3_11,
         **kwargs,
     )
     jsii.create(Function, self, [scope, id, props])
@@ -112,7 +112,7 @@ def mock_layer_init(self, scope: Construct, id: str, *, code: Code, **kwargs) ->
     # override the runtime list for now, as well, to match above
     with TemporaryDirectory() as tmpdirname:
         kwargs["code"] = Code.from_asset(path=tmpdirname)
-        kwargs["compatible_runtimes"] = [Runtime.PYTHON_3_9]
+        kwargs["compatible_runtimes"] = [Runtime.PYTHON_3_11]
         props = LayerVersionProps(**kwargs)
         jsii.create(LayerVersion, self, [scope, id, props])
 

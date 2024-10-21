@@ -36,7 +36,7 @@ MOCKER_REQUESTS = (
 def test_event(request):
     event = {
         "RequestType": request.param,
-        "ResourceProperties": {"Solution": "SOL0123", "Metric1": "Data1"},
+        "ResourceProperties": {"Solution": "SOL0123", "Version": "v1.4.5","Metric1": "Data1"},
     }
     yield event
 

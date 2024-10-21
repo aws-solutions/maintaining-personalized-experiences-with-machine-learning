@@ -19,7 +19,7 @@ from aws_cdk.aws_stepfunctions import IChainable, TaskInput
 from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
-
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 class CreateEventTracker(SolutionStep):
     def __init__(
@@ -49,6 +49,11 @@ class CreateEventTracker(SolutionStep):
             failure_state=failure_state,
             entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_event_tracker" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
+        )
+
+        add_cfn_guard_suppressions(
+         self.function.role.node.try_find_child("Resource"),
+          ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     def _set_permissions(self):
