@@ -49,7 +49,7 @@ setuptools.setup(
         "click==8.1.3",
         "cronex==0.1.3.1",
         "boto3==1.26.47",
-        "requests==2.31.0",
+        "requests==2.32.0",
         "crhelper==2.0.11",
         "rich==12.6.0",
     ],
@@ -57,7 +57,7 @@ setuptools.setup(
     [console_scripts]
     aws-solutions-scheduler=aws_solutions.scheduler.common.scripts.scheduler_cli:cli
     """,
-    python_requires=">=3.9",
+    python_requires=">=3.11",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -67,6 +67,8 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Software Development :: Code Generators",
         "Topic :: Utilities",
         "Typing :: Typed",

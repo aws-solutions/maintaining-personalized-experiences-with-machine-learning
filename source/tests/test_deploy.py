@@ -55,6 +55,12 @@ def test_parameters(build_stacks_for_buckets):
     )
 
 
+def test_personalize_bucket_notification_dependency(build_stacks_for_buckets):
+    stack = build_stacks_for_buckets
+    assert stack["Resources"]["PersonalizeBucketNotifications3328A32B"]["Type"] == "Custom::S3BucketNotifications"
+    assert "PersonalizeBucketPolicy5818C815" in stack["Resources"]["PersonalizeBucketNotifications3328A32B"]["DependsOn"]
+
+
 def test_personalize_bucket(build_stacks_for_buckets):
     stack = build_stacks_for_buckets
     personalize_bucket = stack["Resources"]["PersonalizeBucket"]

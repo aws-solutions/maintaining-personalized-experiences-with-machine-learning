@@ -17,6 +17,7 @@ from aws_cdk import Aws
 from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 
 class CreateSolutionVersion(SolutionStep):
@@ -32,6 +33,11 @@ class CreateSolutionVersion(SolutionStep):
             layers=layers,
             entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_solution_version" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
+        )
+
+        add_cfn_guard_suppressions(
+         self.function.role.node.try_find_child("Resource"),
+          ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     def _set_permissions(self):

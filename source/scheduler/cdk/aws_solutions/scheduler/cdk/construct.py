@@ -40,6 +40,7 @@ from aws_solutions.cdk.aws_lambda.environment import Environment
 from aws_solutions.cdk.aws_lambda.java.function import SolutionsJavaFunction
 from aws_solutions.cdk.aws_lambda.layers.aws_lambda_powertools import PowertoolsLayer
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 from aws_solutions.scheduler.cdk.aws_lambda import (
     CreateScheduledTask,
     ReadScheduledTask,
@@ -364,6 +365,8 @@ class Scheduler(Construct):
         )
         tasks_table.node.default_child.override_logical_id("PersonalizeScheduledTasks")
 
+        add_cfn_guard_suppressions(tasks_table,["DYNAMODB_TABLE_ENCRYPTED_KMS"])
+
         return tasks_table
 
     def _scheduler_function(self, scope: Construct, construct_id: str) -> SolutionsJavaFunction:
@@ -391,5 +394,10 @@ class Scheduler(Construct):
             solutions_java_function.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
             [CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *")],
         )
+
+        add_cfn_guard_suppressions(
+                solutions_java_function.role.node.try_find_child("Resource"),
+                ["IAM_NO_INLINE_POLICY_CHECK"]
+        )        
         
         return solutions_java_function

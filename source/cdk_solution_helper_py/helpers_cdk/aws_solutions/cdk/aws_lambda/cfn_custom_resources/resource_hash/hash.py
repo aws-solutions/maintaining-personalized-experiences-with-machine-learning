@@ -20,6 +20,7 @@ from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 from cdk_nag import NagSuppressions
 from cdk_nag import NagPackSuppression
@@ -57,6 +58,10 @@ class ResourceHash(Construct):
                         "This AWS Lambda Function does not require reserved concurrency",
                     ),
                 ],
+            )
+            add_cfn_guard_suppressions(
+                self._resource_name_function.role.node.try_find_child("Resource"),
+                ["IAM_NO_INLINE_POLICY_CHECK"]
             )
 
             NagSuppressions.add_resource_suppressions(self._resource_name_function.role, [

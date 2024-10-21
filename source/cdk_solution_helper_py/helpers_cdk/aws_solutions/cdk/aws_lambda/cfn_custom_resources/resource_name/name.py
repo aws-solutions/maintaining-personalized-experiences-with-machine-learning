@@ -22,6 +22,7 @@ from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 from cdk_nag import NagSuppressions
 from cdk_nag import NagPackSuppression
@@ -71,6 +72,11 @@ class ResourceName(Construct):
                            'which do not have a resource arn')],
                 apply_to_children=True)
 
+            add_cfn_guard_suppressions(
+                    self._resource_name_function.role.node.try_find_child("Resource"),
+                    ["IAM_NO_INLINE_POLICY_CHECK"]
+            )
+
         properties = {
             "ServiceToken": self._resource_name_function.function_arn,
             "Purpose": purpose,
@@ -86,6 +92,11 @@ class ResourceName(Construct):
             self.logical_name,
             type="Custom::ResourceName",
             properties=properties,
+        )
+
+        add_cfn_guard_suppressions(
+                self._resource_name_function.role.node.try_find_child("Resource"),
+                ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     @property

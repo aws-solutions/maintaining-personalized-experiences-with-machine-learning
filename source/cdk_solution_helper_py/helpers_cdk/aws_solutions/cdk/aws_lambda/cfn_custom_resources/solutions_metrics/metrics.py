@@ -23,7 +23,7 @@ from constructs import Construct
 
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
-
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 class Metrics(Construct):
     """Used to track anonymous solution deployment metrics."""
@@ -65,8 +65,8 @@ class Metrics(Construct):
 
         properties = {
             "ServiceToken": self._metrics_function.function_arn,
-            "Solution": self.node.try_get_context("SOLUTION_NAME"),
-            "Version": self.node.try_get_context("VERSION"),
+            "Solution": self.node.try_get_context("SOLUTION_ID"),
+            "Version": self.node.try_get_context("SOLUTION_VERSION"),
             "Region": Aws.REGION,
             **metrics,
         }
@@ -78,3 +78,8 @@ class Metrics(Construct):
         )
         self.solution_metrics.override_logical_id("SolutionMetricsAnonymousData")
         self.solution_metrics.cfn_options.condition = self._send_anonymous_usage_data
+
+        add_cfn_guard_suppressions(
+            self._metrics_function.role.node.try_find_child("Resource"),
+            ["IAM_NO_INLINE_POLICY_CHECK"]
+        )

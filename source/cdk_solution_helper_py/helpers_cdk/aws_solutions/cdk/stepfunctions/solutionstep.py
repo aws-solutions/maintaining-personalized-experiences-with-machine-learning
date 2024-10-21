@@ -127,7 +127,7 @@ class SolutionStep(Construct):
             kwargs["layers"] = kwargs.get("layers", [])
             kwargs["tracing"] = Tracing.ACTIVE
             kwargs["timeout"] = Duration.seconds(15)
-            kwargs["runtime"] = Runtime("python3.9", RuntimeFamily.PYTHON)
+            kwargs["runtime"] = Runtime("python3.11", RuntimeFamily.PYTHON)
 
             super().__init__(
                 scope,
