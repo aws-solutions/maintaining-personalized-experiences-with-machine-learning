@@ -49,7 +49,7 @@ setuptools.setup(
         "click==8.1.3",
         "cronex==0.1.3.1",
         "boto3==1.26.47",
-        "requests==2.32.0",
+        "requests==2.32.4",
         "crhelper==2.0.11",
         "rich==12.6.0",
     ],

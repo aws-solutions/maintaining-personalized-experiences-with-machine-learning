@@ -20,8 +20,8 @@ source_bucket = "SOURCE_BUCKET"
 @pytest.fixture
 def build_stacks_for_buckets():
     """Ensure parameter ordering is kept"""
-    from deploy import build_app
-    from deploy import solution as cdk_solution
+    from infrastructure.deploy import build_app
+    from infrastructure.deploy import solution as cdk_solution
 
     cdk_solution.reset()
 
