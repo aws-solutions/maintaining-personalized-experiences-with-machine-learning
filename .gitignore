@@ -65,3 +65,6 @@ source/cdk_solution_helper_py/helpers_cdk/build/*
 source/cdk_solution_helper_py/helpers_common/build/*
 source/scheduler/common/build/*
 source/scheduler/cdk/build/*
+
+# nightswatch test results
+.nightswatch/functional/test-results.xml
