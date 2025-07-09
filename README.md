@@ -1,5 +1,7 @@
 # Maintaining Personalized Experiences with Machine Learning
 
+⚠️🚨⚠️ **Important: [The Maintaining Personalized Experiences with Machine Learning](https://aws.amazon.com/solutions/implementations/maintaining-personalized-experiences-with-ml/) solution will retire in October 2025. Deployments (via CloudFormation or GitHub) will remain operational, but customers will assume responsibility for maintenance and API-related updates after support ends. Customers can explore using [Amazon Personalize](https://aws.amazon.com/personalize/) to deliver hyper-personalized user experiences in real-time at scale to improve user engagement, customer loyalty, and business results.** ⚠️🚨⚠️
+
 The Maintaining Personalized Experiences with Machine Learning solution provides a mechanism to automate much of the
 workflow around Amazon Personalize. This includes dataset group creation, dataset creation and import, solution
 creation, solution version creation, campaign creation and batch inference job creation
