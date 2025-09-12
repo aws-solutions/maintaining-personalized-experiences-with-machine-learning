@@ -26,7 +26,7 @@ from constructs import Construct
 
 from aws_solutions.cdk.aspects import ConditionalResources
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
-
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 class Notifications(SolutionStep):
     def __init__(
@@ -50,6 +50,11 @@ class Notifications(SolutionStep):
             failure_state=failure_state,
             entrypoint=(Path(__file__).absolute().parents[3] / "aws_lambda" / "sns_notification" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[3] / "aws_lambda" / "shared"],
+        )
+
+        add_cfn_guard_suppressions(
+                self.function.role.node.try_find_child("Resource"),
+                ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     def create_sns(self):

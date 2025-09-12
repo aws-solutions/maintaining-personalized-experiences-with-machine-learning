@@ -20,8 +20,8 @@ source_bucket = "SOURCE_BUCKET"
 @pytest.fixture
 def build_stacks_for_buckets():
     """Ensure parameter ordering is kept"""
-    from deploy import build_app
-    from deploy import solution as cdk_solution
+    from infrastructure.deploy import build_app
+    from infrastructure.deploy import solution as cdk_solution
 
     cdk_solution.reset()
 
@@ -53,6 +53,12 @@ def test_parameters(build_stacks_for_buckets):
         stack["Metadata"]["AWS::CloudFormation::Interface"]["ParameterLabels"]["PersonalizeKmsKeyArn"]["default"]
         == "(Optional) KMS key ARN used to encrypt Datasets managed by Amazon Personalize"
     )
+
+
+def test_personalize_bucket_notification_dependency(build_stacks_for_buckets):
+    stack = build_stacks_for_buckets
+    assert stack["Resources"]["PersonalizeBucketNotifications3328A32B"]["Type"] == "Custom::S3BucketNotifications"
+    assert "PersonalizeBucketPolicy5818C815" in stack["Resources"]["PersonalizeBucketNotifications3328A32B"]["DependsOn"]
 
 
 def test_personalize_bucket(build_stacks_for_buckets):

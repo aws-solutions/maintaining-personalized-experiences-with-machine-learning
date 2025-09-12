@@ -20,6 +20,7 @@ from aws_cdk.aws_stepfunctions import IChainable
 from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 
 class ReadScheduledTask(SolutionStep):
@@ -42,6 +43,11 @@ class ReadScheduledTask(SolutionStep):
             failure_state=failure_state,
             function="read_schedule",
             entrypoint=Path(__file__).parents[1].resolve() / "aws_lambda" / "scheduler" / "handler.py",
+        )
+
+        add_cfn_guard_suppressions(
+                self.function.role.node.try_find_child("Resource"),
+                ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     def _set_permissions(self):

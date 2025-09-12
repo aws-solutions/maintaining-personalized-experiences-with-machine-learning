@@ -38,7 +38,7 @@ setuptools.setup(
         "aws-cdk-lib==2.88.0",
         "pip>=22.3.1",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.11",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -48,6 +48,8 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Software Development :: Code Generators",
         "Topic :: Utilities",
         "Typing :: Typed",

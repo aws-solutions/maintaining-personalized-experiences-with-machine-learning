@@ -21,6 +21,7 @@ from cdk_nag import NagSuppressions
 from cdk_nag import NagPackSuppression
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 
 class CreateBatchInferenceJob(SolutionStep):
@@ -74,6 +75,11 @@ class CreateBatchInferenceJob(SolutionStep):
                            'which do not have a resource arn')],
             apply_to_children=True)
 
+        add_cfn_guard_suppressions(
+         self.personalize_batch_inference_rw_role.node.try_find_child("Resource"),
+          ["IAM_NO_INLINE_POLICY_CHECK"]
+        )
+
         super().__init__(
             scope,
             id,
@@ -84,6 +90,11 @@ class CreateBatchInferenceJob(SolutionStep):
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
         )
 
+        add_cfn_guard_suppressions(
+         self.function.role.node.try_find_child("Resource"),
+          ["IAM_NO_INLINE_POLICY_CHECK"]
+        )
+        
     def _set_permissions(self):
         # personalize resource permissions
         self.function.add_to_role_policy(

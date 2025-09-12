@@ -21,6 +21,7 @@ from constructs import Construct
 from aws_solutions.cdk.aws_lambda.environment import Environment
 from aws_solutions.cdk.aws_lambda.python.function import SolutionsPythonFunction
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 
 class CreateConfig(SolutionsPythonFunction):
@@ -30,7 +31,7 @@ class CreateConfig(SolutionsPythonFunction):
         kwargs["libraries"] = [Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"]
         kwargs["tracing"] = Tracing.ACTIVE
         kwargs["timeout"] = Duration.seconds(90)
-        kwargs["runtime"] = Runtime("python3.9", RuntimeFamily.PYTHON)
+        kwargs["runtime"] = Runtime("python3.11", RuntimeFamily.PYTHON)
 
         super().__init__(scope, construct_id, entrypoint, function_name, **kwargs)
 
@@ -39,6 +40,11 @@ class CreateConfig(SolutionsPythonFunction):
         add_cfn_nag_suppressions(
             self.role.node.try_find_child("DefaultPolicy").node.find_child("Resource"),
             [CfnNagSuppression("W12", "IAM policy for AWS X-Ray requires an allow on *")],
+        )
+
+        add_cfn_guard_suppressions(
+            self.role.node.try_find_child("Resource"),
+            ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
         self._set_permissions()

@@ -228,6 +228,7 @@ def source_code_package(ctx, ignore, solution_name):
         "CONTRIBUTING.md",
         "CHANGELOG.md",
         ".gitignore",
+        "SECURITY.md"
     ]
 
     # read the gitignore

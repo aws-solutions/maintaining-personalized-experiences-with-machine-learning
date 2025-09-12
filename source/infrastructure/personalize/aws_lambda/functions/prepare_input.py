@@ -16,7 +16,7 @@ from pathlib import Path
 from constructs import Construct
 
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
-
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 class PrepareInput(SolutionStep):
     def __init__(
@@ -31,6 +31,11 @@ class PrepareInput(SolutionStep):
             layers=layers,
             entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "prepare_input" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
+        )
+
+        add_cfn_guard_suppressions(
+                self.function.role.node.try_find_child("Resource"),
+                ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     def _set_permissions(self):

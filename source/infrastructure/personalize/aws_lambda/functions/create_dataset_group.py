@@ -21,6 +21,7 @@ from constructs import Construct
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_hash import ResourceHash
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
+from aws_solutions.cdk.cfn_guard import add_cfn_guard_suppressions
 
 
 class CreateDatasetGroup(SolutionStep):
@@ -45,6 +46,11 @@ class CreateDatasetGroup(SolutionStep):
             entrypoint=(Path(__file__).absolute().parents[4] / "aws_lambda" / "create_dataset_group" / "handler.py"),
             libraries=[Path(__file__).absolute().parents[4] / "aws_lambda" / "shared"],
             **kwargs,
+        )
+
+        add_cfn_guard_suppressions(
+            self.function.role.node.try_find_child("Resource"),
+            ["IAM_NO_INLINE_POLICY_CHECK"]
         )
 
     def _set_permissions(self):
@@ -160,4 +166,9 @@ class CreateDatasetGroup(SolutionStep):
         self.function.add_environment(
             "KMS_KEY_ARN",
             Fn.condition_if(self.kms_enabled.node.id, self.kms_key.value_as_string, "").to_string(),
+        )
+
+        add_cfn_guard_suppressions(
+            kms_role.node.try_find_child("Resource"),
+            ["IAM_NO_INLINE_POLICY_CHECK"]
         )

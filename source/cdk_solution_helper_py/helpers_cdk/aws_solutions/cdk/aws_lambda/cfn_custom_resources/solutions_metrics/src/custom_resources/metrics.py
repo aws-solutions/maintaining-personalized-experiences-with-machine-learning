@@ -14,7 +14,7 @@
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from os import getenv
 
 import requests
@@ -54,11 +54,11 @@ def send_metrics(event, _):
         headers = {"Content-Type": "application/json"}
         payload = {
             "Solution": resource_properties["Solution"],
+            "Version": resource_properties["Version"],
             "UUID": random_id,
-            "TimeStamp": datetime.utcnow().isoformat(),
+            "TimeStamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "Data": _sanitize_data(event),
         }
-
         logger.info(f"Sending payload: {payload}")
         response = requests.post(METRICS_ENDPOINT, json=payload, headers=headers, timeout=REQUESTS_TIMEOUT)
         logger.info(f"Response from metrics endpoint: {response.status_code} {response.reason}")

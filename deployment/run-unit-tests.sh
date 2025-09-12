@@ -41,7 +41,9 @@ echo "--------------------------------------------------------------------------
 echo "[Env] Create virtual environment and install dependencies"
 echo "------------------------------------------------------------------------------"
 
-virtualenv .venv
+#Set the python version to 3.11
+pip install virtualenv
+python3.11 -m virtualenv .venv
 source .venv/bin/activate
 
 cd $source_dir
