@@ -1,15 +1,6 @@
-# ######################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                  #
-#                                                                                                                      #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance      #
-#  with the License. You may obtain a copy of the License at                                                           #
-#                                                                                                                      #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
-#                                                                                                                      #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed    #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
-#  the specific language governing permissions and limitations under the License.                                      #
-# ######################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 import os
 import sys
@@ -20,14 +11,7 @@ from typing import Dict, Optional
 import boto3
 import jsii
 import pytest
-from aws_cdk.aws_lambda import (
-    Code,
-    Function,
-    FunctionProps,
-    LayerVersion,
-    LayerVersionProps,
-    Runtime,
-)
+from aws_cdk.aws_lambda import Code, Function, FunctionProps, LayerVersion, LayerVersionProps, Runtime
 from aws_solutions.cdk.synthesizers import SolutionStackSubstitutions
 from aws_solutions.core import get_service_client
 from botocore.stub import Stubber
@@ -53,7 +37,6 @@ class Solution:
             "SOLUTION_NAME": "Maintaining Personalized Experiences with Machine Learning",
             "SOLUTION_ID": self.id,
             "SOLUTION_VERSION": self.version,
-            "APP_REGISTRY_NAME": "personalized-experiences-ML",
             "APPLICATION_TYPE": "AWS-Solutions",
             "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": True,
         }
@@ -207,6 +190,17 @@ def notifier_stubber(mocker):
     notifier = NotifierStub()
     mocker.patch("shared.events.NOTIFY_LIST", [notifier])
     yield notifier
+
+
+@pytest.fixture(autouse=True)
+def mock_aws_helpers(mocker):
+    """Automatically mock AWS helper functions for all tests to avoid real AWS calls"""
+    mocker.patch("shared.resource.base.get_aws_account", return_value="111111111111")
+    mocker.patch("shared.resource.base.get_aws_region", return_value="us-east-1")
+    mocker.patch("shared.resource.base.get_aws_partition", return_value="aws")
+    mocker.patch("shared.personalize_service.get_aws_account", return_value="111111111111")
+    mocker.patch("shared.personalize_service.get_aws_region", return_value="us-east-1")
+    mocker.patch("shared.personalize_service.get_aws_partition", return_value="aws")
 
 
 @pytest.fixture

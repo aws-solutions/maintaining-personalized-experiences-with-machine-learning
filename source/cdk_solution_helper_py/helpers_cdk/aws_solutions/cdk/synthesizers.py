@@ -1,15 +1,6 @@
-# #####################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                 #
-#                                                                                                                     #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance     #
-#  with the License. You may obtain a copy of the License at                                                          #
-#                                                                                                                     #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                        #
-#                                                                                                                     #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  #
-#  the specific language governing permissions and limitations under the License.                                     #
-# #####################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 import logging
 import os
@@ -19,7 +10,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from fileinput import FileInput
 from pathlib import Path
-from typing import Dict, List, Tuple, Iterable
+from typing import Dict, Iterable, List, Tuple
 
 import jsii
 from aws_cdk import DefaultStackSynthesizer, IStackSynthesizer, ISynthesisSession
@@ -188,48 +179,6 @@ class CloudFormationTemplate:
                 # add resource to the list of regional assets
                 self.assets_regional.append(archive_path)
 
-    def patch_app_reg(self):
-        """Patch the App Registry Info"""
-        for resource_name, resource in self.contents.get("Resources", {}).items():
-            resource_type = resource.get("Type")
-            if resource_type == "AWS::ApplicationInsights::Application":
-                logger.info(f"{resource_name} ({resource_type}) patching")
-
-                # update CloudFormation resource properties for ServiceCatalogAppRegistry
-                # fmt: off
-                resource["Properties"]["ResourceGroupName"] = {
-                    "Fn::Join": [ # NOSONAR (python:S1192) - string for clarity
-                        "-",
-                        [
-                            "AWS_AppRegistry_Application",
-                            {"Ref": "AWS::StackName"},
-                            {
-                                "Fn::FindInMap": ["Solution", "Data", "AppRegistryName"]  # NOSONAR (python:S1192) - string for clarity
-                            }
-                        ],
-                    ]
-                }
-                # fmt: on
-
-            if resource_type == "AWS::ServiceCatalogAppRegistry::Application":
-                logger.info(f"{resource_name} ({resource_type}) patching")
-
-                # update CloudFormation resource properties for ServiceCatalogAppRegistry
-                # fmt: off
-                resource["Properties"]["Name"] = {
-                    "Fn::Join": [ # NOSONAR (python:S1192) - string for clarity
-                        "-",
-                        [
-                            "App",
-                            {"Ref": "AWS::StackName"},
-                            {
-                                "Fn::FindInMap": ["Solution", "Data", "AppRegistryName"]  # NOSONAR (python:S1192) - string for clarity
-                            },
-                        ],
-                    ]
-                }
-                # fmt: on
-
     def _build_asset_path(self, asset_path):
         asset_output_path = self.cloud_assembly_path.joinpath(asset_path)
         asset_output_path.mkdir(parents=True, exist_ok=True)
@@ -264,10 +213,10 @@ class SolutionStackSubstitutions(DefaultStackSynthesizer):
 
     def _template_names(self, session: ISynthesisSession) -> List[Path]:
         assembly_output_path = Path(session.assembly.outdir)
-        templates = [assembly_output_path.joinpath(self._stack.template_file)]
+        templates = [assembly_output_path.joinpath(self._bound_stack.template_file)]
 
         # add this stack's children to the outputs to process (todo: this only works for singly-nested stacks)
-        for child in self._stack.node.children:
+        for child in self._bound_stack.node.children:
             child_template = getattr(child, "template_file", None)
             if child_template:
                 templates.append(assembly_output_path.joinpath(child_template))
@@ -276,9 +225,11 @@ class SolutionStackSubstitutions(DefaultStackSynthesizer):
     def _templates(self, session: ISynthesisSession) -> Iterable[Tuple[Path, Dict]]:
         assembly_output_path = Path(session.assembly.outdir)
         assets = {}
-        
+
         try:
-            assets = json.loads(next(assembly_output_path.glob(self._stack.stack_name + "*.assets.json")).read_text())
+            assets = json.loads(
+                next(assembly_output_path.glob(self._bound_stack.stack_name + "*.assets.json")).read_text()
+            )
         except StopIteration:
             pass  # use the default (no assets)
 
@@ -290,8 +241,8 @@ class SolutionStackSubstitutions(DefaultStackSynthesizer):
         # when called from python directly, this outputs to a temporary directory
         result = DefaultStackSynthesizer.synthesize(self, session)
 
-        asset_path_regional = self._stack.node.try_get_context("SOLUTIONS_ASSETS_REGIONAL")
-        asset_path_global = self._stack.node.try_get_context("SOLUTIONS_ASSETS_GLOBAL")
+        asset_path_regional = self._bound_stack.node.try_get_context("SOLUTIONS_ASSETS_REGIONAL")
+        asset_path_global = self._bound_stack.node.try_get_context("SOLUTIONS_ASSETS_GLOBAL")
 
         logger.info(f"solutions parameter substitution in {session.assembly.outdir} started")
         for template in self._template_names(session):
@@ -301,7 +252,7 @@ class SolutionStackSubstitutions(DefaultStackSynthesizer):
                     # handle all template substitutions in the line
                     for match in SolutionStackSubstitutions.substitution_re.findall(line):
                         placeholder = match.replace("%", "")
-                        replacement = self._stack.node.try_get_context(placeholder)
+                        replacement = self._bound_stack.node.try_get_context(placeholder)
                         if not replacement:
                             raise ValueError(
                                 f"Please provide a parameter substitution for {placeholder} via environment variable or CDK context"
@@ -321,7 +272,6 @@ class SolutionStackSubstitutions(DefaultStackSynthesizer):
         for template in self._templates(session):
             template.patch_lambda()
             template.patch_nested()
-            template.patch_app_reg()
             template.delete_bootstrap_parameters()
 
             template.delete_cdk_helpers()

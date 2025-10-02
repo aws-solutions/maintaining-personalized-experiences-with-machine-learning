@@ -1,20 +1,10 @@
-# ######################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                  #
-#                                                                                                                      #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance      #
-#  with the License. You may obtain a copy of the License at                                                           #
-#                                                                                                                      #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
-#                                                                                                                      #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed    #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
-#  the specific language governing permissions and limitations under the License.                                      #
-# ######################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Dict
 
-from aws_cdk.aws_stepfunctions import StateMachine, Chain, Parallel, TaskInput
+from aws_cdk.aws_stepfunctions import Chain, DefinitionBody, Parallel, StateMachine, TaskInput
 from constructs import Construct
-
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.cfn_nag import add_cfn_nag_suppressions, CfnNagSuppression
 from aws_solutions.cdk.stepfunctions.solutionstep import SolutionStep
@@ -40,25 +30,29 @@ class ScheduledDatasetImport(Construct):
             "PeriodicDatasetImport",
             tracing_enabled=True,
             state_machine_name=state_machine_namer.resource_name.to_string(),
-            definition=Chain.start(
-                Parallel(self, "Manage The Execution")
-                .branch(
-                    create_timestamp.state(self, "Set Current Timestamp", result_path="$.currentDate")
-                    .next(prepare_input.state(self, "Prepare Input"))
-                    .next(
-                        DatasetImportsFragment(self, "Handle Periodic Dataset Imports", **dataset_management_functions)
+            definition_body=DefinitionBody.from_chainable(
+                Chain.start(
+                    Parallel(self, "Manage The Execution")
+                    .branch(
+                        create_timestamp.state(self, "Set Current Timestamp", result_path="$.currentDate")
+                        .next(prepare_input.state(self, "Prepare Input"))
+                        .next(
+                            DatasetImportsFragment(
+                                self, "Handle Periodic Dataset Imports", **dataset_management_functions
+                            )
+                        )
                     )
-                )
-                .add_catch(
-                    FailureFragment(self, notifications).start_state,
-                    errors=["States.ALL"],
-                    result_path="$.statesError",
-                )
-                .next(
-                    notifications.state(
-                        self,
-                        "Success",
-                        payload=TaskInput.from_object({"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}),
+                    .add_catch(
+                        FailureFragment(self, notifications).start_state,
+                        errors=["States.ALL"],
+                        result_path="$.statesError",
+                    )
+                    .next(
+                        notifications.state(
+                            self,
+                            "Success",
+                            payload=TaskInput.from_object({"datasetGroup.$": "$[0].datasetGroup.serviceConfig.name"}),
+                        )
                     )
                 )
             ),

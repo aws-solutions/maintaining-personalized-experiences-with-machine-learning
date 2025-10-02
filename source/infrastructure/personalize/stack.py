@@ -1,15 +1,5 @@
-# ######################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                  #
-#                                                                                                                      #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance      #
-#  with the License. You may obtain a copy of the License at                                                           #
-#                                                                                                                      #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
-#                                                                                                                      #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed    #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
-#  the specific language governing permissions and limitations under the License.                                      #
-# ######################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 from aws_cdk import (
     Aspects,
@@ -24,7 +14,7 @@ from aws_cdk import (
 from aws_cdk.aws_events import EventBus
 from aws_cdk.aws_s3 import EventType, NotificationKeyFilter
 from aws_cdk.aws_s3_notifications import LambdaDestination
-from aws_cdk.aws_stepfunctions import Chain, Parallel, StateMachine, TaskInput
+from aws_cdk.aws_stepfunctions import Chain, DefinitionBody, Parallel, StateMachine, TaskInput
 from aws_solutions.cdk.aws_lambda.cfn_custom_resources.resource_name import ResourceName
 from aws_solutions.cdk.aws_lambda.layers.aws_lambda_powertools import PowertoolsLayer
 from aws_solutions.cdk.cfn_nag import (
@@ -68,9 +58,7 @@ from personalize.step_functions.scheduled_solution_maintenance import (
 from personalize.step_functions.scheduler_fragment import SchedulerFragment
 from personalize.step_functions.schedules import Schedules
 from personalize.step_functions.solution_fragment import SolutionFragment
-
-from cdk_nag import NagSuppressions
-from cdk_nag import NagPackSuppression
+from cdk_nag import NagPackSuppression, NagSuppressions
 
 
 class PersonalizeStack(SolutionStack):
@@ -362,7 +350,7 @@ class PersonalizeStack(SolutionStack):
             self,
             "PersonalizeStateMachine",
             state_machine_name=state_machine_namer.resource_name.to_string(),
-            definition=definition,
+            definition_body=DefinitionBody.from_chainable(definition),
             tracing_enabled=True,
         )
         add_cfn_nag_suppressions(
@@ -406,6 +394,12 @@ class PersonalizeStack(SolutionStack):
         bucket_notification_handler = self.node.try_find_child(
             "BucketNotificationsHandler050a0587b7544547bf325f094a3db834"
         )
+
+        # Escape hatch to change Python runtime from 3.9 to 3.11
+        if bucket_notification_handler:
+            bucket_notification_lambda = bucket_notification_handler.node.find_child("Resource")
+            bucket_notification_lambda.add_property_override("Runtime", "python3.11")
+
         bucket_notification_policy = (
             bucket_notification_handler.node.find_child("Role")
             .node.find_child("DefaultPolicy")
