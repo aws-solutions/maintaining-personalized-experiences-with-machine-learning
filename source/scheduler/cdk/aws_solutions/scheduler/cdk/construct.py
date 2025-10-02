@@ -1,15 +1,5 @@
-# ######################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                  #
-#                                                                                                                      #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance      #
-#  with the License. You may obtain a copy of the License at                                                           #
-#                                                                                                                      #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
-#                                                                                                                      #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed    #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
-#  the specific language governing permissions and limitations under the License.                                      #
-# ######################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
@@ -22,15 +12,16 @@ import jsii
 from aws_cdk import Aws, IAspect, Aspects
 from aws_cdk.aws_lambda import Tracing
 from aws_cdk.aws_stepfunctions import (
-    StateMachine,
     Chain,
-    Wait,
-    WaitTime,
-    IStateMachine,
-    CustomState,
-    TaskInput,
     Choice,
     Condition,
+    CustomState,
+    DefinitionBody,
+    IStateMachine,
+    StateMachine,
+    TaskInput,
+    Wait,
+    WaitTime,
 )
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
 from constructs import Construct, IConstruct
@@ -238,7 +229,7 @@ class Scheduler(Construct):
             self,
             "SchedulerStateMachine",
             state_machine_name=self.state_machine_name,
-            definition=self._scheduler_definition,
+            definition_body=DefinitionBody.from_chainable(self._scheduler_definition),
             tracing_enabled=True,
         )
 

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-10-02
+
+### Fixed
+
+- Deprecation warnings arising from aws-cdk-lib
+- Bucket Notifications Handler Lambda to use Python 3.11 runtime
+
+### Changed
+
+- Removed use of AWS Service Catalog AppRegistry
+- Standardized license headers across source files
+
 ## [1.4.6] - 2025-06-26
 
 ### Fixed

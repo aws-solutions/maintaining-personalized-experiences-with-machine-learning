@@ -1,5 +1,4 @@
 aws_cdk_lib==2.88.0
-aws-cdk.aws-servicecatalogappregistry-alpha==2.88.0a0
 black
 boto3==1.26.47
 requests==2.32.4

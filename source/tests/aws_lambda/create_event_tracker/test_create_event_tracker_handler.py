@@ -1,33 +1,15 @@
-# ######################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                  #
-#                                                                                                                      #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance      #
-#  with the License. You may obtain a copy of the License at                                                           #
-#                                                                                                                      #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
-#                                                                                                                      #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed    #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
-#  the specific language governing permissions and limitations under the License.                                      #
-# ######################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 
 import pytest
-from aws_lambda.create_event_tracker.handler import (
-    CONFIG,
-    RESOURCE,
-    STATUS,
-    lambda_handler,
-)
+from aws_lambda.create_event_tracker.handler import CONFIG, RESOURCE, STATUS, lambda_handler
 from botocore.exceptions import ParamValidationError
-from moto import mock_sts
 from shared.exceptions import ResourcePending
 from shared.resource import DatasetGroup, EventTracker
 
 etracker_name = "mockEventTracker"
-event_tracker_arn = EventTracker().arn(etracker_name)
-dataset_group_arn = DatasetGroup().arn("mockDatasetGroup")
 
 
 def test_create_event_tracker(validate_handler_config):
@@ -36,8 +18,7 @@ def test_create_event_tracker(validate_handler_config):
         lambda_handler({}, None)
 
 
-@mock_sts
-def test_event_tracker_tags(personalize_stubber, notifier_stubber):
+def test_event_tracker_tags(mocker, personalize_stubber, notifier_stubber):
     event_tracker_arn = EventTracker().arn(etracker_name)
     dataset_group_arn = DatasetGroup().arn("mockDatasetGroup")
 
@@ -77,8 +58,7 @@ def test_event_tracker_tags(personalize_stubber, notifier_stubber):
     assert notifier_stubber.latest_notification_status == "CREATING"
 
 
-@mock_sts
-def test_bad_event_tracker_tags(personalize_stubber):
+def test_bad_event_tracker_tags(mocker, personalize_stubber):
     event_tracker_arn = EventTracker().arn(etracker_name)
     dataset_group_arn = DatasetGroup().arn("mockDatasetGroup")
 
