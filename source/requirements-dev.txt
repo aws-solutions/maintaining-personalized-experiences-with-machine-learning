@@ -3,7 +3,6 @@ black==24.3.0
 boto3==1.26.47
 aws_cdk_lib==2.88.0
 aws_solutions_constructs.aws_lambda_sns==2.41.0
-aws-cdk.aws-servicecatalogappregistry-alpha==2.88.0a0
 cdk-nag==2.27.107
 requests==2.32.4
 crhelper==2.0.11

@@ -1,15 +1,5 @@
-# ######################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                  #
-#                                                                                                                      #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance      #
-#  with the License. You may obtain a copy of the License at                                                           #
-#                                                                                                                      #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
-#                                                                                                                      #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed    #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
-#  the specific language governing permissions and limitations under the License.                                      #
-# ######################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 
@@ -35,7 +25,6 @@ def template():
         "SOLUTION_VERSION": "v1.0.0",
         "SOLUTION_NAME": "test-solution-name",
         "BUCKET_NAME": "test-solution-bucket",
-        "APP_REGISTRY_NAME": "test-solution-name",
     }
     for ctx_var in ["SOLUTIONS_ASSETS_GLOBAL", "SOLUTIONS_ASSETS_REGIONAL"]:
         ctx_var_val = os.environ.get(ctx_var)
@@ -52,7 +41,6 @@ def template():
     # SOLUTIONS_ASSETS_GLOBAL / SOLUTIONS_ASSETS_REGIONAL not set:
     # this will not remove the CDK generated parameters (this was called by CDK)
     yield app.synth().stacks[0].template
-
 
 
 def test_cloudformation_template_init(template):
@@ -72,7 +60,6 @@ def test_cloudformation_template_init_metadata(solution_build_environment, templ
             "Version": "v1.0.0",
             "SendAnonymousUsageData": "Yes",
             "SolutionName": "test-solution-name",
-            "AppRegistryName": "test-solution-name",
             "ApplicationType": "AWS-Solutions",
         }
     }

@@ -1,34 +1,15 @@
-# ######################################################################################################################
-#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                                  #
-#                                                                                                                      #
-#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance      #
-#  with the License. You may obtain a copy of the License at                                                           #
-#                                                                                                                      #
-#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
-#                                                                                                                      #
-#  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed    #
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for   #
-#  the specific language governing permissions and limitations under the License.                                      #
-# ######################################################################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 
 import pytest
-from aws_lambda.create_dataset_import_job.handler import (
-    CONFIG,
-    RESOURCE,
-    STATUS,
-    lambda_handler,
-)
+from aws_lambda.create_dataset_import_job.handler import CONFIG, RESOURCE, STATUS, lambda_handler
 from botocore.exceptions import ParamValidationError
-from moto import mock_sts
 from shared.exceptions import ResourcePending
 from shared.resource import Dataset, DatasetGroup, DatasetImportJob
 
 dataset_name = "mockDataset"
-dataset_arn = Dataset().arn(dataset_name)
-dataset_import_arn = DatasetImportJob().arn("mockDatasetImport")
-dataset_group_arn = DatasetGroup().arn("mockDatasetGroup")
 
 
 def test_create_dataset_import_job_handler(validate_handler_config):
@@ -37,9 +18,9 @@ def test_create_dataset_import_job_handler(validate_handler_config):
         lambda_handler({}, None)
 
 
-@mock_sts
 def test_data_import_tags(mocker, personalize_stubber, notifier_stubber):
     os.environ["ROLE_ARN"] = "roleArn"
+
     dataset_arn = Dataset().arn(dataset_name)
     dataset_import_arn = DatasetImportJob().arn("mockDatasetImport")
 
@@ -91,12 +72,11 @@ def test_data_import_tags(mocker, personalize_stubber, notifier_stubber):
     del os.environ["ROLE_ARN"]
 
 
-@mock_sts
 def test_bad_data_import_tags(mocker, personalize_stubber):
+    os.environ["ROLE_ARN"] = "roleArn"
+
     dataset_arn = Dataset().arn(dataset_name)
     dataset_import_arn = DatasetImportJob().arn("mockDatasetImport")
-
-    os.environ["ROLE_ARN"] = "roleArn"
 
     personalize_stubber.add_response(
         method="list_dataset_import_jobs",
